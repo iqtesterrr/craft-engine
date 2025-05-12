@@ -1,6 +1,8 @@
 package net.momirealms.craftengine.bukkit.entity.furniture;
 
+import net.momirealms.craftengine.bukkit.api.BukkitAdaptors;
 import net.momirealms.craftengine.bukkit.entity.furniture.hitbox.InteractionHitBox;
+import net.momirealms.craftengine.bukkit.entity.furniture.seat.BukkitSeatEntity;
 import net.momirealms.craftengine.bukkit.nms.CollisionEntity;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
@@ -451,11 +453,19 @@ public class BukkitFurnitureManager extends AbstractFurnitureManager {
     protected void tryLeavingSeat(@NotNull Player player, @NotNull Entity vehicle) {
         Integer baseFurniture = vehicle.getPersistentDataContainer().get(FURNITURE_SEAT_BASE_ENTITY_KEY, PersistentDataType.INTEGER);
         if (baseFurniture == null) return;
-        vehicle.remove();
         LoadedFurniture furniture = loadedFurnitureByRealEntityId(baseFurniture);
         if (furniture == null) {
+            vehicle.remove();
             return;
         }
+        BukkitSeatEntity seatEntity = furniture.seatByEntityId(vehicle.getEntityId());
+        if (seatEntity == null) vehicle.remove();
+        else {
+            seatEntity.dismount(BukkitAdaptors.adapt(player));
+            seatEntity.remove();
+            furniture.removeSeatEntity(vehicle.getEntityId());
+        }
+
         String vector3f = vehicle.getPersistentDataContainer().get(BukkitFurnitureManager.FURNITURE_SEAT_VECTOR_3F_KEY, PersistentDataType.STRING);
         if (vector3f == null) {
             plugin.logger().warn("Failed to get vector3f for player " + player.getName() + "'s seat");

@@ -38,7 +38,7 @@ items:
                 interactive: true
                 interaction-entity: true
                 seats:
-                  - 0,0,-0.1 0
+                  - 0,0,-0.1 0 crawl
                   - 1,0,-0.1 0
         loot:
           template: "default:loot_table/furniture"

@@ -15,6 +15,7 @@ import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.block.PackedBlockState;
 import net.momirealms.craftengine.core.entity.player.InteractionHand;
 import net.momirealms.craftengine.core.entity.player.Player;
+import net.momirealms.craftengine.core.entity.seat.SeatEntity;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.config.Config;
@@ -91,6 +92,8 @@ public class BukkitServerPlayer extends Player {
     // cache interaction range here
     private int lastUpdateInteractionRangeTick;
     private double cachedInteractionRange;
+    // cache seat
+    private SeatEntity seatEntity;
 
     private final Map<Integer, EntityPacketHandler> entityTypeView = new ConcurrentHashMap<>();
 
@@ -814,5 +817,15 @@ public class BukkitServerPlayer extends Player {
         } else {
             return LegacyAttributeUtils.getLuck(platformPlayer());
         }
+    }
+
+    @Override
+    public void setSeat(SeatEntity seatEntity) {
+        this.seatEntity = seatEntity;
+    }
+
+    @Override
+    public SeatEntity seat() {
+        return this.seatEntity;
     }
 }

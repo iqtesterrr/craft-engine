@@ -8,6 +8,7 @@ import net.momirealms.craftengine.bukkit.block.behavior.BukkitBlockBehaviors;
 import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurnitureManager;
 import net.momirealms.craftengine.bukkit.entity.furniture.hitbox.BukkitHitBoxTypes;
 import net.momirealms.craftengine.bukkit.entity.projectile.BukkitProjectileManager;
+import net.momirealms.craftengine.bukkit.entity.furniture.seat.BukkitSeatTypes;
 import net.momirealms.craftengine.bukkit.font.BukkitFontManager;
 import net.momirealms.craftengine.bukkit.item.BukkitItemManager;
 import net.momirealms.craftengine.bukkit.item.behavior.BukkitItemBehaviors;
@@ -154,6 +155,7 @@ public class BukkitCraftEngine extends CraftEngine {
         BukkitBlockBehaviors.init();
         BukkitItemBehaviors.init();
         BukkitHitBoxTypes.init();
+        BukkitSeatTypes.init();
         super.packManager = new BukkitPackManager(this);
         super.senderFactory = new BukkitSenderFactory(this);
         super.itemManager = new BukkitItemManager(this);

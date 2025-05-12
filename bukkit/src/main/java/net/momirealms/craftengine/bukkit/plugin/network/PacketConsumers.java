@@ -6,6 +6,7 @@ import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslationArgument;
+import net.momirealms.craftengine.bukkit.api.BukkitAdaptors;
 import net.momirealms.craftengine.bukkit.api.CraftEngineFurniture;
 import net.momirealms.craftengine.bukkit.api.event.FurnitureBreakEvent;
 import net.momirealms.craftengine.bukkit.api.event.FurnitureInteractEvent;
@@ -23,6 +24,7 @@ import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.*;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.entity.player.InteractionHand;
+import net.momirealms.craftengine.core.entity.seat.SeatEntity;
 import net.momirealms.craftengine.core.font.FontManager;
 import net.momirealms.craftengine.core.font.IllegalCharacterProcessResult;
 import net.momirealms.craftengine.core.item.CustomItem;
@@ -419,8 +421,7 @@ public class PacketConsumers {
                 return;
             }
             EnumSet<? extends Enum<?>> enums = FastNMS.INSTANCE.field$ClientboundPlayerInfoUpdatePacket$actions(packet);
-            outer:
-            {
+            outer: {
                 for (Object entry : enums) {
                     if (entry == Reflections.instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_DISPLAY_NAME) {
                         break outer;
@@ -1582,7 +1583,14 @@ public class PacketConsumers {
                 user.entityPacketHandlers().put(id, TextDisplayPacketHandler.INSTANCE);
             } else if (type == Reflections.instance$EntityType$ARMOR_STAND$registryId) {
                 user.entityPacketHandlers().put(id, ArmorStandPacketHandler.INSTANCE);
-            }
+            } else if (type == Reflections.instance$EntityType$PLAYER$registryId) {
+				// Seat pose synchronization
+				BukkitServerPlayer player = (BukkitServerPlayer) BukkitCraftEngine.instance().networkManager().getOnlineUser(uuid);
+				if (player == null) return;
+                SeatEntity seat = player.seat();
+                if (seat == null) return;
+                seat.sync((BukkitServerPlayer) user);
+			}
         } catch (Exception e) {
             CraftEngine.instance().logger().warn("Failed to handle ClientboundAddEntityPacket", e);
         }
@@ -1738,9 +1746,9 @@ public class PacketConsumers {
                         serverPlayer.setResendSound();
                         FastNMS.INSTANCE.simulateInteraction(serverPlayer.serverPlayer(), DirectionUtils.toNMSDirection(hitResult.direction()), hitResult.hitLocation().x, hitResult.hitLocation().y, hitResult.hitLocation().z, LocationUtils.toBlockPos(hitResult.blockPos()));
                     } else {
-                        furniture.findFirstAvailableSeat(entityId).ifPresent(seatPos -> {
-                            if (furniture.tryOccupySeat(seatPos)) {
-                                furniture.spawnSeatEntityForPlayer(serverPlayer, seatPos);
+                        furniture.findFirstAvailableSeat(entityId).ifPresent(seat -> {
+                            if (furniture.tryOccupySeat(seat)) {
+								furniture.spawnSeatEntityForPlayer(serverPlayer, seat);
                             }
                         });
                     }

@@ -4,6 +4,7 @@ import net.momirealms.craftengine.core.block.CustomBlock;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
 import net.momirealms.craftengine.core.block.properties.PropertyFactory;
 import net.momirealms.craftengine.core.entity.furniture.HitBoxFactory;
+import net.momirealms.craftengine.core.entity.furniture.SeatFactory;
 import net.momirealms.craftengine.core.item.behavior.ItemBehaviorFactory;
 import net.momirealms.craftengine.core.item.recipe.CustomSmithingTransformRecipe;
 import net.momirealms.craftengine.core.item.recipe.RecipeFactory;
@@ -56,6 +57,7 @@ public class BuiltInRegistries {
     public static final Registry<ResourcePackHostFactory> RESOURCE_PACK_HOST_FACTORY = createRegistry(Registries.RESOURCE_PACK_HOST_FACTORY);
     public static final Registry<Factory<Function<PlayerBlockActionContext>>> PLAYER_BLOCK_FUNCTION_FACTORY = createRegistry(Registries.PLAYER_BLOCK_FUNCTION_FACTORY);
     public static final Registry<Factory<Condition<PlayerBlockActionContext>>> PLAYER_BLOCK_CONDITION_FACTORY = createRegistry(Registries.PLAYER_BLOCK_CONDITION_FACTORY);
+    public static final Registry<SeatFactory> SEAT_FACTORY = createRegistry(Registries.SEAT_FACTORY);
 
     private static <T> Registry<T> createRegistry(ResourceKey<? extends Registry<T>> key) {
         return new MappedRegistry<>(key);

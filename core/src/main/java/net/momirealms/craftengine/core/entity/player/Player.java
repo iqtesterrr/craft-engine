@@ -2,6 +2,7 @@ package net.momirealms.craftengine.core.entity.player;
 
 import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.entity.AbstractEntity;
+import net.momirealms.craftengine.core.entity.seat.SeatEntity;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.plugin.network.NetWorkUser;
 import net.momirealms.craftengine.core.util.Key;
@@ -89,6 +90,10 @@ public abstract class Player extends AbstractEntity implements NetWorkUser {
     public abstract void performCommand(String command);
 
     public abstract double luck();
+
+    public abstract void setSeat(SeatEntity seatEntity);
+
+    public abstract SeatEntity seat();
 
     @Override
     public Key type() {

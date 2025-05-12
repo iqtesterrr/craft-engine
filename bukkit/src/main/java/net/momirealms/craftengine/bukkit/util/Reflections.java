@@ -1,5 +1,7 @@
 package net.momirealms.craftengine.bukkit.util;
 
+import com.google.common.collect.ForwardingMap;
+import com.google.common.collect.ForwardingMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -3811,6 +3813,7 @@ public class Reflections {
     public static final Object instance$EntityType$OAK_BOAT;
     public static final Object instance$EntityType$TRIDENT;
     public static final Object instance$EntityType$SNOWBALL;
+    public static final Object instance$EntityType$PLAYER;
 
     static {
         try {
@@ -3834,6 +3837,8 @@ public class Reflections {
             instance$EntityType$TRIDENT = Reflections.method$Registry$get.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, trident);
             Object snowball = FastNMS.INSTANCE.method$ResourceLocation$fromNamespaceAndPath("minecraft", "snowball");
             instance$EntityType$SNOWBALL = Reflections.method$Registry$get.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, snowball);
+            Object player = FastNMS.INSTANCE.method$ResourceLocation$fromNamespaceAndPath("minecraft", "player");
+            instance$EntityType$PLAYER = Reflections.method$Registry$get.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, player);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -6416,6 +6421,7 @@ public class Reflections {
     public static final int instance$EntityType$FALLING_BLOCK$registryId;
     public static final int instance$EntityType$TRIDENT$registryId;
     public static final int instance$EntityType$ARMOR_STAND$registryId;
+    public static final int instance$EntityType$PLAYER$registryId;
 
     static {
         try {
@@ -6425,6 +6431,7 @@ public class Reflections {
             instance$EntityType$FALLING_BLOCK$registryId = (int) Reflections.method$Registry$getId.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, instance$EntityType$FALLING_BLOCK);
             instance$EntityType$TRIDENT$registryId = (int) Reflections.method$Registry$getId.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, instance$EntityType$TRIDENT);
             instance$EntityType$ARMOR_STAND$registryId = (int) Reflections.method$Registry$getId.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, instance$EntityType$ARMOR_STAND);
+            instance$EntityType$PLAYER$registryId = (int) Reflections.method$Registry$getId.invoke(Reflections.instance$BuiltInRegistries$ENTITY_TYPE, instance$EntityType$PLAYER);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -6659,4 +6666,62 @@ public class Reflections {
                     "world.entity.projectile.AbstractArrow"
             )
     );
+
+    public static final Method method$Entity$refreshEntityData = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$Entity, new String[]{"refreshEntityData"}, Reflections.clazz$ServerPlayer
+            )
+    );
+
+    public static final Class<?> clazz$GameProfile = requireNonNull(
+            ReflectionUtils.getClazz(
+                    BukkitReflectionUtils.assembleMCClass("com.mojang.authlib.GameProfile")
+            )
+    );
+
+    public static final Constructor<?> constructor$GameProfile = requireNonNull(
+            ReflectionUtils.getConstructor(
+                    clazz$GameProfile, 0
+            )
+    );
+
+    public static final Method method$GameProfile$getProperties = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$GameProfile, ForwardingMultimap.class
+            )
+    );
+
+    public static final Constructor<?> constructor$ServerPlayer = requireNonNull(
+            ReflectionUtils.getConstructor(
+                    clazz$ServerPlayer, 0
+            )
+    );
+
+    public static final Method method$ServerPlayer$getGameProfile = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$ServerPlayer, clazz$GameProfile, 0
+            )
+    );
+
+    public static final Method method$ServerPlayer$clientInformation = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$Player, 0
+            )
+    );
+
+    public static final Class<?> clazz$CompoundTag = requireNonNull(
+            ReflectionUtils.getClazz(
+                    BukkitReflectionUtils.assembleMCClass("nbt.CompoundTag")
+            )
+    );
+
+    public static final Object instance$CompoundTag$Empty;
+
+    static {
+        try {
+            instance$CompoundTag$Empty = Reflections.clazz$CompoundTag.getConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to instantiate empty CompoundTag", e);
+        }
+    }
 }

@@ -271,6 +271,10 @@ public class BukkitNetworkManager implements NetworkManager, Listener, PluginMes
         return onlineUsers.get(player.getUniqueId());
     }
 
+    public NetWorkUser getOnlineUser(UUID uuid) {
+        return onlineUsers.get(uuid);
+    }
+
     public Channel getChannel(Player player) {
         return (Channel) FastNMS.INSTANCE.field$Player$connection$connection$channel(FastNMS.INSTANCE.method$CraftPlayer$getHandle(player));
     }
