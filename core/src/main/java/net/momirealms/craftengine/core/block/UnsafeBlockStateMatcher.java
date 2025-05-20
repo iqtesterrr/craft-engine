@@ -24,7 +24,7 @@ public class UnsafeBlockStateMatcher {
     }
 
     public boolean matches(ImmutableBlockState state) {
-        if (!state.owner().value().id.equals(this.id)) {
+        if (!state.owner().value().id().equals(this.id)) {
             return false;
         }
         CustomBlock customBlock = state.owner().value();

@@ -16,6 +16,14 @@ public class HasComponentConditionProperty implements ConditionProperty {
         this.ignoreDefault = ignoreDefault;
     }
 
+    public String component() {
+        return component;
+    }
+
+    public boolean ignoreDefault() {
+        return ignoreDefault;
+    }
+
     @Override
     public Key type() {
         return ConditionProperties.HAS_COMPONENT;

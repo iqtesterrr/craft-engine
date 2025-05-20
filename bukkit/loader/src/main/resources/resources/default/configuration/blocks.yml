@@ -61,6 +61,15 @@ items#misc:
           type: falling_block
           hurt-amount: 4
           max-hurt: 80
+        events:
+          - on: right_click
+            functions:
+              - type: open_window
+                gui-type: anvil
+              - type: cancel_event
+            conditions:
+              - type: expression
+                expression: "!<arg:player.is_sneaking>"
         settings:
           template:
             - default:pickaxe_power/level_4

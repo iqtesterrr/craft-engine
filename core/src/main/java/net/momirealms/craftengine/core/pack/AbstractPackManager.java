@@ -1,8 +1,11 @@
 package net.momirealms.craftengine.core.pack;
 
+import com.google.common.jimfs.Configuration;
+import com.google.common.jimfs.Jimfs;
 import com.google.gson.*;
 import dev.dejvokep.boostedyaml.YamlDocument;
 import dev.dejvokep.boostedyaml.block.implementation.Section;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.momirealms.craftengine.core.font.BitmapImage;
 import net.momirealms.craftengine.core.font.Font;
 import net.momirealms.craftengine.core.item.EquipmentData;
@@ -29,6 +32,7 @@ import net.momirealms.craftengine.core.sound.AbstractSoundManager;
 import net.momirealms.craftengine.core.sound.SoundEvent;
 import net.momirealms.craftengine.core.util.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -39,12 +43,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.FileSystem;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import static net.momirealms.craftengine.core.util.MiscUtils.castToMap;
 
@@ -71,7 +75,8 @@ public abstract class AbstractPackManager implements PackManager {
     private final BiConsumer<Path, Path> eventDispatcher;
     private final Map<String, Pack> loadedPacks = new HashMap<>();
     private final Map<String, ConfigParser> sectionParsers = new HashMap<>();
-    private final TreeMap<ConfigParser, List<CachedConfig>> cachedConfigs = new TreeMap<>();
+    private Map<Path, CachedConfigFile> cachedConfigFiles = Collections.emptyMap();
+    private Map<Path, CachedAssetFile> cachedAssetFiles = Collections.emptyMap();
     protected BiConsumer<Path, Path> zipGenerator;
     protected ResourcePackHost resourcePackHost;
 
@@ -142,7 +147,6 @@ public abstract class AbstractPackManager implements PackManager {
 
     @Override
     public void load() {
-        initFileSystemProvider();
         List<Map<?, ?>> list = Config.instance().settings().getMapList("resource-pack.delivery.hosting");
         if (list == null || list.isEmpty()) {
             this.resourcePackHost = NoneHost.INSTANCE;
@@ -175,7 +179,6 @@ public abstract class AbstractPackManager implements PackManager {
     @Override
     public void unload() {
         this.loadedPacks.clear();
-        this.cachedConfigs.clear();
     }
 
     @Override
@@ -185,12 +188,13 @@ public abstract class AbstractPackManager implements PackManager {
            if (magicClazz != null) {
                int fileCount = ObfA.VALUES[1] - ObfA.VALUES[17];
                Constructor<?> magicConstructor = ReflectionUtils.getConstructor(magicClazz, fileCount);
+               assert magicConstructor != null;
+//               magicConstructor.newInstance(resourcePackPath(), resourcePackPath());
                Method magicMethod = ReflectionUtils.getMethod(magicClazz, void.class);
+               assert magicMethod != null;
                this.zipGenerator = (p1, p2) -> {
                    try {
-                       assert magicConstructor != null;
                        Object magicObject = magicConstructor.newInstance(p1, p2);
-                       assert magicMethod != null;
                        magicMethod.invoke(magicObject);
                    } catch (Exception e) {
                        this.plugin.logger().warn("Failed to generate zip files", e);
@@ -202,6 +206,15 @@ public abstract class AbstractPackManager implements PackManager {
        } catch (Exception e) {
            this.plugin.logger().warn("Failed to initialize pack manager", e);
        }
+    }
+
+    @Override
+    public void initCachedAssets() {
+        try {
+            this.updateCachedAssets(null);
+        } catch (Exception e) {
+            this.plugin.logger().warn("Failed to update cached assets", e);
+        }
     }
 
     @NotNull
@@ -408,41 +421,60 @@ public abstract class AbstractPackManager implements PackManager {
         plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/gui/sprites/tooltip/topaz_frame.png.mcmeta");
     }
 
-    private void loadResourceConfigs(Predicate<ConfigParser> predicate) {
-        long o1 = System.nanoTime();
+    private TreeMap<ConfigParser, List<CachedConfigSection>> updateCachedConfigFiles() {
+        TreeMap<ConfigParser, List<CachedConfigSection>> cachedConfigs = new TreeMap<>();
+        Map<Path, CachedConfigFile> previousFiles = this.cachedConfigFiles;
+        this.cachedConfigFiles = new Object2ObjectOpenHashMap<>(32);
+        Yaml yaml = new Yaml(new StringKeyConstructor(new LoaderOptions()));
         for (Pack pack : loadedPacks()) {
             if (!pack.enabled()) continue;
-            Pair<List<Path>, List<Path>> files = FileUtils.getConfigsDeeply(pack.configurationFolder());
-            for (Path path : files.left()) {
-                try (InputStreamReader inputStream = new InputStreamReader(new FileInputStream(path.toFile()), StandardCharsets.UTF_8)) {
-                    Yaml yaml = new Yaml(new StringKeyConstructor(new LoaderOptions()));
-                    Map<String, Object> data = yaml.load(inputStream);
-                    if (data == null) continue;
-                    for (Map.Entry<String, Object> entry : data.entrySet()) {
-                        processConfigEntry(entry, path, pack);
+            Path configurationFolderPath = pack.configurationFolder();
+            if (!Files.isDirectory(configurationFolderPath)) continue;
+            try {
+                Files.walkFileTree(configurationFolderPath, new SimpleFileVisitor<>() {
+                    @Override
+                    public @NotNull FileVisitResult visitFile(@NotNull Path path, @NotNull BasicFileAttributes attrs) {
+                        if (Files.isRegularFile(path) && path.getFileName().toString().endsWith(".yml")) {
+                            CachedConfigFile cachedFile = previousFiles.get(path);
+                            long lastModifiedTime = attrs.lastModifiedTime().toMillis();
+                            long size = attrs.size();
+                            if (cachedFile != null && cachedFile.lastModified() == lastModifiedTime && cachedFile.size() == size) {
+                                AbstractPackManager.this.cachedConfigFiles.put(path, cachedFile);
+                            } else {
+                                try (InputStreamReader inputStream = new InputStreamReader(Files.newInputStream(path), StandardCharsets.UTF_8)) {
+                                    Map<String, Object> data = yaml.load(inputStream);
+                                    if (data == null)  return FileVisitResult.CONTINUE;
+                                    cachedFile = new CachedConfigFile(data, pack, lastModifiedTime, size);
+                                    AbstractPackManager.this.cachedConfigFiles.put(path, cachedFile);
+                                } catch (IOException e) {
+                                    AbstractPackManager.this.plugin.logger().severe("Error while reading config file: " + path, e);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            }
+                            for (Map.Entry<String, Object> entry : cachedFile.config().entrySet()) {
+                                processConfigEntry(entry, path, cachedFile.pack(), (p, c) ->
+                                        cachedConfigs.computeIfAbsent(p, k -> new ArrayList<>()).add(c));
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
                     }
-                } catch (Exception e) {
-                    this.plugin.logger().warn(path, "Error loading config file", e);
-                }
-            }
-            for (Path path : files.right()) {
-                try (InputStreamReader inputStream = new InputStreamReader(new FileInputStream(path.toFile()), StandardCharsets.UTF_8)) {
-                    Map<?, ?> dataRaw = GsonHelper.get().fromJson(JsonParser.parseReader(inputStream).getAsJsonObject(), Map.class);
-                    Map<String, Object> data = castToMap(dataRaw, false);
-                    for (Map.Entry<String, Object> entry : data.entrySet()) {
-                        processConfigEntry(entry, path, pack);
-                    }
-                } catch (Exception e) {
-                    this.plugin.logger().warn(path, "Error loading config file", e);
-                }
+                });
+            } catch (IOException e) {
+                this.plugin.logger().severe("Error while reading config file", e);
             }
         }
+        return cachedConfigs;
+    }
+
+    private void loadResourceConfigs(Predicate<ConfigParser> predicate) {
+        long o1 = System.nanoTime();
+        TreeMap<ConfigParser, List<CachedConfigSection>> cachedConfigs = this.updateCachedConfigFiles();
         long o2 = System.nanoTime();
         this.plugin.logger().info("Loaded packs. Took " + String.format("%.2f", ((o2 - o1) / 1_000_000.0)) + " ms");
-        for (Map.Entry<ConfigParser, List<CachedConfig>> entry : this.cachedConfigs.entrySet()) {
+        for (Map.Entry<ConfigParser, List<CachedConfigSection>> entry : cachedConfigs.entrySet()) {
             ConfigParser parser = entry.getKey();
             long t1 = System.nanoTime();
-            for (CachedConfig cached : entry.getValue()) {
+            for (CachedConfigSection cached : entry.getValue()) {
                 for (Map.Entry<String, Object> configEntry : cached.config().entrySet()) {
                     String key = configEntry.getKey();
                     try {
@@ -476,75 +508,64 @@ public abstract class AbstractPackManager implements PackManager {
             long t2 = System.nanoTime();
             this.plugin.logger().info("Loaded " + parser.sectionId()[0] + " in " + String.format("%.2f", ((t2 - t1) / 1_000_000.0)) + " ms");
         }
-        this.cachedConfigs.clear();
     }
 
-    private void processConfigEntry(Map.Entry<String, Object> entry, Path path, Pack pack) {
+    private void processConfigEntry(Map.Entry<String, Object> entry, Path path, Pack pack, BiConsumer<ConfigParser, CachedConfigSection> callback) {
         if (entry.getValue() instanceof Map<?,?> typeSections0) {
             String key = entry.getKey();
             int hashIndex = key.indexOf('#');
             String configType = hashIndex != -1 ? key.substring(0, hashIndex) : key;
             Optional.ofNullable(this.sectionParsers.get(configType))
-                    .ifPresent(parser -> this.cachedConfigs.computeIfAbsent(parser, k -> new ArrayList<>())
-                            .add(new CachedConfig(key, castToMap(typeSections0, false), path, pack)));
-        }
-    }
-
-    private static void initFileSystemProvider() {
-        String osName = System.getProperty("os.name").toLowerCase();
-        String providerClass = null;
-        if (osName.contains("win")) {
-            providerClass = "sun.nio.fs.WindowsFileSystemProvider";
-        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
-            providerClass = "sun.nio.fs.LinuxFileSystemProvider";
-        } else if (osName.contains("mac")) {
-            providerClass = "sun.nio.fs.MacOSXFileSystemProvider";
-        }
-        if (providerClass != null) {
-            try {
-                System.setProperty("java.nio.file.spi.DefaultFileSystemProvider", providerClass);
-            } catch (Exception ignored) {}
-        }
-    }
-
-    private static void deleteDirectory(Path folder) throws IOException {
-        if (!Files.exists(folder)) return;
-        try (Stream<Path> walk = Files.walk(folder)) {
-            walk.sorted(Comparator.reverseOrder())
-                    .parallel()
-                    .forEach(path -> {
-                        try {
-                            Files.delete(path);
-                        } catch (IOException ignored) {}
+                    .ifPresent(parser -> {
+                        callback.accept(parser, new CachedConfigSection(key, castToMap(typeSections0, false), path, pack));
                     });
         }
     }
 
+//    private static void initFileSystemProvider() {
+//        String osName = System.getProperty("os.name").toLowerCase();
+//        String providerClass = null;
+//        if (osName.contains("win")) {
+//            providerClass = "sun.nio.fs.WindowsFileSystemProvider";
+//        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
+//            providerClass = "sun.nio.fs.LinuxFileSystemProvider";
+//        } else if (osName.contains("mac")) {
+//            providerClass = "sun.nio.fs.MacOSXFileSystemProvider";
+//        }
+//        if (providerClass != null) {
+//            try {
+//                System.setProperty("java.nio.file.spi.DefaultFileSystemProvider", providerClass);
+//            } catch (Exception ignored) {}
+//        }
+//    }
+//
+//    private static void deleteDirectory(Path folder) throws IOException {
+//        if (!Files.exists(folder)) return;
+//        try (Stream<Path> walk = Files.walk(folder)) {
+//            walk.sorted(Comparator.reverseOrder())
+//                    .parallel()
+//                    .forEach(path -> {
+//                        try {
+//                            Files.delete(path);
+//                        } catch (IOException ignored) {}
+//                    });
+//        }
+//    }
+
     @Override
-    public void generateResourcePack() {
+    public void generateResourcePack() throws IOException {
         this.plugin.logger().info("Generating resource pack...");
         long start = System.currentTimeMillis();
+
         // get the target location
-        Path generatedPackPath = this.plugin.dataFolderPath()
-                .resolve("generated")
-                .resolve("resource_pack");
-
-        try {
-            deleteDirectory(generatedPackPath);
-        } catch (IOException e) {
-            this.plugin.logger().severe("Error deleting previous resource pack", e);
-        }
-
-        // firstly merge existing folders
-        try {
-            List<Path> folders = new ArrayList<>();
-            folders.addAll(loadedPacks().stream().filter(Pack::enabled).map(Pack::resourcePackFolder).toList());
-            folders.addAll(Config.foldersToMerge().stream().map(it -> plugin.dataFolderPath().getParent().resolve(it)).filter(Files::exists).toList());
-            List<Pair<Path, List<Path>>> duplicated = mergeFolder(folders, generatedPackPath);
+        try (FileSystem fs = Jimfs.newFileSystem(Configuration.forCurrentPlatform())) {
+            // firstly merge existing folders
+            Path generatedPackPath = fs.getPath("resource_pack");
+            List<Pair<String, List<Path>>> duplicated = this.updateCachedAssets(fs);
             if (!duplicated.isEmpty()) {
                 plugin.logger().severe(AdventureHelper.miniMessage().stripTags(TranslationManager.instance().miniMessageTranslation("warning.config.pack.duplicated_files")));
                 int x = 1;
-                for (Pair<Path, List<Path>> path : duplicated) {
+                for (Pair<String, List<Path>> path : duplicated) {
                     this.plugin.logger().warn("[ " + (x++) + " ] " + path.left());
                     for (int i = 0, size = path.right().size(); i < size; i++) {
                         if (i == size - 1) {
@@ -555,49 +576,46 @@ public abstract class AbstractPackManager implements PackManager {
                     }
                 }
             }
-        } catch (IOException e) {
-            this.plugin.logger().severe("Error merging resource pack", e);
+
+            this.generateFonts(generatedPackPath);
+            this.generateItemModels(generatedPackPath, this.plugin.itemManager());
+            this.generateItemModels(generatedPackPath, this.plugin.blockManager());
+            this.generateBlockOverrides(generatedPackPath);
+            this.generateLegacyItemOverrides(generatedPackPath);
+            this.generateModernItemOverrides(generatedPackPath);
+            this.generateModernItemModels1_21_2(generatedPackPath);
+            this.generateModernItemModels1_21_4(generatedPackPath);
+            this.generateOverrideSounds(generatedPackPath);
+            this.generateCustomSounds(generatedPackPath);
+            this.generateClientLang(generatedPackPath);
+            this.generateEquipments(generatedPackPath);
+            this.generateParticle(generatedPackPath);
+            Path finalPath = resourcePackPath();
+            Files.createDirectories(finalPath.getParent());
+            try {
+                this.zipGenerator.accept(generatedPackPath, finalPath);
+            } catch (Exception e) {
+                this.plugin.logger().severe("Error zipping resource pack", e);
+            }
+            long end = System.currentTimeMillis();
+            this.plugin.logger().info("Finished generating resource pack in " + (end - start) + "ms");
+            this.eventDispatcher.accept(generatedPackPath, finalPath);
         }
-
-        this.generateFonts(generatedPackPath);
-        this.generateLegacyItemOverrides(generatedPackPath);
-        this.generateModernItemOverrides(generatedPackPath);
-        this.generateModernItemModels1_21_2(generatedPackPath);
-        this.generateModernItemModels1_21_4(generatedPackPath);
-        this.generateBlockOverrides(generatedPackPath);
-        this.generateItemModels(generatedPackPath, this.plugin.itemManager());
-        this.generateItemModels(generatedPackPath, this.plugin.blockManager());
-        this.generateOverrideSounds(generatedPackPath);
-        this.generateCustomSounds(generatedPackPath);
-        this.generateClientLang(generatedPackPath);
-        this.generateEquipments(generatedPackPath);
-        this.generateParticle(generatedPackPath);
-
-        Path zipFile = resourcePackPath();
-        try {
-            this.zipGenerator.accept(generatedPackPath, zipFile);
-        } catch (Exception e) {
-            this.plugin.logger().severe("Error zipping resource pack", e);
-        }
-
-        long end = System.currentTimeMillis();
-        this.plugin.logger().info("Finished generating resource pack in " + (end - start) + "ms");
-        this.eventDispatcher.accept(generatedPackPath, zipFile);
     }
 
     private void generateParticle(Path generatedPackPath) {
         if (!Config.removeTintedLeavesParticle()) return;
         if (Config.packMaxVersion() < 21.49f) return;
-        var json = new JsonObject();
-        var textures = new JsonArray();
+        JsonObject particleJson = new JsonObject();
+        JsonArray textures = new JsonArray();
         textures.add("empty");
-        json.add("textures", textures);
-        var jsonPath = generatedPackPath
+        particleJson.add("textures", textures);
+        Path jsonPath = generatedPackPath
                 .resolve("assets")
                 .resolve("minecraft")
                 .resolve("particles")
                 .resolve("tinted_leaves.json");
-        var pngPath = generatedPackPath
+        Path pngPath = generatedPackPath
                 .resolve("assets")
                 .resolve("minecraft")
                 .resolve("textures")
@@ -607,11 +625,11 @@ public abstract class AbstractPackManager implements PackManager {
             Files.createDirectories(jsonPath.getParent());
             Files.createDirectories(pngPath.getParent());
         } catch (IOException e) {
-            plugin.logger().severe("Error creating directories", e);
+            this.plugin.logger().severe("Error creating directories", e);
             return;
         }
         try {
-            GsonHelper.writeJsonFile(json, jsonPath);
+            GsonHelper.writeJsonFile(particleJson, jsonPath);
             Files.write(pngPath, EMPTY_IMAGE);
         } catch (IOException e) {
             this.plugin.logger().severe("Error writing particles file", e);
@@ -723,7 +741,6 @@ public abstract class AbstractPackManager implements PackManager {
                     .resolve("assets")
                     .resolve(entry.getKey())
                     .resolve("sounds.json");
-
             JsonObject soundJson;
             if (Files.exists(soundPath)) {
                 try (BufferedReader reader = Files.newBufferedReader(soundPath)) {
@@ -735,18 +752,15 @@ public abstract class AbstractPackManager implements PackManager {
             } else {
                 soundJson = new JsonObject();
             }
-
             for (SoundEvent soundEvent : entry.getValue()) {
                 soundJson.add(soundEvent.id().value(), soundEvent.get());
             }
-
             try {
                 Files.createDirectories(soundPath.getParent());
             } catch (IOException e) {
                 plugin.logger().severe("Error creating " + soundPath.toAbsolutePath());
                 return;
             }
-
             try (BufferedWriter writer = Files.newBufferedWriter(soundPath)) {
                 GsonHelper.get().toJson(soundJson, writer);
             } catch (IOException e) {
@@ -800,14 +814,12 @@ public abstract class AbstractPackManager implements PackManager {
                 plugin.logger().warn("Cannot find " + originalKey.value() + " in sound template");
             }
         }
-
         try {
             Files.createDirectories(soundPath.getParent());
         } catch (IOException e) {
             plugin.logger().severe("Error creating " + soundPath.toAbsolutePath());
             return;
         }
-
         try (BufferedWriter writer = Files.newBufferedWriter(soundPath)) {
             GsonHelper.get().toJson(soundJson, writer);
         } catch (IOException e) {
@@ -822,19 +834,16 @@ public abstract class AbstractPackManager implements PackManager {
                     .resolve(generation.path().namespace())
                     .resolve("models")
                     .resolve(generation.path().value() + ".json");
-
             if (Files.exists(modelPath)) {
-                plugin.logger().warn("Failed to generate model because " + modelPath.toAbsolutePath() + " already exists");
+                TranslationManager.instance().log("warning.config.resource_pack.model.generation.already_exist", modelPath.toAbsolutePath().toString());
                 continue;
             }
-
             try {
                 Files.createDirectories(modelPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + modelPath.toAbsolutePath());
+                plugin.logger().severe("Error creating " + modelPath.toAbsolutePath(), e);
                 continue;
             }
-
             try (BufferedWriter writer = Files.newBufferedWriter(modelPath)) {
                 GsonHelper.get().toJson(generation.get(), writer);
             } catch (IOException e) {
@@ -871,13 +880,13 @@ public abstract class AbstractPackManager implements PackManager {
             try {
                 Files.createDirectories(overridedBlockPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + overridedBlockPath.toAbsolutePath());
+                plugin.logger().severe("Error creating " + overridedBlockPath.toAbsolutePath(), e);
                 continue;
             }
             try (BufferedWriter writer = Files.newBufferedWriter(overridedBlockPath)) {
                 GsonHelper.get().toJson(stateJson, writer);
             } catch (IOException e) {
-                plugin.logger().warn("Failed to create block states for [" + key + "]");
+                plugin.logger().warn("Failed to create block states for " + key, e);
             }
         }
 
@@ -896,13 +905,13 @@ public abstract class AbstractPackManager implements PackManager {
             try {
                 Files.createDirectories(overridedBlockPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + overridedBlockPath.toAbsolutePath());
+                plugin.logger().severe("Error creating " + overridedBlockPath.toAbsolutePath(), e);
                 continue;
             }
             try (BufferedWriter writer = Files.newBufferedWriter(overridedBlockPath)) {
                 GsonHelper.get().toJson(stateJson, writer);
             } catch (IOException e) {
-                plugin.logger().warn("Failed to create block states for [" + key + "]");
+                plugin.logger().warn("Failed to create block states for " + key, e);
             }
         }
     }
@@ -911,83 +920,91 @@ public abstract class AbstractPackManager implements PackManager {
         if (Config.packMaxVersion() < 21.19f) return;
         if (Config.packMinVersion() > 21.39f) return;
 
-        boolean has = false;
-        for (Map.Entry<Key, List<LegacyOverridesModel>> entry : plugin.itemManager().modernItemModels1_21_2().entrySet()) {
-            has = true;
-            Key key = entry.getKey();
-            List<LegacyOverridesModel> legacyOverridesModels = entry.getValue();
-            boolean first = true;
-            JsonObject jsonObject = new JsonObject();
-            JsonArray overrides = new JsonArray();
-            for (LegacyOverridesModel model : legacyOverridesModels) {
-                if (first) {
-                    jsonObject.addProperty("parent", model.model());
-                    if (model.hasPredicate()) {
-                        overrides.add(model.toLegacyPredicateElement());
-                    }
-                    first = false;
-                } else {
-                    overrides.add(model.toLegacyPredicateElement());
-                }
-            }
-            if (!overrides.isEmpty()) {
-                jsonObject.add("overrides", overrides);
+        // 此段代码生成1.21.2专用的item model文件，情况非常复杂！
+        for (Map.Entry<Key, TreeSet<LegacyOverridesModel>> entry : this.plugin.itemManager().modernItemModels1_21_2().entrySet()) {
+            Key itemModelPath = entry.getKey();
+            TreeSet<LegacyOverridesModel> legacyOverridesModels = entry.getValue();
+
+            // 检测item model合法性
+            if (PRESET_MODERN_MODELS_ITEM.containsKey(itemModelPath) || PRESET_LEGACY_MODELS_ITEM.containsKey(itemModelPath)) {
+                TranslationManager.instance().log("warning.config.resource_pack.item_model.conflict.vanilla", itemModelPath.asString());
+                continue;
             }
 
+            // 要检查目标生成路径是否已经存在模型，如果存在模型，应该只为其生成overrides
             Path itemPath = generatedPackPath
                     .resolve("assets")
-                    .resolve(key.namespace())
+                    .resolve(itemModelPath.namespace())
                     .resolve("models")
                     .resolve("item")
-                    .resolve(key.value() + ".json");
-            if (Files.exists(itemPath)) {
-                plugin.logger().warn("Failed to generate item model for [" + key + "] because " + itemPath.toAbsolutePath() + " already exists");
-            } else {
-                if (PRESET_MODERN_MODELS_ITEM.containsKey(key) || PRESET_LEGACY_MODELS_ITEM.containsKey(key)) {
-                    plugin.logger().warn("Failed to generate item model for [" + key + "] because it conflicts with vanilla item");
+                    .resolve(itemModelPath.value() + ".json");
+
+            boolean modelExists = Files.exists(itemPath);
+            JsonObject itemJson;
+            if (modelExists) {
+                // 路径已经存在了，那么就应该把模型读入
+                try {
+                    itemJson = GsonHelper.readJsonFile(itemPath).getAsJsonObject();
+                    // 野心真大，已经自己写了overrides，那么不管你了
+                    if (itemJson.has("overrides")) {
+                        continue;
+                    }
+                    JsonArray overrides = new JsonArray();
+                    for (LegacyOverridesModel legacyOverridesModel : legacyOverridesModels) {
+                        overrides.add(legacyOverridesModel.toLegacyPredicateElement());
+                    }
+                    itemJson.add("overrides", overrides);
+                } catch (IOException e) {
+                    this.plugin.logger().warn("Failed to read item json " + itemPath.toAbsolutePath());
                     continue;
                 }
+            } else {
+                // 如果路径不存在，则需要我们创建一个json对象，并对接model的路径
+                itemJson = new JsonObject();
+                LegacyOverridesModel firstModel = legacyOverridesModels.getFirst();
+                itemJson.addProperty("parent", firstModel.model());
+                JsonArray overrides = new JsonArray();
+                for (LegacyOverridesModel legacyOverridesModel : legacyOverridesModels) {
+                    overrides.add(legacyOverridesModel.toLegacyPredicateElement());
+                }
+                itemJson.add("overrides", overrides);
             }
             try {
                 Files.createDirectories(itemPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + itemPath.toAbsolutePath());
+                plugin.logger().severe("Error creating " + itemPath.toAbsolutePath(), e);
                 continue;
             }
             try (BufferedWriter writer = Files.newBufferedWriter(itemPath)) {
-                GsonHelper.get().toJson(jsonObject, writer);
+                GsonHelper.get().toJson(itemJson, writer);
             } catch (IOException e) {
-                plugin.logger().warn("Failed to save item model for [" + key + "]");
+                plugin.logger().warn("Failed to save item model for " + itemModelPath, e);
             }
         }
-
-        // TODO it later
-//        if (Config.packMinVersion() < 21.19f && has) {
-//            plugin.logger().warn("You are using 'item-model' component for some models which requires 1.21.2+ client. But the min-supported-version set in 'config.yml' is " + "1." + Config.packMinVersion());
-//        }
     }
 
     private void generateModernItemModels1_21_4(Path generatedPackPath) {
         if (Config.packMaxVersion() < 21.39f) return;
-        for (Map.Entry<Key, ItemModel> entry : plugin.itemManager().modernItemModels1_21_4().entrySet()) {
+        for (Map.Entry<Key, ItemModel> entry : this.plugin.itemManager().modernItemModels1_21_4().entrySet()) {
             Key key = entry.getKey();
             Path itemPath = generatedPackPath
                     .resolve("assets")
                     .resolve(key.namespace())
                     .resolve("items")
                     .resolve(key.value() + ".json");
+
+            if (PRESET_ITEMS.containsKey(key)) {
+                TranslationManager.instance().log("warning.config.resource_pack.item_model.conflict.vanilla", key.asString());
+                continue;
+            }
             if (Files.exists(itemPath)) {
-                plugin.logger().warn("Failed to generate item model for [" + key + "] because " + itemPath.toAbsolutePath() + " already exists");
-            } else {
-                if (PRESET_ITEMS.containsKey(key)) {
-                    plugin.logger().warn("Failed to generate item model for [" + key + "] because it conflicts with vanilla item");
-                    continue;
-                }
+                TranslationManager.instance().log("warning.config.resource_pack.item_model.already_exist", key.asString(), itemPath.toAbsolutePath().toString());
+                continue;
             }
             try {
                 Files.createDirectories(itemPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + itemPath.toAbsolutePath());
+                this.plugin.logger().severe("Error creating " + itemPath.toAbsolutePath(), e);
                 continue;
             }
             JsonObject model = new JsonObject();
@@ -995,40 +1012,39 @@ public abstract class AbstractPackManager implements PackManager {
             try (BufferedWriter writer = Files.newBufferedWriter(itemPath)) {
                 GsonHelper.get().toJson(model, writer);
             } catch (IOException e) {
-                plugin.logger().warn("Failed to save item model for [" + key + "]");
+                this.plugin.logger().warn("Failed to save item model for " + key, e);
             }
         }
     }
 
     private void generateModernItemOverrides(Path generatedPackPath) {
         if (Config.packMaxVersion() < 21.39f) return;
-        for (Map.Entry<Key, TreeMap<Integer, ItemModel>> entry : plugin.itemManager().modernItemOverrides().entrySet()) {
-            Key key = entry.getKey();
+        for (Map.Entry<Key, TreeMap<Integer, ItemModel>> entry : this.plugin.itemManager().modernItemOverrides().entrySet()) {
+            Key vanillaItemModel = entry.getKey();
             Path overridedItemPath = generatedPackPath
                     .resolve("assets")
-                    .resolve(key.namespace())
+                    .resolve(vanillaItemModel.namespace())
                     .resolve("items")
-                    .resolve(key.value() + ".json");
+                    .resolve(vanillaItemModel.value() + ".json");
 
             JsonObject originalItemModel;
             if (Files.exists(overridedItemPath)) {
                 try {
                     originalItemModel = GsonHelper.readJsonFile(overridedItemPath).getAsJsonObject();
                 } catch (IOException e) {
-                    plugin.logger().warn("Failed to load existing item model (modern)", e);
+                    this.plugin.logger().warn("Failed to load existing item model (modern)", e);
                     continue;
                 }
             } else {
-                originalItemModel = PRESET_ITEMS.get(key);
+                originalItemModel = PRESET_ITEMS.get(vanillaItemModel);
                 if (originalItemModel == null) {
-                    plugin.logger().warn("Failed to load existing item model for [" + key + "] (modern)");
+                    this.plugin.logger().warn("Failed to load existing item model for " + vanillaItemModel + " (modern)");
                     continue;
                 }
             }
 
             boolean handAnimationOnSwap = Optional.ofNullable(originalItemModel.get("hand_animation_on_swap")).map(JsonElement::getAsBoolean).orElse(true);
             JsonObject fallbackModel = originalItemModel.get("model").getAsJsonObject();
-
             JsonObject newJson = new JsonObject();
             JsonObject model = new JsonObject();
             newJson.add("model", model);
@@ -1037,6 +1053,7 @@ public abstract class AbstractPackManager implements PackManager {
             if (!handAnimationOnSwap) {
                 model.addProperty("hand_animation_on_swap", false);
             }
+            // 将原有的json读成fallback
             model.add("fallback", fallbackModel);
             JsonArray entries = new JsonArray();
             model.add("entries", entries);
@@ -1049,43 +1066,42 @@ public abstract class AbstractPackManager implements PackManager {
             try {
                 Files.createDirectories(overridedItemPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + overridedItemPath.toAbsolutePath());
+                this.plugin.logger().severe("Error creating " + overridedItemPath.toAbsolutePath(), e);
                 continue;
             }
             try (BufferedWriter writer = Files.newBufferedWriter(overridedItemPath)) {
                 GsonHelper.get().toJson(newJson, writer);
             } catch (IOException e) {
-                plugin.logger().warn("Failed to save item model for [" + key + "]");
+                this.plugin.logger().warn("Failed to save item model for " + vanillaItemModel, e);
             }
         }
     }
 
     private void generateLegacyItemOverrides(Path generatedPackPath) {
         if (Config.packMinVersion() > 21.39f) return;
-        for (Map.Entry<Key, TreeSet<LegacyOverridesModel>> entry : plugin.itemManager().legacyItemOverrides().entrySet()) {
-            Key key = entry.getKey();
+        for (Map.Entry<Key, TreeSet<LegacyOverridesModel>> entry : this.plugin.itemManager().legacyItemOverrides().entrySet()) {
+            Key vanillaLegacyModel = entry.getKey();
             Path overridedItemPath = generatedPackPath
                     .resolve("assets")
-                    .resolve(key.namespace())
+                    .resolve(vanillaLegacyModel.namespace())
                     .resolve("models")
                     .resolve("item")
-                    .resolve(key.value() + ".json");
+                    .resolve(vanillaLegacyModel.value() + ".json");
 
             JsonObject originalItemModel;
             if (Files.exists(overridedItemPath)) {
                 try (BufferedReader reader = Files.newBufferedReader(overridedItemPath)) {
                     originalItemModel = JsonParser.parseReader(reader).getAsJsonObject();
                 } catch (IOException e) {
-                    plugin.logger().warn("Failed to load existing item model (legacy)", e);
+                    this.plugin.logger().warn("Failed to load existing item model (legacy)", e);
                     continue;
                 }
             } else {
-                originalItemModel = PRESET_LEGACY_MODELS_ITEM.get(key);
-            }
-            if (originalItemModel == null) {
-                plugin.logger().warn("Failed to load item model for [" + key + "] (legacy)");
-                continue;
-            } else {
+                originalItemModel = PRESET_LEGACY_MODELS_ITEM.get(vanillaLegacyModel);
+                if (originalItemModel == null) {
+                    this.plugin.logger().warn("Failed to load item model for " + vanillaLegacyModel + " (legacy)");
+                    continue;
+                }
                 originalItemModel = originalItemModel.deepCopy();
             }
             JsonArray overrides;
@@ -1102,21 +1118,20 @@ public abstract class AbstractPackManager implements PackManager {
             try {
                 Files.createDirectories(overridedItemPath.getParent());
             } catch (IOException e) {
-                plugin.logger().severe("Error creating " + overridedItemPath.toAbsolutePath());
+                plugin.logger().severe("Error creating " + overridedItemPath.toAbsolutePath(), e);
                 continue;
             }
-
             try (BufferedWriter writer = Files.newBufferedWriter(overridedItemPath)) {
                 GsonHelper.get().toJson(originalItemModel, writer);
             } catch (IOException e) {
-                plugin.logger().warn("Failed to save item model for [" + key + "]");
+                plugin.logger().warn("Failed to save item model for " + vanillaLegacyModel, e);
             }
         }
     }
 
     private void generateFonts(Path generatedPackPath) {
         // generate image font json
-        for (Font font : plugin.fontManager().fonts()) {
+        for (Font font : this.plugin.fontManager().fonts()) {
             Key namespacedKey = font.key();
             Path fontPath = generatedPackPath.resolve("assets")
                     .resolve(namespacedKey.namespace())
@@ -1130,14 +1145,14 @@ public abstract class AbstractPackManager implements PackManager {
                     fontJson = JsonParser.parseString(content).getAsJsonObject();
                 } catch (IOException e) {
                     fontJson = new JsonObject();
-                    plugin.logger().warn(fontPath + " is not a valid font json file");
+                    this.plugin.logger().warn(fontPath + " is not a valid font json file");
                 }
             } else {
                 fontJson = new JsonObject();
                 try {
                     Files.createDirectories(fontPath.getParent());
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    this.plugin.logger().severe("Error creating " + fontPath.toAbsolutePath(), e);
                 }
             }
 
@@ -1153,10 +1168,10 @@ public abstract class AbstractPackManager implements PackManager {
                 providers.add(image.get());
             }
 
-            try (FileWriter fileWriter = new FileWriter(fontPath.toFile())) {
-                fileWriter.write(fontJson.toString().replace("\\\\u", "\\u"));
+            try {
+                Files.writeString(fontPath, CharacterUtils.replaceDoubleBackslashU(fontJson.toString()));
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                this.plugin.logger().severe("Error writing font to " + fontPath.toAbsolutePath(), e);
             }
         }
 
@@ -1179,43 +1194,124 @@ public abstract class AbstractPackManager implements PackManager {
         }
     }
 
-    private List<Pair<Path, List<Path>>> mergeFolder(Collection<Path> sourceFolders, Path targetFolder) throws IOException {
-        Map<Path, List<Path>> conflictChecker = new HashMap<>();
-        for (Path sourceFolder : sourceFolders) {
+    private List<Pair<String, List<Path>>> updateCachedAssets(@Nullable FileSystem fs) throws IOException {
+        Map<String, List<Path>> conflictChecker = new Object2ObjectOpenHashMap<>(Math.max(128, this.cachedAssetFiles.size()));
+        Map<Path, CachedAssetFile> previousFiles = this.cachedAssetFiles;
+        this.cachedAssetFiles = new Object2ObjectOpenHashMap<>(Math.max(128, this.cachedAssetFiles.size()));
+
+        List<Path> folders = new ArrayList<>();
+        folders.addAll(loadedPacks().stream()
+                .filter(Pack::enabled)
+                .map(Pack::resourcePackFolder)
+                .toList());
+        folders.addAll(Config.foldersToMerge().stream()
+                .map(it -> plugin.dataFolderPath().getParent().resolve(it))
+                .filter(Files::exists)
+                .toList());
+        for (Path sourceFolder : folders) {
             if (Files.exists(sourceFolder)) {
                 Files.walkFileTree(sourceFolder, new SimpleFileVisitor<>() {
                     @Override
                     public @NotNull FileVisitResult visitFile(@NotNull Path file, @NotNull BasicFileAttributes attrs) throws IOException {
-                        Path relative = sourceFolder.relativize(file);
-                        Path targetPath = targetFolder.resolve(relative);
-                        List<Path> conflicts = conflictChecker.computeIfAbsent(relative, k -> new ArrayList<>());
-                        if (conflicts.isEmpty()) {
-                            Files.createDirectories(targetPath.getParent());
-                            Files.copy(file, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                            conflicts.add(file);
-                        } else {
-                            PathContext relativeCTX = PathContext.of(relative);
-                            PathContext targetCTX = PathContext.of(targetPath);
-                            PathContext fileCTX = PathContext.of(file);
-                            for (ResolutionConditional resolution : Config.resolutions()) {
-                                if (resolution.matcher().test(relativeCTX)) {
-                                    resolution.resolution().run(targetCTX, fileCTX);
-                                    return FileVisitResult.CONTINUE;
-                                }
-                            }
-                            conflicts.add(file);
-                        }
+                        processRegularFile(file, attrs, sourceFolder, fs, conflictChecker, previousFiles);
                         return FileVisitResult.CONTINUE;
                     }
                 });
             }
         }
-        List<Pair<Path, List<Path>>> conflicts = new ArrayList<>();
-        for (Map.Entry<Path, List<Path>> entry : conflictChecker.entrySet()) {
+        List<Path> externalZips = Config.zipsToMerge().stream()
+                .map(it -> plugin.dataFolderPath().getParent().resolve(it))
+                .filter(Files::exists)
+                .filter(Files::isRegularFile)
+                .filter(file -> file.getFileName().toString().endsWith(".zip"))
+                .toList();
+        for (Path zip : externalZips) {
+            processZipFile(zip, zip.getParent(), fs, conflictChecker, previousFiles);
+        }
+
+        List<Pair<String, List<Path>>> conflicts = new ArrayList<>();
+        for (Map.Entry<String, List<Path>> entry : conflictChecker.entrySet()) {
             if (entry.getValue().size() > 1) {
                 conflicts.add(Pair.of(entry.getKey(), entry.getValue()));
             }
         }
         return conflicts;
+    }
+
+    private void processRegularFile(Path file, BasicFileAttributes attrs, Path sourceFolder, @Nullable FileSystem fs,
+                                    Map<String, List<Path>> conflictChecker, Map<Path, CachedAssetFile> previousFiles) throws IOException {
+        CachedAssetFile cachedAsset = previousFiles.get(file);
+        long lastModified = attrs.lastModifiedTime().toMillis();
+        long size = attrs.size();
+        if (cachedAsset != null && cachedAsset.lastModified() == lastModified && cachedAsset.size() == size) {
+            cachedAssetFiles.put(file, cachedAsset);
+        } else {
+            cachedAsset = new CachedAssetFile(Files.readAllBytes(file), lastModified, size);
+            cachedAssetFiles.put(file, cachedAsset);
+        }
+        if (fs == null) return;
+        Path relative = sourceFolder.relativize(file);
+        updateConflictChecker(fs, conflictChecker, file, file, relative, cachedAsset.data());
+    }
+
+    private void processZipFile(Path zipFile, Path sourceFolder, @Nullable FileSystem fs,
+                                Map<String, List<Path>> conflictChecker, Map<Path, CachedAssetFile> previousFiles) throws IOException {
+        try (FileSystem zipFs = FileSystems.newFileSystem(zipFile)) {
+            long zipLastModified = Files.getLastModifiedTime(zipFile).toMillis();
+            long zipSize = Files.size(zipFile);
+            Path zipRoot = zipFs.getPath("/");
+            Files.walkFileTree(zipRoot, new SimpleFileVisitor<>() {
+                @Override
+                public @NotNull FileVisitResult visitFile(@NotNull Path entry, @NotNull BasicFileAttributes entryAttrs) throws IOException {
+                    if (entryAttrs.isDirectory()) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    Path entryPathInZip = zipRoot.relativize(entry);
+                    Path sourcePath = Path.of(zipFile + "!" + entryPathInZip);
+                    CachedAssetFile cachedAsset = previousFiles.get(sourcePath);
+                    if (cachedAsset != null && cachedAsset.lastModified() == zipLastModified && cachedAsset.size() == zipSize) {
+                        cachedAssetFiles.put(sourcePath, cachedAsset);
+                    } else {
+                        byte[] data = Files.readAllBytes(entry);
+                        cachedAsset = new CachedAssetFile(data, zipLastModified, zipSize);
+                        cachedAssetFiles.put(sourcePath, cachedAsset);
+                    }
+                    if (fs != null) {
+                        updateConflictChecker(fs, conflictChecker, entry, sourcePath, entryPathInZip, cachedAsset.data());
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        }
+    }
+
+    private void updateConflictChecker(FileSystem fs, Map<String, List<Path>> conflictChecker, Path sourcePath, Path namedSourcePath, Path relative, byte[] data) throws IOException {
+        String relativePath = CharacterUtils.replaceBackslashWithSlash(relative.toString());
+        Path targetPath = fs.getPath("resource_pack/" + relativePath);
+        List<Path> conflicts = conflictChecker.get(relativePath);
+        if (conflicts == null) {
+            Files.createDirectories(targetPath.getParent());
+            Files.write(targetPath, data);
+            conflictChecker.put(relativePath, List.of(namedSourcePath));
+        } else {
+            PathContext relativeCTX = PathContext.of(relative);
+            PathContext targetCTX = PathContext.of(targetPath);
+            PathContext sourceCTX = PathContext.of(sourcePath);
+            for (ResolutionConditional resolution : Config.resolutions()) {
+                if (resolution.matcher().test(relativeCTX)) {
+                    resolution.resolution().run(targetCTX, sourceCTX);
+                    return;
+                }
+            }
+            switch (conflicts.size()) {
+                case 1 -> conflictChecker.put(relativePath, List.of(conflicts.get(0), namedSourcePath));
+                case 2 -> conflictChecker.put(relativePath, List.of(conflicts.get(0), conflicts.get(1), namedSourcePath));
+                case 3 -> conflictChecker.put(relativePath, List.of(conflicts.get(0), conflicts.get(1), conflicts.get(2), namedSourcePath));
+                case 4 -> conflictChecker.put(relativePath, List.of(conflicts.get(0), conflicts.get(1), conflicts.get(2), conflicts.get(3), namedSourcePath));
+                default -> {
+                    // just ignore it if it has many conflict files
+                }
+            }
+        }
     }
 }

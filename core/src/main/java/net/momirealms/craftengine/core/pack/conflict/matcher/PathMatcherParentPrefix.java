@@ -4,6 +4,7 @@ import net.momirealms.craftengine.core.pack.conflict.PathContext;
 import net.momirealms.craftengine.core.plugin.context.Condition;
 import net.momirealms.craftengine.core.plugin.context.condition.ConditionFactory;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedException;
+import net.momirealms.craftengine.core.util.CharacterUtils;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 
@@ -21,7 +22,7 @@ public class PathMatcherParentPrefix implements Condition<PathContext> {
     public boolean test(PathContext path) {
         Path parent = path.path().getParent();
         if (parent == null) return false;
-        String pathStr = parent.toString().replace("\\", "/");
+        String pathStr = CharacterUtils.replaceBackslashWithSlash(parent.toString());
         return pathStr.startsWith(this.prefix);
     }
 

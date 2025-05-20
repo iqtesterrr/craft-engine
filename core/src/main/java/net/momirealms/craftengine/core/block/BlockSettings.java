@@ -42,6 +42,7 @@ public class BlockSettings {
     }
 
     public static BlockSettings fromMap(Map<String, Object> map) {
+        if (map == null || map.isEmpty()) return BlockSettings.of();
         return applyModifiers(BlockSettings.of(), map);
     }
 

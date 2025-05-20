@@ -127,7 +127,6 @@ public class LootTable<T> {
         }
     }
 
-    // TODO https://mo-mi.gitbook.io/xiaomomi-plugins/craftengine/plugin-wiki/craftengine/loot-system/flat-format
     public static <T> LootPool<T> readFlatFormatLootPool(String pool) {
         return null;
     }

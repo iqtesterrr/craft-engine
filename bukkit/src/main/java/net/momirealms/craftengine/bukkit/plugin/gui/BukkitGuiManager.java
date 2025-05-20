@@ -1,10 +1,13 @@
 package net.momirealms.craftengine.bukkit.plugin.gui;
 
+import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
-import net.momirealms.craftengine.core.plugin.gui.AbstractGui;
-import net.momirealms.craftengine.core.plugin.gui.Gui;
-import net.momirealms.craftengine.core.plugin.gui.GuiManager;
-import net.momirealms.craftengine.core.plugin.gui.Inventory;
+import net.momirealms.craftengine.bukkit.util.ComponentUtils;
+import net.momirealms.craftengine.bukkit.util.LegacyInventoryUtils;
+import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.core.plugin.CraftEngine;
+import net.momirealms.craftengine.core.plugin.gui.*;
+import net.momirealms.craftengine.core.util.VersionHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +16,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.inventory.MenuType;
 
 public class BukkitGuiManager implements GuiManager, Listener {
     private final BukkitCraftEngine plugin;
@@ -29,6 +33,47 @@ public class BukkitGuiManager implements GuiManager, Listener {
     @Override
     public void disable() {
         HandlerList.unregisterAll(this);
+    }
+
+    @SuppressWarnings("UnstableApiUsage")
+    @Override
+    public void openInventory(net.momirealms.craftengine.core.entity.player.Player player, GuiType guiType) {
+        Player bukkitPlayer = (Player) player.platformPlayer();
+        if (VersionHelper.isOrAbove1_21_4()) {
+            switch (guiType) {
+                case ANVIL -> MenuType.ANVIL.create(bukkitPlayer).open();
+                case LOOM -> MenuType.LOOM.create(bukkitPlayer).open();
+                case ENCHANTMENT -> MenuType.ENCHANTMENT.create(bukkitPlayer).open();
+                case CRAFTING -> MenuType.CRAFTING.create(bukkitPlayer).open();
+                case CARTOGRAPHY -> MenuType.CARTOGRAPHY_TABLE.create(bukkitPlayer).open();
+                case SMITHING -> MenuType.SMITHING.create(bukkitPlayer).open();
+                case GRINDSTONE -> MenuType.GRINDSTONE.create(bukkitPlayer).open();
+            }
+        } else {
+            switch (guiType) {
+                case ANVIL -> LegacyInventoryUtils.openAnvil(bukkitPlayer);
+                case LOOM -> LegacyInventoryUtils.openLoom(bukkitPlayer);
+                case GRINDSTONE -> LegacyInventoryUtils.openGrindstone(bukkitPlayer);
+                case SMITHING -> LegacyInventoryUtils.openSmithingTable(bukkitPlayer);
+                case CRAFTING -> LegacyInventoryUtils.openWorkbench(bukkitPlayer);
+                case ENCHANTMENT -> LegacyInventoryUtils.openEnchanting(bukkitPlayer);
+                case CARTOGRAPHY -> LegacyInventoryUtils.openCartographyTable(bukkitPlayer);
+            }
+        }
+    }
+
+    @Override
+    public void updateInventoryTitle(net.momirealms.craftengine.core.entity.player.Player player, Component component) {
+        Object nmsPlayer = player.serverPlayer();
+        try {
+            Object containerMenu = Reflections.field$Player$containerMenu.get(nmsPlayer);
+            int containerId = Reflections.field$AbstractContainerMenu$containerId.getInt(containerMenu);
+            Object menuType = Reflections.field$AbstractContainerMenu$menuType.get(containerMenu);
+            Object packet = Reflections.constructor$ClientboundOpenScreenPacket.newInstance(containerId, menuType, ComponentUtils.adventureToMinecraft(component));
+            player.sendPacket(packet, false);
+        } catch (Exception e) {
+            CraftEngine.instance().logger().warn("Failed to update inventory title", e);
+        }
     }
 
     @Override

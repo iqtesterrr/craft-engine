@@ -27,7 +27,7 @@ public interface ItemManager<T> extends Manageable, ModelGenerator {
 
     Map<Key, ItemModel> modernItemModels1_21_4();
 
-    Map<Key, List<LegacyOverridesModel>> modernItemModels1_21_2();
+    Map<Key, TreeSet<LegacyOverridesModel>> modernItemModels1_21_2();
 
     Collection<Key> vanillaItems();
 
@@ -67,6 +67,8 @@ public interface ItemManager<T> extends Manageable, ModelGenerator {
         return getVanillaItem(key);
     }
 
+    boolean addCustomItem(CustomItem<T> customItem);
+
     List<Holder<Key>> tagToItems(Key tag);
 
     List<Holder<Key>> tagToVanillaItems(Key tag);
@@ -80,4 +82,6 @@ public interface ItemManager<T> extends Manageable, ModelGenerator {
     Collection<Suggestion> cachedSuggestions();
 
     Collection<Suggestion> cachedTotemSuggestions();
+
+    boolean isVanillaItem(Key item);
 }

@@ -47,6 +47,7 @@ public abstract class AbstractFontManager implements FontManager {
 
     protected List<Emoji> emojiList;
     protected List<String> allEmojiSuggestions;
+    protected Set<Path> existingImagePaths = new HashSet<>();
 
     public AbstractFontManager(CraftEngine plugin) {
         this.plugin = plugin;
@@ -67,6 +68,7 @@ public abstract class AbstractFontManager implements FontManager {
         this.images.clear();
         this.illegalChars.clear();
         this.emojis.clear();
+        this.existingImagePaths.clear();
     }
 
     @Override
@@ -424,12 +426,12 @@ public abstract class AbstractFontManager implements FontManager {
                 throw new LocalizedResourceConfigException("warning.config.image.missing_file", path, id);
             }
 
-            String resourceLocation = file.toString().replace("\\", "/");
+            String resourceLocation = CharacterUtils.replaceBackslashWithSlash(file.toString());
             if (!ResourceLocation.isValid(resourceLocation)) {
                 throw new LocalizedResourceConfigException("warning.config.image.invalid_file_chars", path, id, resourceLocation);
             }
 
-            String fontName = (String) section.getOrDefault("font", "minecraft:default");
+            String fontName = section.getOrDefault("font", "minecraft:default").toString();
             if (!ResourceLocation.isValid(fontName)) {
                 throw new LocalizedResourceConfigException("warning.config.image.invalid_font_chars", path, id, fontName);
             }
@@ -437,10 +439,7 @@ public abstract class AbstractFontManager implements FontManager {
             Key fontKey = Key.withDefaultNamespace(fontName, id.namespace());
             Font font = getOrCreateFont(fontKey);
             List<char[]> chars;
-            Object charsObj = section.get("chars");
-            if (charsObj == null) {
-                charsObj = section.get("char");
-            }
+            Object charsObj = ResourceConfigUtils.get(section, "chars", "char");
             if (charsObj == null) {
                 throw new LocalizedResourceConfigException("warning.config.image.missing_char", path, id);
             }
@@ -516,7 +515,7 @@ public abstract class AbstractFontManager implements FontManager {
                     .resolve("textures")
                     .resolve(namespacedPath.value());
 
-            if (!Files.exists(targetImagePath)) {
+            if (!doesImageFileExist(targetImagePath)) {
                 TranslationManager.instance().log("warning.config.image.file_not_found", path.toString(), id.toString(), targetImagePath.toString());
                 // DO NOT RETURN, JUST GIVE WARNINGS
             } else if (heightObj == null) {
@@ -547,6 +546,17 @@ public abstract class AbstractFontManager implements FontManager {
             }
 
             images.put(id, bitmapImage);
+        }
+
+        private boolean doesImageFileExist(Path path) {
+            if (existingImagePaths.contains(path)) {
+                return true;
+            }
+            boolean exist = Files.exists(path);
+            if (exist) {
+                existingImagePaths.add(path);
+            }
+            return exist;
         }
     }
 }

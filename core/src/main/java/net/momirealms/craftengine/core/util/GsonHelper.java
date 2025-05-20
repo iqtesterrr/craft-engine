@@ -8,6 +8,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 public class GsonHelper {
@@ -99,6 +100,18 @@ public class GsonHelper {
             );
         } catch (JsonSyntaxException e) {
             throw new RuntimeException("Invalid JSON response: " + json, e);
+        }
+    }
+
+    public static JsonElement combine(List<? extends JsonElement> jo) {
+        if (jo.size() == 1) {
+            return jo.get(0);
+        } else {
+            JsonArray ja = new JsonArray();
+            for (JsonElement je : jo) {
+                ja.add(je);
+            }
+            return ja;
         }
     }
 }

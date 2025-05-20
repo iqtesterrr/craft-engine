@@ -24,7 +24,7 @@ public class BlockStateMatcher {
     }
 
     public boolean matches(ImmutableBlockState state) {
-        if (!state.owner().value().id.equals(this.id)) {
+        if (!state.owner().value().id().equals(this.id)) {
             return false;
         }
         for (Pair<Property<?>, Comparable<?>> pair : this.properties) {

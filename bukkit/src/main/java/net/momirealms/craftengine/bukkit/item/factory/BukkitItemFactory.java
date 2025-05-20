@@ -54,6 +54,7 @@ public abstract class BukkitItemFactory<W extends ItemWrapper<ItemStack>> extend
 
     @Override
     protected boolean isBlockItem(W item) {
+        // todo 这个 isBlockItem 他考虑组件了吗???
         return item.getItem().getType().isBlock();
     }
 

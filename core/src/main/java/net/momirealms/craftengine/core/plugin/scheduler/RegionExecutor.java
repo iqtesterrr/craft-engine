@@ -20,6 +20,10 @@ public interface RegionExecutor<W> extends Executor {
 
     SchedulerTask runAsyncLater(Runnable runnable, long delay);
 
+    default SchedulerTask runLater(Runnable runnable, long delay) {
+        return runLater(runnable, delay, null, 0 ,0);
+    }
+
     SchedulerTask runLater(Runnable runnable, long delay, W world, int x, int z);
 
     SchedulerTask runRepeating(Runnable runnable, long delay, long period, W world, int x, int z);

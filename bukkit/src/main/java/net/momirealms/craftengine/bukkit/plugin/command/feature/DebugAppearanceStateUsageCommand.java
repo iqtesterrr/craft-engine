@@ -51,7 +51,7 @@ public class DebugAppearanceStateUsageCommand extends BukkitCommandFeature<Comma
                     for (int appearance : appearances) {
                         Component text = Component.text("|");
                         List<Integer> reals = blockManager.appearanceToRealStates(appearance);
-                        if (reals == null) {
+                        if (reals == null || reals.isEmpty()) {
                             Component hover = Component.text(baseBlockId.value() + ":" + i).color(NamedTextColor.GREEN);
                             hover = hover.append(Component.newline()).append(Component.text(BlockStateUtils.fromBlockData(BlockStateUtils.idToBlockState(appearance)).getAsString()).color(NamedTextColor.GREEN));
                             text = text.color(NamedTextColor.GREEN).hoverEvent(HoverEvent.showText(hover));

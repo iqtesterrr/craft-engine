@@ -200,37 +200,155 @@ public class Dependencies {
             List.of(Relocation.of("snakeyaml", "org{}yaml{}snakeyaml"))
     );
 
+    public static final Dependency OPTION = new Dependency(
+            "option",
+            "net{}kyori",
+            "option",
+            "option",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    );
+
+    public static final Dependency ADVENTURE_API = new Dependency(
+            "adventure-api",
+            "net{}kyori",
+            "adventure-api",
+            "adventure-api",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    );
+
+    public static final Dependency ADVENTURE_KEY = new Dependency(
+            "adventure-key",
+            "net{}kyori",
+            "adventure-key",
+            "adventure-key",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
+
+    public static final Dependency EXAMINATION_API = new Dependency(
+            "examination-api",
+            "net{}kyori",
+            "examination-api",
+            "examination-api",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    );
+
+    public static final Dependency EXAMINATION_STRING = new Dependency(
+            "examination-string",
+            "net{}kyori",
+            "examination-string",
+            "examination-string",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return EXAMINATION_API.getVersion();
+        }
+    };
+
     public static final Dependency MINIMESSAGE = new Dependency(
             "adventure-text-minimessage",
             "net{}kyori",
             "adventure-text-minimessage",
             "adventure-text-minimessage",
-            List.of(Relocation.of("adventure", "net{}kyori{}adventure"))
-    );
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
+
+    public static final Dependency TEXT_SERIALIZER_COMMONS = new Dependency(
+            "adventure-text-serializer-commons",
+            "net{}kyori",
+            "adventure-text-serializer-commons",
+            "adventure-text-serializer-commons",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
 
     public static final Dependency TEXT_SERIALIZER_GSON = new Dependency(
             "adventure-text-serializer-gson",
             "net{}kyori",
             "adventure-text-serializer-gson",
             "adventure-text-serializer-gson",
-            List.of(Relocation.of("adventure", "net{}kyori{}adventure"))
-    );
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
 
     public static final Dependency TEXT_SERIALIZER_GSON_LEGACY = new Dependency(
             "adventure-text-serializer-json-legacy-impl",
             "net{}kyori",
             "adventure-text-serializer-json-legacy-impl",
             "adventure-text-serializer-json-legacy-impl",
-            List.of(Relocation.of("adventure", "net{}kyori{}adventure"))
-    );
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
+
+    public static final Dependency TEXT_SERIALIZER_LEGACY = new Dependency(
+            "adventure-text-serializer-legacy",
+            "net{}kyori",
+            "adventure-text-serializer-legacy",
+            "adventure-text-serializer-legacy",
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
 
     public static final Dependency TEXT_SERIALIZER_JSON = new Dependency(
             "adventure-text-serializer-json",
             "net{}kyori",
             "adventure-text-serializer-json",
             "adventure-text-serializer-json",
-            List.of(Relocation.of("adventure", "net{}kyori{}adventure"))
-    );
+            List.of(Relocation.of("option", "net{}kyori{}option"),
+                    Relocation.of("examination", "net{}kyori{}examination"),
+                    Relocation.of("adventure", "net{}kyori{}adventure"))
+    ) {
+        @Override
+        public String getVersion() {
+            return ADVENTURE_API.getVersion();
+        }
+    };
 
     public static final Dependency AHO_CORASICK = new Dependency(
             "ahocorasick",
@@ -278,6 +396,22 @@ public class Dependencies {
             "reactive-streams",
             "reactive-streams",
             List.of(Relocation.of("reactivestreams", "org{}reactivestreams"))
+    );
+
+    public static final Dependency JIMFS = new Dependency(
+            "jimfs",
+            "com{}google{}jimfs",
+            "jimfs",
+            "jimfs",
+            List.of(Relocation.of("jimfs", "com{}google{}common{}jimfs"))
+    );
+
+    public static final Dependency COMMONS_IMAGING = new Dependency(
+            "commons-imaging",
+            "org{}apache{}commons",
+            "commons-imaging",
+            "commons-imaging",
+            List.of(Relocation.of("imaging", "org{}apache{}commons{}imaging"))
     );
 
     public static final Dependency AMAZON_AWSSDK_S3 = new Dependency(

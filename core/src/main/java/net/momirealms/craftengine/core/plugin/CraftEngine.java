@@ -234,6 +234,7 @@ public abstract class CraftEngine implements Plugin {
             // set up some platform extra tasks
             this.platformDelayedEnable();
             this.isInitializing = false;
+            this.scheduler.executeAsync(() -> this.packManager.initCachedAssets());
         });
     }
 
@@ -305,11 +306,16 @@ public abstract class CraftEngine implements Plugin {
                 Dependencies.BYTE_BUDDY,
                 Dependencies.SNAKE_YAML,
                 Dependencies.BOOSTED_YAML,
+                Dependencies.OPTION,
+                Dependencies.EXAMINATION_API, Dependencies.EXAMINATION_STRING,
+                Dependencies.ADVENTURE_KEY, Dependencies.ADVENTURE_API,
                 Dependencies.MINIMESSAGE,
-                Dependencies.TEXT_SERIALIZER_GSON, Dependencies.TEXT_SERIALIZER_GSON_LEGACY, Dependencies.TEXT_SERIALIZER_JSON,
+                Dependencies.TEXT_SERIALIZER_COMMONS, Dependencies.TEXT_SERIALIZER_LEGACY, Dependencies.TEXT_SERIALIZER_GSON, Dependencies.TEXT_SERIALIZER_GSON_LEGACY, Dependencies.TEXT_SERIALIZER_JSON,
                 Dependencies.AHO_CORASICK,
                 Dependencies.LZ4,
-                Dependencies.EVALEX
+                Dependencies.EVALEX,
+                Dependencies.JIMFS,
+                Dependencies.COMMONS_IMAGING
         );
     }
 

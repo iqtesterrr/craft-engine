@@ -14,11 +14,11 @@ public class ComponentItemWrapper implements ItemWrapper<ItemStack> {
     private final ItemStack item;
 
     public ComponentItemWrapper(final ItemStack item) {
-        this.item = item;
+        this.item = FastNMS.INSTANCE.ensureCraftItemStack(item);
     }
 
     public ComponentItemWrapper(final ItemStack item, int count) {
-        this.item = item;
+        this.item = FastNMS.INSTANCE.ensureCraftItemStack(item);
         this.item.setAmount(count);
     }
 

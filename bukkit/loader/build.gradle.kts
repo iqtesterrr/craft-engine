@@ -1,6 +1,6 @@
 plugins {
-    id("com.gradleup.shadow") version "9.0.0-beta11"
-    id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
+    id("com.gradleup.shadow") version "9.0.0-beta13"
+    id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
 }
 
 repositories {
@@ -21,7 +21,6 @@ dependencies {
     implementation(project(":bukkit:compatibility"))
     implementation(project(":bukkit:compatibility:legacy"))
 
-    implementation("net.kyori:adventure-platform-bukkit:${rootProject.properties["adventure_platform_version"]}")
     implementation("com.saicone.rtag:rtag-item:${rootProject.properties["rtag_version"]}")
     implementation("net.momirealms:sparrow-util:${rootProject.properties["sparrow_util_version"]}")
     implementation("net.momirealms:antigrieflib:${rootProject.properties["anti_grief_version"]}")
@@ -60,7 +59,7 @@ artifacts {
 
 tasks {
     shadowJar {
-        archiveFileName = "${rootProject.name}-plugin-${rootProject.properties["project_version"]}.jar"
+        archiveFileName = "${rootProject.name}-bukkit-plugin-${rootProject.properties["project_version"]}.jar"
         destinationDirectory.set(file("$rootDir/target"))
         relocate("net.kyori", "net.momirealms.craftengine.libraries")
         relocate("net.momirealms.sparrow.nbt", "net.momirealms.craftengine.libraries.nbt")
@@ -78,5 +77,7 @@ tasks {
         relocate("net.jpountz", "net.momirealms.craftengine.libraries.jpountz")
         relocate("software.amazon.awssdk", "net.momirealms.craftengine.libraries.awssdk")
         relocate("software.amazon.eventstream", "net.momirealms.craftengine.libraries.eventstream")
+        relocate("com.google.common.jimfs", "net.momirealms.craftengine.libraries.jimfs")
+        relocate("org.apache.commons.imaging", "net.momirealms.craftengine.libraries.imaging")
     }
 }

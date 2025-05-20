@@ -2,8 +2,10 @@ package net.momirealms.craftengine.core.entity;
 
 import net.momirealms.craftengine.core.util.Direction;
 import net.momirealms.craftengine.core.util.Key;
-import net.momirealms.craftengine.core.world.Vec3d;
 import net.momirealms.craftengine.core.world.World;
+import net.momirealms.craftengine.core.world.WorldPosition;
+
+import java.util.UUID;
 
 public interface Entity {
     Key type();
@@ -14,7 +16,7 @@ public interface Entity {
 
     double z();
 
-    Vec3d position();
+    WorldPosition position();
 
     void tick();
 
@@ -29,4 +31,8 @@ public interface Entity {
     Direction getDirection();
 
     Object literalObject();
+
+    String name();
+
+    UUID uuid();
 }

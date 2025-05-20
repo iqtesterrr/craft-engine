@@ -31,7 +31,7 @@ public class BukkitInventory implements Inventory {
             Reflections.field$Player$containerMenu.set(nmsPlayer, menu);
             Reflections.method$ServerPlayer$initMenu.invoke(nmsPlayer, menu);
         } catch (Exception e) {
-            CraftEngine.instance().logger().warn("Failed to update inventory title", e);
+            CraftEngine.instance().logger().warn("Failed to create bukkit inventory", e);
         }
     }
 

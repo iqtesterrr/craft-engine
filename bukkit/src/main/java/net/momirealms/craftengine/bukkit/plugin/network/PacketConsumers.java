@@ -35,12 +35,13 @@ import net.momirealms.craftengine.core.pack.host.ResourcePackDownloadData;
 import net.momirealms.craftengine.core.pack.host.ResourcePackHost;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.config.Config;
+import net.momirealms.craftengine.core.plugin.context.ContextHolder;
+import net.momirealms.craftengine.core.plugin.context.PlayerOptionalContext;
+import net.momirealms.craftengine.core.plugin.context.event.EventTrigger;
+import net.momirealms.craftengine.core.plugin.context.parameter.DirectContextParameters;
 import net.momirealms.craftengine.core.plugin.network.*;
 import net.momirealms.craftengine.core.util.*;
-import net.momirealms.craftengine.core.world.BlockHitResult;
-import net.momirealms.craftengine.core.world.BlockPos;
-import net.momirealms.craftengine.core.world.EntityHitResult;
-import net.momirealms.craftengine.core.world.WorldEvents;
+import net.momirealms.craftengine.core.world.*;
 import net.momirealms.craftengine.core.world.chunk.Palette;
 import net.momirealms.craftengine.core.world.chunk.PalettedContainer;
 import net.momirealms.craftengine.core.world.chunk.packet.BlockEntityData;
@@ -48,6 +49,7 @@ import net.momirealms.craftengine.core.world.chunk.packet.MCSection;
 import net.momirealms.craftengine.core.world.collision.AABB;
 import net.momirealms.sparrow.nbt.Tag;
 import org.bukkit.*;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
@@ -1696,6 +1698,15 @@ public class PacketConsumers {
                         if (EventUtils.fireAndCheckCancel(breakEvent)) {
                             return;
                         }
+
+                        // execute functions
+                        PlayerOptionalContext context = PlayerOptionalContext.of(serverPlayer, ContextHolder.builder()
+                                .withParameter(DirectContextParameters.FURNITURE, furniture)
+                                .withParameter(DirectContextParameters.POSITION, new WorldPosition(furniture.world(), furniture.position()))
+                        );
+                        furniture.config().execute(context, EventTrigger.LEFT_CLICK);
+                        furniture.config().execute(context, EventTrigger.BREAK);
+
                         CraftEngineFurniture.remove(furniture, serverPlayer, !serverPlayer.isCreativeMode(), true);
                     }
                 } else if (actionType == Reflections.instance$ServerboundInteractPacket$ActionType$INTERACT_AT) {
@@ -1717,6 +1728,13 @@ public class PacketConsumers {
                     if (EventUtils.fireAndCheckCancel(interactEvent)) {
                         return;
                     }
+
+                    // execute functions
+                    PlayerOptionalContext context = PlayerOptionalContext.of(serverPlayer, ContextHolder.builder()
+                            .withParameter(DirectContextParameters.FURNITURE, furniture)
+                            .withParameter(DirectContextParameters.POSITION, new WorldPosition(furniture.world(), furniture.position()))
+                    );
+                    furniture.config().execute(context, EventTrigger.RIGHT_CLICK);;
 
                     if (player.isSneaking()) {
                         // try placing another furniture above it
@@ -1798,7 +1816,7 @@ public class PacketConsumers {
                     buf.writeLong(seed);
                 }
             } else {
-                Optional<Object> optionalSound = FastNMS.INSTANCE.method$BuiltInRegistries$byId(Reflections.instance$BuiltInRegistries$SOUND_EVENT, id - 1);
+                Optional<Object> optionalSound = FastNMS.INSTANCE.method$IdMap$byId(Reflections.instance$BuiltInRegistries$SOUND_EVENT, id - 1);
                 if (optionalSound.isEmpty()) return;
                 Object soundEvent = optionalSound.get();
                 Key soundId = Key.of(FastNMS.INSTANCE.method$SoundEvent$location(soundEvent));
@@ -1969,29 +1987,38 @@ public class PacketConsumers {
                 } else {
                     data = (byte[]) Reflections.method$DiscardedPayload$dataByteArray.invoke(payload);
                 }
-                String decodeData = new String(data, StandardCharsets.UTF_8);
-                if (!decodeData.endsWith("init")) return;
-                int firstColon = decodeData.indexOf(':');
-                if (firstColon == -1) return;
-                int secondColon = decodeData.indexOf(':', firstColon + 1);
-                if (secondColon == -1) return;
-                int clientBlockRegistrySize = Integer.parseInt(decodeData.substring(firstColon + 1, secondColon));
-                int serverBlockRegistrySize = RegistryUtils.currentBlockRegistrySize();
-                if (clientBlockRegistrySize != serverBlockRegistrySize) {
-                    Object kickPacket = Reflections.constructor$ClientboundDisconnectPacket.newInstance(
-                            ComponentUtils.adventureToMinecraft(
-                                    Component.translatable(
-                                            "disconnect.craftengine.block_registry_mismatch",
-                                            TranslationArgument.numeric(clientBlockRegistrySize),
-                                            TranslationArgument.numeric(serverBlockRegistrySize)
-                                    )
-                            )
-                    );
-                    user.nettyChannel().writeAndFlush(kickPacket);
-                    user.nettyChannel().disconnect();
-                    return;
+                FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(data));
+                NetWorkDataTypes<?> dataType = NetWorkDataTypes.readType(buf);
+                if (dataType == NetWorkDataTypes.CLIENT_CUSTOM_BLOCK) {
+                    int clientBlockRegistrySize = dataType.as(Integer.class).decode(buf);
+                    int serverBlockRegistrySize = RegistryUtils.currentBlockRegistrySize();
+                    if (clientBlockRegistrySize != serverBlockRegistrySize) {
+                        Object kickPacket = Reflections.constructor$ClientboundDisconnectPacket.newInstance(
+                                ComponentUtils.adventureToMinecraft(
+                                        Component.translatable(
+                                                "disconnect.craftengine.block_registry_mismatch",
+                                                TranslationArgument.numeric(clientBlockRegistrySize),
+                                                TranslationArgument.numeric(serverBlockRegistrySize)
+                                        )
+                                )
+                        );
+                        user.nettyChannel().writeAndFlush(kickPacket);
+                        user.nettyChannel().disconnect();
+                        return;
+                    }
+                    user.setClientModState(true);
+                } else if (dataType == NetWorkDataTypes.CANCEL_BLOCK_UPDATE) {
+                    if (!VersionHelper.isOrAbove1_20_2()) return;
+                    if (dataType.as(Boolean.class).decode(buf)) {
+                        FriendlyByteBuf bufPayload = new FriendlyByteBuf(Unpooled.buffer());
+                        dataType.writeType(bufPayload);
+                        dataType.as(Boolean.class).encode(bufPayload, true);
+                        Object channelKey = KeyUtils.toResourceLocation(Key.of(NetworkManager.MOD_CHANNEL));
+                        Object dataPayload = Reflections.constructor$DiscardedPayload.newInstance(channelKey, bufPayload.array());
+                        Object responsePacket = Reflections.constructor$ClientboundCustomPayloadPacket.newInstance(dataPayload);
+                        user.nettyChannel().writeAndFlush(responsePacket);
+                    }
                 }
-                user.setClientModState(true);
             }
         } catch (Exception e) {
             CraftEngine.instance().logger().warn("Failed to handle ServerboundCustomPayloadPacket", e);

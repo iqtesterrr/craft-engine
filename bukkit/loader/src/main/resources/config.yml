@@ -62,9 +62,9 @@ resource-pack:
   remove-tinted-leaves-particle: true
   merge-external-folders:
     - ModelEngine/resource pack
-    - CustomNameplates/ResourcePack
     - BetterModel/build
-    - BetterHud/build
+  merge-external-zip-files:
+    - CustomNameplates/resourcepack.zip
   delivery:
     # Send the resource pack on joining the server
     send-on-join: true
@@ -83,8 +83,8 @@ resource-pack:
         deny-non-minecraft-request: true
         one-time-token: true
         rate-limit:
-          max-requests: 3
-          reset-interval: 20
+          max-requests: 10
+          reset-interval: 30
     # Upload the resource pack automatically on generation
     # When disabled, you must manually trigger uploads using the /ce upload command
     auto-upload: true

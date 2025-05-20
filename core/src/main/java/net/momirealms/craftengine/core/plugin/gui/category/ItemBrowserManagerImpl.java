@@ -24,9 +24,11 @@ import java.util.*;
 
 @SuppressWarnings("DuplicatedCode")
 public class ItemBrowserManagerImpl implements ItemBrowserManager {
+    private static final String SHIFT_LEFT = "SHIFT_LEFT";
+    private static final String SHIFT_RIGHT = "SHIFT_RIGHT";
     private static final Set<String> MOVE_TO_OTHER_INV = Set.of("SHIFT_LEFT", "SHIFT_RIGHT");
-    private static final Set<String> LEFT_CLICK = Set.of("LEFT", "SHIFT_LEFT");
-    private static final Set<String> RIGHT_CLICK = Set.of("RIGHT", "SHIFT_RIGHT");
+    private static final Set<String> LEFT_CLICK = Set.of("LEFT", SHIFT_LEFT);
+    private static final Set<String> RIGHT_CLICK = Set.of("RIGHT", SHIFT_RIGHT);
     private static final Set<String> MIDDLE_CLICK = Set.of("MIDDLE");
     private static final Set<String> DOUBLE_CLICK = Set.of("DOUBLE_CLICK");
     private final CraftEngine plugin;
@@ -258,11 +260,22 @@ public class ItemBrowserManagerImpl implements ItemBrowserManager {
                 if (item == null) return null;
                 return new ItemWithAction(item, (e, c) -> {
                     c.cancel();
-                    if (MIDDLE_CLICK.contains(c.type()) && player.isCreativeMode() && player.hasPermission(GET_ITEM_PERMISSION) && c.itemOnCursor() == null) {
-                        Item<?> newItem = this.plugin.itemManager().createWrappedItem(e.item().id(), player);
-                        newItem.count(newItem.maxStackSize());
-                        c.setItemOnCursor(newItem);
-                        return;
+                    if (player.isCreativeMode() && player.hasPermission(GET_ITEM_PERMISSION)) {
+                        if (MIDDLE_CLICK.contains(c.type()) && c.itemOnCursor() == null) {
+                            Item<?> newItem = this.plugin.itemManager().createWrappedItem(e.item().id(), player);
+                            newItem.count(newItem.maxStackSize());
+                            c.setItemOnCursor(newItem);
+                            return;
+                        }
+                        if (SHIFT_LEFT.equals(c.type())) {
+                            player.giveItem(this.plugin.itemManager().createWrappedItem(e.item().id(), player));
+                            return;
+                        } else if (SHIFT_RIGHT.equals(c.type())) {
+                            Item<?> newItem = this.plugin.itemManager().createWrappedItem(e.item().id(), player);
+                            newItem.count(newItem.maxStackSize());
+                            player.giveItem(newItem);
+                            return;
+                        }
                     }
                     if (LEFT_CLICK.contains(c.type())) {
                         List<Recipe<Object>> inRecipes = this.plugin.recipeManager().recipeByResult(itemId);

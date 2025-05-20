@@ -2,7 +2,9 @@ package net.momirealms.craftengine.core.pack.model;
 
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,8 +13,8 @@ public class LegacyOverridesModel implements Comparable<LegacyOverridesModel> {
     private final String model;
     private final int customModelData;
 
-    public LegacyOverridesModel(Map<String, Object> predicate, String model, int customModelData) {
-        this.predicate = predicate;
+    public LegacyOverridesModel(@Nullable Map<String, Object> predicate, @NotNull String model, int customModelData) {
+        this.predicate = predicate == null ? new HashMap<>() : predicate;
         this.model = model;
         this.customModelData = customModelData;
         if (customModelData > 0) {

@@ -97,4 +97,38 @@ public class CharacterUtils {
         }
         return false;
     }
+
+    public static String replaceBackslashWithSlash(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            sb.append(c == '\\' ? '/' : c);
+        }
+        return sb.toString();
+    }
+
+    public static String replaceDoubleBackslashU(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        int length = input.length();
+        StringBuilder sb = new StringBuilder(length);
+        int i = 0;
+        while (i < length) {
+            if (i + 2 < length
+                    && input.charAt(i) == '\\'
+                    && input.charAt(i + 1) == '\\'
+                    && input.charAt(i + 2) == 'u') {
+                sb.append("\\u");
+                i += 3;
+            } else {
+                sb.append(input.charAt(i));
+                i++;
+            }
+        }
+        return sb.toString();
+    }
 }

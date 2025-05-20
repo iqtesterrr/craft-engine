@@ -18,10 +18,15 @@ import net.momirealms.craftengine.core.pack.LoadingSequence;
 import net.momirealms.craftengine.core.pack.Pack;
 import net.momirealms.craftengine.core.plugin.config.Config;
 import net.momirealms.craftengine.core.plugin.config.ConfigParser;
+import net.momirealms.craftengine.core.plugin.context.PlayerOptionalContext;
+import net.momirealms.craftengine.core.plugin.context.event.EventFunctions;
+import net.momirealms.craftengine.core.plugin.context.event.EventTrigger;
+import net.momirealms.craftengine.core.plugin.context.function.Function;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.sound.SoundData;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.MiscUtils;
+import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
 import net.momirealms.craftengine.core.world.WorldPosition;
 import org.bukkit.*;
@@ -214,7 +219,8 @@ public class BukkitFurnitureManager extends AbstractFurnitureManager {
 
             // get loot table
             LootTable<ItemStack> lootTable = lootMap == null ? null : LootTable.fromMap(lootMap);
-            CustomFurniture furniture = new CustomFurniture(id, settings, placements, lootTable);
+            Map<EventTrigger, List<Function<PlayerOptionalContext>>> events = EventFunctions.parseEvents(ResourceConfigUtils.get(section, "events", "event"));
+            CustomFurniture furniture = new CustomFurniture(id, settings, placements, events, lootTable);
             byId.put(id, furniture);
         }
     }

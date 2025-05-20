@@ -34,12 +34,14 @@ public record Key(String namespace, String value) {
     }
 
     public String[] decompose() {
-        return new String[] { namespace, value };
+        return new String[] { this.namespace, this.value };
     }
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        int result = this.namespace.hashCode();
+        result = 31 * result + this.value.hashCode();
+        return result;
     }
 
     @Override
@@ -54,7 +56,11 @@ public record Key(String namespace, String value) {
 
     @Override
     public @NotNull String toString() {
-        return namespace + ":" + value;
+        return this.namespace + ":" + this.value;
+    }
+
+    public String asString() {
+        return this.namespace + ":" + this.value;
     }
 
     private static String[] decompose(String id, String namespace) {

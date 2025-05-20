@@ -23,4 +23,5 @@ public class ComponentKeys {
     public static final Key CUSTOM_DATA = Key.of("minecraft", "custom_data");
     public static final Key PROFILE = Key.of("minecraft", "profile");
     public static final Key DYED_COLOR = Key.of("minecraft", "dyed_color");
+    public static final Key DEATH_PROTECTION = Key.of("minecraft", "death_protection");
 }

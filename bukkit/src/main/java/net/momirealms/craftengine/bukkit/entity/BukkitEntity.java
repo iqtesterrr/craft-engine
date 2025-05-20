@@ -8,6 +8,7 @@ import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.world.World;
 
 import java.lang.ref.WeakReference;
+import java.util.UUID;
 
 public class BukkitEntity extends AbstractEntity {
     private final WeakReference<org.bukkit.entity.Entity> entity;
@@ -18,17 +19,17 @@ public class BukkitEntity extends AbstractEntity {
 
     @Override
     public double x() {
-        return literalObject().getLocation().getX();
+        return literalObject().getX();
     }
 
     @Override
     public double y() {
-        return literalObject().getLocation().getY();
+        return literalObject().getY();
     }
 
     @Override
     public double z() {
-        return literalObject().getLocation().getZ();
+        return literalObject().getZ();
     }
 
     @Override
@@ -42,12 +43,12 @@ public class BukkitEntity extends AbstractEntity {
 
     @Override
     public float getXRot() {
-        return literalObject().getLocation().getYaw();
+        return literalObject().getYaw();
     }
 
     @Override
     public float getYRot() {
-        return literalObject().getLocation().getPitch();
+        return literalObject().getPitch();
     }
 
     @Override
@@ -68,5 +69,15 @@ public class BukkitEntity extends AbstractEntity {
     @Override
     public Key type() {
         return KeyUtils.namespacedKey2Key(literalObject().getType().getKey());
+    }
+
+    @Override
+    public String name() {
+        return literalObject().getName();
+    }
+
+    @Override
+    public UUID uuid() {
+        return literalObject().getUniqueId();
     }
 }

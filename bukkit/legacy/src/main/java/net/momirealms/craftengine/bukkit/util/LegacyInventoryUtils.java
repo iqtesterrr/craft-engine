@@ -37,4 +37,32 @@ public class LegacyInventoryUtils {
     public static InventoryView getView(PrepareAnvilEvent event) {
         return event.getView();
     }
+
+    public static void openAnvil(Player player) {
+        player.openAnvil(null, true);
+    }
+
+    public static void openCartographyTable(Player player) {
+        player.openCartographyTable(null, true);
+    }
+
+    public static void openEnchanting(Player player) {
+        player.openEnchanting(null, true);
+    }
+
+    public static void openGrindstone(Player player) {
+        player.openGrindstone(null, true);
+    }
+
+    public static void openLoom(Player player) {
+        player.openLoom(null, true);
+    }
+
+    public static void openSmithingTable(Player player) {
+        player.openSmithingTable(null, true);
+    }
+
+    public static void openWorkbench(Player player) {
+        player.openWorkbench(null, true);
+    }
 }

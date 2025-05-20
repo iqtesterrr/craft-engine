@@ -30,7 +30,7 @@ public class BlockBehaviors {
         Key key = Key.withDefaultNamespace(type, Key.DEFAULT_NAMESPACE);
         BlockBehaviorFactory factory = BuiltInRegistries.BLOCK_BEHAVIOR_FACTORY.getValue(key);
         if (factory == null) {
-            throw new LocalizedResourceConfigException("warning.config.block.behavior.invalid_type", type.toString());
+            throw new LocalizedResourceConfigException("warning.config.block.behavior.invalid_type", type);
         }
         return factory.create(block, map);
     }

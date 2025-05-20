@@ -1,9 +1,14 @@
 package net.momirealms.craftengine.core.util;
 
+import com.mojang.datafixers.util.Either;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedException;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class ResourceConfigUtils {
@@ -34,6 +39,50 @@ public final class ResourceConfigUtils {
         String s = o.toString();
         if (s.isEmpty()) throw exceptionSupplier.get();
         return s;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Either<T, List<T>> parseConfigAsEither(Object config, Function<Map<String, Object>, T> converter) {
+        if (config instanceof Map<?,?>) {
+            return Either.left(converter.apply((Map<String, Object>) config));
+        } else if (config instanceof List<?> list) {
+            return switch (list.size()) {
+                case 0 -> Either.right(Collections.emptyList());
+                case 1 -> Either.left(converter.apply((Map<String, Object>) list.get(0)));
+                case 2 -> Either.right(List.of(converter.apply((Map<String, Object>) list.get(0)), converter.apply((Map<String, Object>) list.get(1))));
+                default -> {
+                    List<T> result = new ArrayList<>(list.size());
+                    for (Object o : list) {
+                        result.add(converter.apply((Map<String, Object>) o));
+                    }
+                    yield Either.right(result);
+                }
+            };
+        } else {
+            return Either.right(Collections.emptyList());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> parseConfigAsList(Object config, Function<Map<String, Object>, T> converter) {
+        if (config instanceof Map<?,?>) {
+            return List.of(converter.apply((Map<String, Object>) config));
+        } else if (config instanceof List<?> list) {
+            return switch (list.size()) {
+                case 0 -> Collections.emptyList();
+                case 1 -> List.of(converter.apply((Map<String, Object>) list.get(0)));
+                case 2 -> List.of(converter.apply((Map<String, Object>) list.get(0)), converter.apply((Map<String, Object>) list.get(1)));
+                default -> {
+                    List<T> result = new ArrayList<>(list.size());
+                    for (Object o : list) {
+                        result.add(converter.apply((Map<String, Object>) o));
+                    }
+                    yield result;
+                }
+            };
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     public static Object get(Map<String, Object> arguments, String... keys) {

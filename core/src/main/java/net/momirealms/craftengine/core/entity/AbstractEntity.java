@@ -1,11 +1,11 @@
 package net.momirealms.craftengine.core.entity;
 
-import net.momirealms.craftengine.core.world.Vec3d;
+import net.momirealms.craftengine.core.world.WorldPosition;
 
 public abstract class AbstractEntity implements Entity {
 
     @Override
-    public Vec3d position() {
-        return new Vec3d(x(), y(), z());
+    public WorldPosition position() {
+        return new WorldPosition(world(), x(), y(), z(), getXRot(), getYRot());
     }
 }

@@ -9,9 +9,9 @@ import net.momirealms.craftengine.core.block.*;
 import net.momirealms.craftengine.core.block.properties.Property;
 import net.momirealms.craftengine.core.loot.LootTable;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
-import net.momirealms.craftengine.core.plugin.context.PlayerBlockActionContext;
+import net.momirealms.craftengine.core.plugin.context.PlayerOptionalContext;
+import net.momirealms.craftengine.core.plugin.context.event.EventTrigger;
 import net.momirealms.craftengine.core.plugin.context.function.Function;
-import net.momirealms.craftengine.core.plugin.event.EventTrigger;
 import net.momirealms.craftengine.core.registry.BuiltInRegistries;
 import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.registry.WritableRegistry;
@@ -26,18 +26,21 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class BukkitCustomBlock extends CustomBlock {
+public class BukkitCustomBlock extends AbstractCustomBlock {
 
     protected BukkitCustomBlock(
-            Key id,
-            Holder.Reference<CustomBlock> holder,
-            Map<String, Property<?>> properties,
-            Map<String, Integer> appearances,
-            Map<String, VariantState> variantMapper,
-            BlockSettings settings,
-            @NotNull EnumMap<EventTrigger, List<Function<PlayerBlockActionContext>>> events,
+            @NotNull Key id,
+            @NotNull Holder.Reference<CustomBlock> holder,
+            @NotNull Map<String, Property<?>> properties,
+            @NotNull Map<String, Integer> appearances,
+            @NotNull Map<String, VariantState> variantMapper,
+            @NotNull BlockSettings settings,
+            @NotNull Map<EventTrigger, List<Function<PlayerOptionalContext>>> events,
             @Nullable Map<String, Object> behavior,
             @Nullable LootTable<?> lootTable
     ) {
@@ -147,17 +150,67 @@ public class BukkitCustomBlock extends CustomBlock {
     }
 
     public static Builder builder(Key id) {
-        return new Builder(id);
+        return new BuilderImpl(id);
     }
 
-    public static class Builder extends CustomBlock.Builder {
+    public static class BuilderImpl implements Builder {
+        protected final Key id;
+        protected Map<String, Property<?>> properties;
+        protected Map<String, Integer> appearances;
+        protected Map<String, VariantState> variantMapper;
+        protected BlockSettings settings;
+        protected Map<String, Object> behavior;
+        protected LootTable<?> lootTable;
+        protected Map<EventTrigger, List<Function<PlayerOptionalContext>>> events;
 
-        protected Builder(Key id) {
-            super(id);
+        public BuilderImpl(Key id) {
+            this.id = id;
         }
 
         @Override
-        public CustomBlock build() {
+        public Builder events(Map<EventTrigger, List<Function<PlayerOptionalContext>>> events) {
+            this.events = events;
+            return this;
+        }
+
+        @Override
+        public Builder appearances(Map<String, Integer> appearances) {
+            this.appearances = appearances;
+            return this;
+        }
+
+        @Override
+        public Builder behavior(Map<String, Object> behavior) {
+            this.behavior = behavior;
+            return this;
+        }
+
+        @Override
+        public Builder lootTable(LootTable<?> lootTable) {
+            this.lootTable = lootTable;
+            return this;
+        }
+
+        @Override
+        public Builder properties(Map<String, Property<?>> properties) {
+            this.properties = properties;
+            return this;
+        }
+
+        @Override
+        public Builder settings(BlockSettings settings) {
+            this.settings = settings;
+            return this;
+        }
+
+        @Override
+        public Builder variantMapper(Map<String, VariantState> variantMapper) {
+            this.variantMapper = variantMapper;
+            return this;
+        }
+
+        @Override
+        public @NotNull CustomBlock build() {
             // create or get block holder
             Holder.Reference<CustomBlock> holder = BuiltInRegistries.BLOCK.get(id).orElseGet(() ->
                     ((WritableRegistry<CustomBlock>) BuiltInRegistries.BLOCK).registerForHolder(new ResourceKey<>(BuiltInRegistries.BLOCK.key().location(), id)));

@@ -1,7 +1,6 @@
 package net.momirealms.craftengine.bukkit.plugin.command.feature;
 
 import net.momirealms.craftengine.bukkit.plugin.command.BukkitCommandFeature;
-import net.momirealms.craftengine.bukkit.util.BlockTags;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.command.CraftEngineCommandManager;
 import org.bukkit.Material;
@@ -51,7 +50,6 @@ public class TestCommand extends BukkitCommandFeature<CommandSender> {
                     Player player = context.sender();
                     player.sendMessage("开始测试");
                     NamespacedKey key = context.get("setTag");
-                    BlockTags.test(plugin().adapt(player), context.get("reset"), context.get("targetBlock"), key.asString());
                     player.sendMessage("结束测试");
                 });
     }

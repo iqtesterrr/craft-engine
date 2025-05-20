@@ -26,6 +26,7 @@ public class ComponentTypes {
     public static final Object CUSTOM_DATA = getComponentType(ComponentKeys.CUSTOM_DATA);
     public static final Object PROFILE = getComponentType(ComponentKeys.PROFILE);
     public static final Object DYED_COLOR = getComponentType(ComponentKeys.DYED_COLOR);
+    public static final Object DEATH_PROTECTION = getComponentType(ComponentKeys.DEATH_PROTECTION);
 
     private ComponentTypes() {}
 

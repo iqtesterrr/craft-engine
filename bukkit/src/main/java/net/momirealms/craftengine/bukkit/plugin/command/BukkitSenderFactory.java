@@ -1,8 +1,7 @@
 package net.momirealms.craftengine.bukkit.plugin.command;
 
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.util.ComponentUtils;
@@ -18,11 +17,9 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 public class BukkitSenderFactory extends SenderFactory<BukkitCraftEngine, CommandSender> {
-    private final BukkitAudiences audiences;
 
     public BukkitSenderFactory(BukkitCraftEngine plugin) {
         super(plugin);
-        this.audiences = BukkitAudiences.create(plugin.bootstrap());
     }
 
     @Override
@@ -42,19 +39,17 @@ public class BukkitSenderFactory extends SenderFactory<BukkitCraftEngine, Comman
     }
 
     @Override
-    public Audience audience(CommandSender sender) {
-        return this.audiences.sender(sender);
-    }
-
-    @Override
     protected void sendMessage(CommandSender sender, Component message) {
         // we can safely send async for players and the console - otherwise, send it sync
         if (sender instanceof Player player) {
             FastNMS.INSTANCE.sendPacket(FastNMS.INSTANCE.method$CraftPlayer$getHandle(player), FastNMS.INSTANCE.constructor$ClientboundSystemChatPacket(ComponentUtils.adventureToMinecraft(message), false));
-        } else if (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender) {
-            audience(sender).sendMessage(message);
+        } else if (sender instanceof ConsoleCommandSender commandSender) {
+            commandSender.sendMessage(LegacyComponentSerializer.legacySection().serialize(message));
+        } else if (sender instanceof RemoteConsoleCommandSender commandSender) {
+            commandSender.sendMessage(LegacyComponentSerializer.legacySection().serialize(message));
         } else {
-            plugin().scheduler().executeSync(() -> audience(sender).sendMessage(message));
+            String legacy = LegacyComponentSerializer.legacySection().serialize(message);
+            plugin().scheduler().sync().run(() -> sender.sendMessage(legacy));
         }
     }
 
@@ -93,6 +88,5 @@ public class BukkitSenderFactory extends SenderFactory<BukkitCraftEngine, Comman
     @Override
     public void close() {
         super.close();
-        this.audiences.close();
     }
 }

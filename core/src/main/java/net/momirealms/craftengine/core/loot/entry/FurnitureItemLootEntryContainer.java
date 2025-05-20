@@ -6,7 +6,7 @@ import net.momirealms.craftengine.core.loot.LootContext;
 import net.momirealms.craftengine.core.loot.function.LootFunction;
 import net.momirealms.craftengine.core.loot.function.LootFunctions;
 import net.momirealms.craftengine.core.plugin.context.Condition;
-import net.momirealms.craftengine.core.plugin.context.parameter.CommonParameters;
+import net.momirealms.craftengine.core.plugin.context.parameter.DirectContextParameters;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import org.jetbrains.annotations.Nullable;
@@ -31,7 +31,7 @@ public class FurnitureItemLootEntryContainer<T> extends SingleItemLootEntryConta
     @SuppressWarnings("unchecked")
     @Override
     protected void createItem(Consumer<Item<T>> lootConsumer, LootContext context) {
-        Optional<Item<?>> optionalItem = context.getOptionalParameter(CommonParameters.FURNITURE_ITEM);
+        Optional<Item<?>> optionalItem = context.getOptionalParameter(DirectContextParameters.FURNITURE_ITEM);
         if (optionalItem.isPresent()) {
             lootConsumer.accept((Item<T>) optionalItem.get());
         } else if (this.hasFallback) {

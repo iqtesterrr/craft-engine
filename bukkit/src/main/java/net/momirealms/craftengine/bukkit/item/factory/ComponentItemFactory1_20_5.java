@@ -247,12 +247,16 @@ public class ComponentItemFactory1_20_5 extends BukkitItemFactory<ComponentItemW
     @Override
     protected Optional<Integer> dyedColor(ComponentItemWrapper item) {
         if (!item.hasComponent(ComponentTypes.DYED_COLOR)) return Optional.empty();
-        return Optional.ofNullable(
-                (Integer) ComponentType.encodeJava(
-                        ComponentTypes.DYED_COLOR,
-                        item.getComponent(ComponentTypes.DYED_COLOR)
-                ).orElse(null)
-        );
+        Object javaObj = ComponentType.encodeJava(
+                ComponentTypes.DYED_COLOR,
+                item.getComponent(ComponentTypes.DYED_COLOR)
+        ).orElse(null);
+        if (javaObj instanceof Integer integer) {
+            return Optional.of(integer);
+        } else if (javaObj instanceof Map<?, ?> map) {
+            return Optional.of((int) map.get("rgb"));
+        }
+        return Optional.empty();
     }
 
     @Override

@@ -3,6 +3,10 @@ package net.momirealms.craftengine.core.item;
 import net.momirealms.craftengine.core.entity.player.Player;
 import net.momirealms.craftengine.core.item.behavior.ItemBehavior;
 import net.momirealms.craftengine.core.item.modifier.ItemDataModifier;
+import net.momirealms.craftengine.core.plugin.context.PlayerOptionalContext;
+import net.momirealms.craftengine.core.plugin.context.event.EventTrigger;
+import net.momirealms.craftengine.core.plugin.context.function.Function;
+import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +16,8 @@ import java.util.Map;
 public interface CustomItem<I> extends BuildableItem<I> {
 
     Key id();
+
+    Holder<Key> idHolder();
 
     Key material();
 
@@ -39,11 +45,13 @@ public interface CustomItem<I> extends BuildableItem<I> {
 
     Item<I> buildItem(ItemBuildContext context);
 
+    void execute(PlayerOptionalContext context, EventTrigger trigger);
+
     @NotNull
     List<ItemBehavior> behaviors();
 
     interface Builder<I> {
-        Builder<I> id(Key id);
+        Builder<I> id(Holder<Key> id);
 
         Builder<I> material(Key material);
 
@@ -60,6 +68,8 @@ public interface CustomItem<I> extends BuildableItem<I> {
         Builder<I> behaviors(List<ItemBehavior> behaviors);
 
         Builder<I> settings(ItemSettings settings);
+
+        Builder<I> events(Map<EventTrigger, List<Function<PlayerOptionalContext>>> events);
 
         CustomItem<I> build();
     }

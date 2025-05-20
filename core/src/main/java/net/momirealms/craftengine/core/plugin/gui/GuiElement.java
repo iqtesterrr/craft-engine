@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public interface GuiElement {
 
-    static GuiElement EMPTY = GuiElement.constant(null, (e, c) -> c.cancel());
+    GuiElement EMPTY = GuiElement.constant(null, (e, c) -> c.cancel());
 
     @Nullable
     Item<?> item();

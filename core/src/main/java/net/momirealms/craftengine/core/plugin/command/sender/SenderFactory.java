@@ -1,6 +1,5 @@
 package net.momirealms.craftengine.core.plugin.command.sender;
 
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.plugin.Plugin;
 import net.momirealms.craftengine.core.util.Tristate;
@@ -25,8 +24,6 @@ public abstract class SenderFactory<P extends Plugin, T> {
 
     protected abstract String name(T sender);
 
-    protected abstract Audience audience(T sender);
-
     protected abstract void sendMessage(T sender, Component message);
 
     protected abstract Tristate permissionState(T sender, String node);
@@ -44,7 +41,7 @@ public abstract class SenderFactory<P extends Plugin, T> {
     }
 
     public Sender console() {
-        return console;
+        return this.console;
     }
 
     public <C extends T> Sender wrap(C sender) {

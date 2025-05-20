@@ -13,6 +13,10 @@ public class ComponentUtils {
         return jsonElementToMinecraft(AdventureHelper.componentToJsonElement(component));
     }
 
+    public static Object adventureToPaperAdventure(Component component) {
+        return jsonElementToPaperAdventure(AdventureHelper.componentToJsonElement(component));
+    }
+
     public static Object jsonElementToMinecraft(JsonElement json) {
         return FastNMS.INSTANCE.method$Component$Serializer$fromJson(json);
     }

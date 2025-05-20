@@ -1,7 +1,6 @@
-package net.momirealms.craftengine.core.plugin.context.parameter;
+package net.momirealms.craftengine.core.plugin.context;
 
-import net.momirealms.craftengine.core.plugin.context.ContextKey;
-import net.momirealms.craftengine.core.plugin.context.LazyContextParameterProvider;
+import net.momirealms.craftengine.core.plugin.context.parameter.DirectContextParameters;
 import net.momirealms.craftengine.core.util.RandomUtils;
 
 import java.util.HashMap;
@@ -9,16 +8,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class CommonParameterProvider implements LazyContextParameterProvider {
+public class CommonParameterProvider implements AdditionalParameterProvider {
     private double lastRandom = -1;
 
     private static final Map<ContextKey<?>, Function<CommonParameterProvider, Object>> CONTEXT_FUNCTIONS = new HashMap<>();
     static {
-        CONTEXT_FUNCTIONS.put(CommonParameters.RANDOM, (f) -> {
+        CONTEXT_FUNCTIONS.put(DirectContextParameters.RANDOM, (f) -> {
             f.lastRandom = RandomUtils.generateRandomDouble(0,1);
             return f.lastRandom;
         });
-        CONTEXT_FUNCTIONS.put(CommonParameters.LAST_RANDOM, (f) -> {
+        CONTEXT_FUNCTIONS.put(DirectContextParameters.LAST_RANDOM, (f) -> {
             if (f.lastRandom == -1) {
                 f.lastRandom = RandomUtils.generateRandomDouble(0, 1);
             }
