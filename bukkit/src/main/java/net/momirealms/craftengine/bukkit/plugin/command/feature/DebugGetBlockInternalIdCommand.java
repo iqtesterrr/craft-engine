@@ -8,8 +8,6 @@ import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.command.CraftEngineCommandManager;
 import net.momirealms.craftengine.core.plugin.command.FlagKeys;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Pose;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.context.CommandContext;
@@ -37,13 +35,10 @@ public class DebugGetBlockInternalIdCommand extends BukkitCommandFeature<Command
                     }
                 }))
                 .handler(context -> {
-                    Player player = (Player) context.sender();
-                    if (player.hasFixedPose()) player.setPose(Pose.STANDING, false);
-                    else player.setPose(Pose.SWIMMING, true);
                     String data = context.get("id");
-                    //ImmutableBlockState state = BlockStateParser.deserialize(data);
-                    //if (state == null) return;
-                    //context.sender().sendMessage(BlockStateUtils.getBlockOwnerIdFromState(state.customBlockState().handle()).toString());
+                    ImmutableBlockState state = BlockStateParser.deserialize(data);
+                    if (state == null) return;
+                    context.sender().sendMessage(BlockStateUtils.getBlockOwnerIdFromState(state.customBlockState().handle()).toString());
                 });
     }
 

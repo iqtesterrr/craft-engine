@@ -5,20 +5,16 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.momirealms.craftengine.bukkit.entity.BukkitEntity;
 import net.momirealms.craftengine.bukkit.entity.furniture.seat.BukkitSeatEntity;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.network.BukkitNetworkManager;
 import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
-import net.momirealms.craftengine.bukkit.util.EntityUtils;
-import net.momirealms.craftengine.bukkit.util.LegacyAttributeUtils;
+import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.LocationUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
-import net.momirealms.craftengine.bukkit.world.BukkitWorld;
+import net.momirealms.craftengine.bukkit.util.PlayerUtils;
 import net.momirealms.craftengine.core.entity.furniture.*;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.util.ArrayUtils;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.QuaternionUtils;
-import net.momirealms.craftengine.core.util.VersionHelper;
-import net.momirealms.craftengine.core.world.Vec3d;
-import net.momirealms.craftengine.core.world.World;
 import net.momirealms.craftengine.core.world.WorldPosition;
 import net.momirealms.craftengine.core.world.collision.AABB;
 import org.bukkit.Location;
@@ -201,7 +197,7 @@ public class BukkitFurniture implements Furniture {
     @Override
     public void destroySeats() {
         for (BukkitSeatEntity seat : this.seats.values()) {
-            seat.remove();
+            seat.destroy();
         }
         this.seats.clear();
     }
@@ -289,10 +285,13 @@ public class BukkitFurniture implements Furniture {
 
     @Override
     public void spawnSeatEntityForPlayer(net.momirealms.craftengine.core.entity.player.Player player, Seat seat) {
-        net.momirealms.craftengine.core.entity.Entity e = seat.spawn(player, this);
-        BukkitSeatEntity seatEntity = (BukkitSeatEntity) e;
-        this.seats.put(e.entityID(), seatEntity);
+        BukkitSeatEntity seatEntity = (BukkitSeatEntity) seat.spawn(player, this);
+        this.seats.put(seatEntity.playerID(), seatEntity);
         player.setSeat(seatEntity);
+        BukkitServerPlayer serverPlayer = (BukkitServerPlayer) player;
+        for (Player p : PlayerUtils.getTrackedBy(serverPlayer.platformPlayer())) {
+            BukkitNetworkManager.instance().getOnlineUser(p).entityPacketHandlers().put(seatEntity.playerID(), seatEntity);
+        }
     }
 
     @Override

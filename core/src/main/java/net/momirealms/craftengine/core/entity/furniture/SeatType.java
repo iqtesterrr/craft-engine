@@ -1,7 +1,7 @@
 package net.momirealms.craftengine.core.entity.furniture;
 
 import com.google.common.collect.Lists;
-import net.momirealms.craftengine.core.plugin.locale.LocalizedException;
+import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.registry.BuiltInRegistries;
 import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.registry.Registries;
@@ -35,7 +35,7 @@ public class SeatType {
 		}
 		factory = BuiltInRegistries.SEAT_FACTORY.getValue(type);
 		if (factory == null) {
-			throw new LocalizedException("warning.config.furniture.hitbox.invalid_type");
+			throw new LocalizedResourceConfigException("warning.config.furniture.seat.invalid_type", type.toString());
 		}
 		return factory.create(split);
 	}

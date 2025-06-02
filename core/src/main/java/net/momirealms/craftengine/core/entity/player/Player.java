@@ -98,7 +98,7 @@ public abstract class Player extends AbstractEntity implements NetWorkUser {
 
     public abstract boolean isFlying();
 
-    public abstract void setSeat(SeatEntity seatEntity);
+    public abstract void setSeat(SeatEntity seat);
 
     public abstract SeatEntity seat();
 

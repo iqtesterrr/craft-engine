@@ -1,74 +1,68 @@
 package net.momirealms.craftengine.bukkit.entity.furniture.seat;
 
-import net.momirealms.craftengine.bukkit.world.BukkitWorld;
+import net.momirealms.craftengine.bukkit.api.BukkitAdaptors;
+import net.momirealms.craftengine.bukkit.entity.BukkitEntity;
+import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurniture;
+import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import net.momirealms.craftengine.core.entity.player.Player;
 import net.momirealms.craftengine.core.entity.seat.SeatEntity;
-import net.momirealms.craftengine.core.util.Direction;
-import net.momirealms.craftengine.core.util.Key;
-import net.momirealms.craftengine.core.world.World;
+import net.momirealms.craftengine.core.plugin.network.NetWorkUser;
 import org.bukkit.entity.Entity;
+import org.joml.Vector3f;
 
-import java.lang.ref.WeakReference;
+public abstract class BukkitSeatEntity extends BukkitEntity implements SeatEntity {
+	private final BukkitFurniture furniture;
+	private final Vector3f vector3f;
+	private final int playerID;
 
-public abstract class BukkitSeatEntity extends SeatEntity {
-
-	private final WeakReference<Entity> entity;
-
-	public BukkitSeatEntity(Entity entity) {
-		this.entity = new WeakReference<>(entity);
+	public BukkitSeatEntity(Entity entity, Furniture furniture, Vector3f vector3f, int playerID) {
+		super(entity);
+		this.furniture = (BukkitFurniture) furniture;
+		this.vector3f = vector3f;
+		this.playerID = playerID;
 	}
 
 	@Override
-	public void dismount(Player from) {
-		from.setSeat(null);
+	public void add(NetWorkUser from, NetWorkUser to) {}
+
+	@Override
+	public void dismount(Player player) {
+		player.setSeat(null);
+		destroy();
 	}
 
 	@Override
-	public double x() {
-		return literalObject().getLocation().getX();
+	public void event(Player player, Object event) {}
+
+	@Override
+	public void destroy() {
+		org.bukkit.entity.Entity entity = this.literalObject();
+		if (entity == null) return;
+
+		for (org.bukkit.entity.Entity passenger : entity.getPassengers()) {
+			entity.removePassenger(passenger);
+			if (passenger instanceof org.bukkit.entity.Player p && p.getEntityId() == this.playerID) {
+				dismount(BukkitAdaptors.adapt(p));
+				return;
+			}
+		}
+		furniture.removeSeatEntity(playerID());
+		furniture.removeOccupiedSeat(vector3f());
+		entity.remove();
 	}
 
 	@Override
-	public double y() {
-		return literalObject().getLocation().getY();
+	public BukkitFurniture furniture() {
+		return this.furniture;
 	}
 
 	@Override
-	public double z() {
-		return literalObject().getLocation().getZ();
+	public Vector3f vector3f() {
+		return this.vector3f;
 	}
 
 	@Override
-	public void tick() {
-	}
-
-	@Override
-	public int entityID() {
-		return literalObject().getEntityId();
-	}
-
-	@Override
-	public float getXRot() {
-		return literalObject().getLocation().getYaw();
-	}
-
-	@Override
-	public float getYRot() {
-		return literalObject().getLocation().getPitch();
-	}
-
-	@Override
-	public World world() {
-		return new BukkitWorld(literalObject().getWorld());
-	}
-
-	@Override
-	public Direction getDirection() {
-		return Direction.NORTH;
-	}
-
-	@Override
-	public org.bukkit.entity.Entity literalObject() {
-		return this.entity.get();
+	public int playerID() {
+		return this.playerID;
 	}
 }

@@ -1,14 +1,24 @@
 package net.momirealms.craftengine.core.entity.seat;
 
-import net.momirealms.craftengine.core.entity.AbstractEntity;
-import net.momirealms.craftengine.core.entity.Entity;
+import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import net.momirealms.craftengine.core.entity.player.Player;
+import net.momirealms.craftengine.core.plugin.network.EntityPacketHandler;
+import net.momirealms.craftengine.core.plugin.network.NetWorkUser;
+import org.joml.Vector3f;
 
-public abstract class SeatEntity extends AbstractEntity {
+public interface SeatEntity extends EntityPacketHandler {
 
-	public abstract void sync(Player to);
+	void add(NetWorkUser from, NetWorkUser to);
 
-	public abstract void dismount(Player from);
+	void dismount(Player player);
 
-	public abstract void remove();
+	void event(Player player, Object event);
+
+	void destroy();
+
+	Furniture furniture();
+
+	Vector3f vector3f();
+
+	int playerID();
 }

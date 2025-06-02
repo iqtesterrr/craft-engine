@@ -1,6 +1,5 @@
 package net.momirealms.craftengine.bukkit.util;
 
-import com.google.common.collect.ForwardingMap;
 import com.google.common.collect.ForwardingMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
@@ -1780,12 +1779,29 @@ public class Reflections {
             )
     );
 
+    public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$ADD_PLAYER;
+    public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$INITIALIZE_CHAT;
+    public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_GAME_MODE;
+    public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_LISTED;
+    public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_LATENCY;
     public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_DISPLAY_NAME;
+    //public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_LIST_ORDER;
+    //public static final Object instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_HAT;
+
 
     static {
         try {
             Object[] values = (Object[]) method$ClientboundPlayerInfoUpdatePacket$Action$values.invoke(null);
+            instance$ClientboundPlayerInfoUpdatePacket$Action$ADD_PLAYER = values[0];
+            instance$ClientboundPlayerInfoUpdatePacket$Action$INITIALIZE_CHAT = values[1];
+            instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_GAME_MODE = values[2];
+            instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_LISTED = values[3];
+            instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_LATENCY = values[4];
             instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_DISPLAY_NAME = values[5];
+            //1.21.3
+            //instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_LIST_ORDER = values[6];
+            //1.21.4
+            //instance$ClientboundPlayerInfoUpdatePacket$Action$UPDATE_HAT = values[7];
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -3102,7 +3118,6 @@ public class Reflections {
     public static final Object instance$EquipmentSlot$LEGS;
     public static final Object instance$EquipmentSlot$CHEST;
     public static final Object instance$EquipmentSlot$HEAD;
-//    public static final Object instance$EquipmentSlot$BODY;
 
     static {
         try {
@@ -3113,7 +3128,6 @@ public class Reflections {
             instance$EquipmentSlot$LEGS = values[3];
             instance$EquipmentSlot$CHEST = values[4];
             instance$EquipmentSlot$HEAD = values[5];
-//            instance$EquipmentSlot$BODY = values[6];
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }
@@ -6145,6 +6159,12 @@ public class Reflections {
             )
     );
 
+    public static final Constructor<?> constructor$ClientboundRotateHeadPacket = requireNonNull(
+            ReflectionUtils.getDeclaredConstructor(
+                    clazz$ClientboundRotateHeadPacket, clazz$Entity, byte.class
+            )
+    );
+
     public static final Class<?> clazz$ClientboundSetEntityMotionPacket = requireNonNull(
             BukkitReflectionUtils.findReobfOrMojmapClass(
                     "network.protocol.game.PacketPlayOutEntityVelocity",
@@ -6799,17 +6819,14 @@ public class Reflections {
         }
     }
 
-
-    public static final Method method$Entity$refreshEntityData = requireNonNull(
+    public static final Method method$Entity$setInvisible = requireNonNull(
             ReflectionUtils.getMethod(
-                    clazz$Entity, new String[]{"refreshEntityData"}, Reflections.clazz$ServerPlayer
+                    clazz$Entity, new String[]{"j", "setInvisible"}, boolean.class
             )
     );
 
     public static final Class<?> clazz$GameProfile = requireNonNull(
-            ReflectionUtils.getClazz(
-                    BukkitReflectionUtils.assembleMCClass("com.mojang.authlib.GameProfile")
-            )
+            ReflectionUtils.getClazz("com.mojang.authlib.GameProfile")
     );
 
     public static final Constructor<?> constructor$GameProfile = requireNonNull(
@@ -6836,15 +6853,15 @@ public class Reflections {
             )
     );
 
-    public static final Method method$ServerPlayer$clientInformation = requireNonNull(
-            ReflectionUtils.getMethod(
-                    clazz$Player, 0
-            )
-    );
+    // 1.20.2 +
+    public static final Method method$ServerPlayer$clientInformation = VersionHelper.isOrAbove1_20_2() ? requireNonNull(ReflectionUtils.getMethod(
+			clazz$ServerPlayer, clazz$ClientInformation, 0
+	)) : null;
 
     public static final Class<?> clazz$CompoundTag = requireNonNull(
-            ReflectionUtils.getClazz(
-                    BukkitReflectionUtils.assembleMCClass("nbt.CompoundTag")
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "nbt.NBTTagCompound",
+                    "nbt.CompoundTag"
             )
     );
 
@@ -6857,4 +6874,186 @@ public class Reflections {
             throw new RuntimeException("Failed to instantiate empty CompoundTag", e);
         }
     }
+
+    public static final Method method$Entity$getEntityData = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$Entity, clazz$SynchedEntityData, 0
+            )
+    );
+
+    public static final Method method$SynchedEntityData$set = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$SynchedEntityData, void.class, clazz$EntityDataAccessor, Object.class
+            )
+    );
+
+    public static final Method method$SynchedEntityData$isDirty = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$SynchedEntityData, boolean.class
+            )
+    );
+
+    public static final Method method$SynchedEntityData$packDirty = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$SynchedEntityData, List.class, new String[]{"b", "packDirty"}
+            )
+    );
+
+    public static final Class<?> clazz$SynchedEntityData$DataItem = requireNonNull(
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "network.syncher.DataWatcher$Item",
+                    "network.syncher.SynchedEntityData$DataItem"
+            )
+    );
+
+    public static final Method method$SynchedEntityData$getItem = requireNonNull(
+            ReflectionUtils.getDeclaredMethod(
+                    clazz$SynchedEntityData, clazz$SynchedEntityData$DataItem, clazz$EntityDataAccessor)
+    );
+
+    public static final Method method$SynchedEntityData$DataItem$value = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$SynchedEntityData$DataItem, clazz$SynchedEntityData$DataValue, 0
+            )
+    );
+
+    public static final Class<?> clazz$ClientBoundPlayerInfoRemovePacket = requireNonNull(
+            ReflectionUtils.getClazz(
+                    BukkitReflectionUtils.assembleMCClass("network.protocol.game.ClientboundPlayerInfoRemovePacket")
+            )
+    );
+
+    public static final Constructor<?> constructor$ClientBoundPlayerInfoRemovePacket = requireNonNull(
+            ReflectionUtils.getConstructor(clazz$ClientBoundPlayerInfoRemovePacket, List.class)
+    );
+
+    public static final Class<?> clazz$ClientBoundPlayerInfoUpdatePacket$Entry = requireNonNull(
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "network.protocol.game.ClientboundPlayerInfoUpdatePacket$b",
+                    "network.protocol.game.ClientboundPlayerInfoUpdatePacket$Entry"
+            )
+    );
+
+    public static final Class<?> clazz$RemoteChatSession$Data = requireNonNull(
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "network.chat.RemoteChatSession$a",
+                    "network.chat.RemoteChatSession$Data"
+            )
+    );
+
+    public static final Constructor<?> constructor$ClientBoundPlayerInfoUpdatePacket$Entry = requireNonNull(
+            VersionHelper.isOrAbove1_21_3()
+                    ? VersionHelper.isOrAbove1_21_4()
+                        ? ReflectionUtils.getConstructor(clazz$ClientBoundPlayerInfoUpdatePacket$Entry, UUID.class, clazz$GameProfile, boolean.class, int.class, clazz$GameType, clazz$Component, boolean.class, int.class, clazz$RemoteChatSession$Data)
+                        : ReflectionUtils.getConstructor(clazz$ClientBoundPlayerInfoUpdatePacket$Entry, UUID.class, clazz$GameProfile, boolean.class, int.class, clazz$GameType, clazz$Component, int.class, clazz$RemoteChatSession$Data)
+                    : ReflectionUtils.getConstructor(clazz$ClientBoundPlayerInfoUpdatePacket$Entry, UUID.class, clazz$GameProfile, boolean.class, int.class, clazz$GameType, clazz$Component, clazz$RemoteChatSession$Data)
+    );
+
+    public static final Method method$GameType$values = requireNonNull(
+            ReflectionUtils.getStaticMethod(
+                    clazz$GameType, clazz$GameType.arrayType()
+            )
+    );
+
+    public static final Object instance$GameType$SURVIVAL;
+    public static final Object instance$GameType$CREATIVE;
+    public static final Object instance$GameType$ADVENTURE;
+    public static final Object instance$GameType$SPECTATOR;
+
+    static {
+        try {
+            Object[] values = (Object[]) method$GameType$values.invoke(null);
+            instance$GameType$SURVIVAL = values[0];
+            instance$GameType$CREATIVE = values[1];
+            instance$GameType$ADVENTURE = values[2];
+            instance$GameType$SPECTATOR = values[3];
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // 1.21.3 +
+    public static final Class<?> clazz$PositionMoveRotation = VersionHelper.isOrAbove1_21_3() ? ReflectionUtils.getClazz(
+			requireNonNull(BukkitReflectionUtils.assembleMCClass("world.entity.PositionMoveRotation"))) : null;
+
+    public static final Method method$PositionMoveRotation$of = VersionHelper.isOrAbove1_21_3() ? requireNonNull(
+            ReflectionUtils.getStaticMethod(clazz$PositionMoveRotation, clazz$PositionMoveRotation, clazz$Entity)) : null;
+
+    public static final Method method$Entity$absSnapTo = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$Entity, void.class, double.class, double.class, double.class, float.class, float.class
+            )
+    );
+
+    public static final Class<?> clazz$ClientboundTeleportEntityPacket = requireNonNull(
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "network.protocol.game.PacketPlayOutEntityTeleport",
+                    "network.protocol.game.ClientboundTeleportEntityPacket"
+            )
+    );
+
+    public static final Constructor<?> constructor$ClientboundTeleportEntityPacket = requireNonNull(
+            VersionHelper.isOrAbove1_21_3()
+                    ? ReflectionUtils.getConstructor(clazz$ClientboundTeleportEntityPacket, int.class, clazz$PositionMoveRotation, Set.class, boolean.class)
+                    : ReflectionUtils.getConstructor(clazz$ClientboundTeleportEntityPacket, clazz$Entity)
+    );
+
+    public static final Method method$Entity$setSharedFlag = requireNonNull(
+            ReflectionUtils.getDeclaredMethod(
+                    clazz$Entity, void.class, int.class, boolean.class
+            )
+    );
+
+    public static final Method method$ClientboundSetEquipmentPacket$getEntity = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$ClientboundSetEquipmentPacket, int.class
+            )
+    );
+
+    public static final Method method$ClientboundSetEquipmentPacket$getSlots = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$ClientboundSetEquipmentPacket, List.class
+            )
+    );
+
+    public static final Class<?> clazz$ClientboundContainerSetSlotPacket = requireNonNull(
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "network.protocol.game.PacketPlayOutSetSlot",
+                    "network.protocol.game.ClientboundContainerSetSlotPacket"
+            )
+    );
+
+    public static final Constructor<?> constructor$ClientboundContainerSetSlotPacket = requireNonNull(
+            ReflectionUtils.getConstructor(
+                    clazz$ClientboundContainerSetSlotPacket, int.class, int.class, int.class, clazz$ItemStack
+            )
+    );
+
+    public static final Method method$ClientboundContainerSetSlotPacket$getContainerId = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$ClientboundContainerSetSlotPacket, int.class, new String[]{"a", "getContainerId"}
+            )
+    );
+
+    public static final Method method$ClientboundContainerSetSlotPacket$getSlot = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$ClientboundContainerSetSlotPacket, int.class, new String[]{"c", "d", "getSlot"}
+            )
+    );
+
+    public static final Method method$ClientboundContainerSetSlotPacket$getStateId = requireNonNull(
+            ReflectionUtils.getMethod(
+                    clazz$ClientboundContainerSetSlotPacket, int.class, new String[]{"e", "f", "getStateId"}
+            )
+    );
+
+    public static final Class<?> clazz$ClientboundAnimatePacket = requireNonNull(
+            BukkitReflectionUtils.findReobfOrMojmapClass(
+                    "network.protocol.game.PacketPlayOutAnimation",
+                    "network.protocol.game.ClientboundAnimatePacket")
+    );
+
+    public static final Constructor<?> constructor$ClientboundAnimatePacket = requireNonNull(
+            ReflectionUtils.getConstructor(clazz$ClientboundAnimatePacket, clazz$Entity, int.class)
+    );
 }

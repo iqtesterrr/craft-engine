@@ -1,37 +1,37 @@
 package net.momirealms.craftengine.bukkit.entity.furniture.seat;
 
 import net.momirealms.craftengine.bukkit.api.BukkitAdaptors;
+import net.momirealms.craftengine.bukkit.entity.data.PlayerData;
 import net.momirealms.craftengine.bukkit.entity.data.ShulkerData;
-import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurnitureManager;
-import net.momirealms.craftengine.bukkit.entity.furniture.LoadedFurniture;
+import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurniture;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
+import net.momirealms.craftengine.bukkit.plugin.network.BukkitNetworkManager;
 import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.EntityUtils;
-import net.momirealms.craftengine.bukkit.util.LegacyAttributeUtils;
+import net.momirealms.craftengine.bukkit.util.PlayerUtils;
 import net.momirealms.craftengine.bukkit.util.Reflections;
-import net.momirealms.craftengine.core.entity.Entity;
 import net.momirealms.craftengine.core.entity.furniture.AbstractSeat;
 import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import net.momirealms.craftengine.core.entity.furniture.Seat;
 import net.momirealms.craftengine.core.entity.furniture.SeatFactory;
 import net.momirealms.craftengine.core.entity.player.Player;
+import net.momirealms.craftengine.core.entity.seat.SeatEntity;
+import net.momirealms.craftengine.core.plugin.CraftEngine;
+import net.momirealms.craftengine.core.plugin.network.NetWorkUser;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.MiscUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Pose;
-import org.bukkit.persistence.PersistentDataType;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class CrawlSeat extends AbstractSeat {
 	public static final SeatFactory FACTORY = new Factory();
@@ -51,104 +51,90 @@ public class CrawlSeat extends AbstractSeat {
 	}
 
 	@Override
-	public Entity spawn(Player player, Furniture furniture) {
+	public SeatEntity spawn(Player player, Furniture furniture) {
 		return spawn((org.bukkit.entity.Player) player.platformPlayer(), furniture);
 	}
 
-	public Entity spawn(org.bukkit.entity.Player player, Furniture furniture) {
-		Location location = ((LoadedFurniture)furniture).calculateSeatLocation(this);
+	public SeatEntity spawn(org.bukkit.entity.Player player, Furniture furniture) {
+		Location location = ((BukkitFurniture)furniture).calculateSeatLocation(this);
 
+		org.bukkit.entity.Entity seatEntity = EntityUtils.spawnSeatEntity(furniture, this, player.getWorld(), location, this.limitPlayerRotation, null);
+		seatEntity.addPassenger(player);
+
+		// Fix Rider Pose
 		int visualId = Reflections.instance$Entity$ENTITY_COUNTER.incrementAndGet();
 		List<Object> packets = new ArrayList<>();
 		packets.add(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(visualId, UUID.randomUUID(), location.getX(), location.getY(), location.getZ(), location.getPitch(), location.getYaw(),
 				Reflections.instance$EntityType$SHULKER, 0, Reflections.instance$Vec3$Zero, 0));
 		packets.add(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(visualId, List.copyOf(visualData)));
+
+		try {
+			if (VersionHelper.isOrAbove1_20_5()) {
+				Object attributeInstance = Reflections.constructor$AttributeInstance.newInstance(Reflections.instance$Holder$Attribute$scale, (Consumer<?>) (o) -> {});
+				Reflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, 0.6);
+				packets.add(
+						Reflections.constructor$ClientboundUpdateAttributesPacket0
+								.newInstance(visualId, Collections.singletonList(attributeInstance))
+				);
+				packets.add(FastNMS.INSTANCE.constructor$ClientboundSetPassengersPacket(seatEntity.getEntityId(), visualId));
+			}
+		} catch (Exception e) {
+			CraftEngine.instance().logger().warn("Failed to add crawl seat attributes", e);
+		}
+
 		Object bundle = FastNMS.INSTANCE.constructor$ClientboundBundlePacket(packets);
-		BukkitAdaptors.adapt(player).sendPacket(bundle, true);
+		BukkitServerPlayer serverPlayer = BukkitAdaptors.adapt(player);
+		serverPlayer.sendPacket(bundle, true);
 
-		org.bukkit.entity.Entity seatEntity = this.limitPlayerRotation ?
-				EntityUtils.spawnEntity(player.getWorld(), VersionHelper.isOrAbove1_20_2() ? location.subtract(0,0.9875,0) : location.subtract(0,0.990625,0), EntityType.ARMOR_STAND, entity -> {
-					ArmorStand armorStand = (ArmorStand) entity;
-					if (VersionHelper.isOrAbove1_21_3()) {
-						Objects.requireNonNull(armorStand.getAttribute(Attribute.MAX_HEALTH)).setBaseValue(0.01);
-					} else {
-						LegacyAttributeUtils.setMaxHealth(armorStand);
-					}
-					armorStand.setSmall(true);
-					armorStand.setInvisible(true);
-					armorStand.setSilent(true);
-					armorStand.setInvulnerable(true);
-					armorStand.setArms(false);
-					armorStand.setCanTick(false);
-					armorStand.setAI(false);
-					armorStand.setGravity(false);
-					armorStand.setPersistent(false);
-					armorStand.getPersistentDataContainer().set(BukkitFurnitureManager.FURNITURE_SEAT_BASE_ENTITY_KEY, PersistentDataType.INTEGER, furniture.baseEntityId());
-					armorStand.getPersistentDataContainer().set(BukkitFurnitureManager.FURNITURE_SEAT_VECTOR_3F_KEY, PersistentDataType.STRING, this.offset().x + ", " + this.offset().y + ", " + this.offset().z);
-				}) :
-				EntityUtils.spawnEntity(player.getWorld(), VersionHelper.isOrAbove1_20_2() ? location : location.subtract(0,0.25,0), EntityType.ITEM_DISPLAY, entity -> {
-					ItemDisplay itemDisplay = (ItemDisplay) entity;
-					itemDisplay.setPersistent(false);
-					itemDisplay.getPersistentDataContainer().set(BukkitFurnitureManager.FURNITURE_SEAT_BASE_ENTITY_KEY, PersistentDataType.INTEGER, furniture.baseEntityId());
-					itemDisplay.getPersistentDataContainer().set(BukkitFurnitureManager.FURNITURE_SEAT_VECTOR_3F_KEY, PersistentDataType.STRING, this.offset().x + ", " + this.offset().y + ", " + this.offset().z);
-				});
-		seatEntity.addPassenger(player);
-		// Todo 调查一下，位置y的变化是为了什么，可能是为了让玩家做下去之后的位置是seatlocation的位置
-		BukkitCraftEngine.instance().scheduler().sync().runLater(() -> player.setPose(Pose.SWIMMING, true),
-				1, location.getWorld(), location.getBlockX() >> 4, location.getBlockZ() >> 4);
+		// Sync Pose
+		player.setPose(Pose.SWIMMING, true);
+		Object syncPosePacket = null;
+		try {
+			Object playerData = Reflections.method$Entity$getEntityData.invoke(serverPlayer.serverPlayer());
+			Object dataItem = Reflections.method$SynchedEntityData$getItem.invoke(playerData, PlayerData.Pose.entityDataAccessor());
+			Object dataValue = Reflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
+			syncPosePacket = FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(serverPlayer.entityID(), List.of(dataValue));
+		} catch (Exception e) {
+			CraftEngine.instance().logger().warn("Failed to construct sync pose packet", e);
+		}
 
-		return new CrawlEntity(seatEntity, visualId);
-		// Todo 检测版本实现潜影贝缩小 + 找到合适的位置保持玩家的姿势 + 潜影贝骑乘展示实体
+		Object finalSyncPosePacket = syncPosePacket;
+		BukkitCraftEngine.instance().scheduler().sync().runLater(() -> {
+			serverPlayer.sendPacket(finalSyncPosePacket, true);
+			for (org.bukkit.entity.Player p : PlayerUtils.getTrackedBy(player)) {
+				BukkitNetworkManager.instance().sendPacket(BukkitAdaptors.adapt(p), finalSyncPosePacket, true);
+			}
+		}, 1, location.getWorld(), location.getBlockX() >> 4, location.getBlockZ() >> 4);
+
+		return new CrawlEntity(seatEntity, furniture, offset(), player.getEntityId(), visualId, syncPosePacket);
 	}
 
 	private static class CrawlEntity extends BukkitSeatEntity {
-		private final int visual;
+		private final int visualId;
+		private final Object syncPosePacket;
 
-		public CrawlEntity(org.bukkit.entity.Entity entity, int visual) {
-			super(entity);
-			this.visual = visual;
+
+		public CrawlEntity(Entity entity, Furniture furniture, Vector3f vector3f, int playerID, int visualId, Object fixPosePacket) {
+			super(entity, furniture, vector3f, playerID);
+			this.visualId = visualId;
+			this.syncPosePacket = fixPosePacket;
 		}
 
 		@Override
-		public void sync(Player to) {
-			org.bukkit.entity.Entity entity = this.literalObject();
-			for (org.bukkit.entity.Entity passenger : entity.getPassengers()) {
-				if (passenger instanceof org.bukkit.entity.Player) {
-					try {
-						Object serverPlayer = FastNMS.INSTANCE.method$CraftEntity$getHandle(passenger);
-						Reflections.method$Entity$refreshEntityData.invoke(serverPlayer, to.serverPlayer());
-					} catch (Exception e) {
-						BukkitCraftEngine.instance().logger().warn("Failed to sync player pose", e);
-					}
-				}
-			}
+		public void add(NetWorkUser from, NetWorkUser to) {
+			to.sendPacket(syncPosePacket, false);
 		}
 
 		@Override
-		public void dismount(Player from) {
-			super.dismount(from);
-			((org.bukkit.entity.Player) from.platformPlayer()).setPose(Pose.STANDING, false);
+		public void dismount(Player player) {
+			super.dismount(player);
+			((org.bukkit.entity.Player) player.platformPlayer()).setPose(Pose.STANDING, false);
 			try {
-				@SuppressWarnings("Confusing primitive array argument to var-arg method PrimitiveArrayArgumentToVariableArgMethod")
-				Object packet = Reflections.constructor$ClientboundRemoveEntitiesPacket.newInstance(new int[]{visual});
-				from.sendPacket(packet, true);
+				Object packet = Reflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{visualId});
+				player.sendPacket(packet, false);
 			} catch (Exception e) {
-				BukkitCraftEngine.instance().logger().warn("Failed to send remove entity packet", e);
+				BukkitCraftEngine.instance().logger().warn("Failed to remove crawl entity", e);
 			}
-		}
-
-		@Override
-		public void remove() {
-			org.bukkit.entity.Entity entity = this.literalObject();
-			if (entity == null) return;
-
-			for (org.bukkit.entity.Entity passenger : entity.getPassengers()) {
-				entity.removePassenger(passenger);
-				if (passenger instanceof org.bukkit.entity.Player p) {
-					dismount(BukkitAdaptors.adapt(p));
-				}
-			}
-			entity.remove();
 		}
 
 		@Override
@@ -161,8 +147,8 @@ public class CrawlSeat extends AbstractSeat {
 
 		@Override
 		public Seat create(List<String> args) {
-			if (args.size() == 1) return new CrawlSeat(MiscUtils.getAsVector3f(args.get(0), "seats"), 0, false);
-			return new CrawlSeat(MiscUtils.getAsVector3f(args.get(0), "seats"), Float.parseFloat(args.get(1)), true);
+			if (args.size() == 1) return new CrawlSeat(MiscUtils.getAsVector3f(args.getFirst(), "seats"), 0, false);
+			return new CrawlSeat(MiscUtils.getAsVector3f(args.getFirst(), "seats"), Float.parseFloat(args.get(1)), true);
 		}
 	}
 }
