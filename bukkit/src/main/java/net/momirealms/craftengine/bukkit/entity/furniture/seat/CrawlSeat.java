@@ -7,10 +7,13 @@ import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurniture;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.plugin.network.BukkitNetworkManager;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MAttributeHolders;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MEntityTypes;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.EntityUtils;
 import net.momirealms.craftengine.bukkit.util.PlayerUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.entity.furniture.AbstractSeat;
 import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import net.momirealms.craftengine.core.entity.furniture.Seat;
@@ -62,18 +65,18 @@ public class CrawlSeat extends AbstractSeat {
 		seatEntity.addPassenger(player);
 
 		// Fix Rider Pose
-		int visualId = Reflections.instance$Entity$ENTITY_COUNTER.incrementAndGet();
+		int visualId = CoreReflections.instance$Entity$ENTITY_COUNTER.incrementAndGet();
 		List<Object> packets = new ArrayList<>();
 		packets.add(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(visualId, UUID.randomUUID(), location.getX(), location.getY(), location.getZ(), location.getPitch(), location.getYaw(),
-				Reflections.instance$EntityType$SHULKER, 0, Reflections.instance$Vec3$Zero, 0));
+				MEntityTypes.instance$EntityType$SHULKER, 0, CoreReflections.instance$Vec3$Zero, 0));
 		packets.add(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(visualId, List.copyOf(visualData)));
 
 		try {
 			if (VersionHelper.isOrAbove1_20_5()) {
-				Object attributeInstance = Reflections.constructor$AttributeInstance.newInstance(Reflections.instance$Holder$Attribute$scale, (Consumer<?>) (o) -> {});
-				Reflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, 0.6);
+				Object attributeInstance = CoreReflections.constructor$AttributeInstance.newInstance(MAttributeHolders.SCALE, (Consumer<?>) (o) -> {});
+				CoreReflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, 0.6);
 				packets.add(
-						Reflections.constructor$ClientboundUpdateAttributesPacket0
+						NetworkReflections.constructor$ClientboundUpdateAttributesPacket0
 								.newInstance(visualId, Collections.singletonList(attributeInstance))
 				);
 				packets.add(FastNMS.INSTANCE.constructor$ClientboundSetPassengersPacket(seatEntity.getEntityId(), visualId));
@@ -90,9 +93,9 @@ public class CrawlSeat extends AbstractSeat {
 		player.setPose(Pose.SWIMMING, true);
 		Object syncPosePacket = null;
 		try {
-			Object playerData = Reflections.method$Entity$getEntityData.invoke(serverPlayer.serverPlayer());
-			Object dataItem = Reflections.method$SynchedEntityData$getItem.invoke(playerData, PlayerData.Pose.entityDataAccessor());
-			Object dataValue = Reflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
+			Object playerData = CoreReflections.method$Entity$getEntityData.invoke(serverPlayer.serverPlayer());
+			Object dataItem = CoreReflections.method$SynchedEntityData$getItem.invoke(playerData, PlayerData.Pose.entityDataAccessor());
+			Object dataValue = CoreReflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
 			syncPosePacket = FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(serverPlayer.entityID(), List.of(dataValue));
 		} catch (Exception e) {
 			CraftEngine.instance().logger().warn("Failed to construct sync pose packet", e);
@@ -130,7 +133,7 @@ public class CrawlSeat extends AbstractSeat {
 			super.dismount(player);
 			((org.bukkit.entity.Player) player.platformPlayer()).setPose(Pose.STANDING, false);
 			try {
-				Object packet = Reflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{visualId});
+				Object packet = CoreReflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{visualId});
 				player.sendPacket(packet, false);
 			} catch (Exception e) {
 				BukkitCraftEngine.instance().logger().warn("Failed to remove crawl entity", e);

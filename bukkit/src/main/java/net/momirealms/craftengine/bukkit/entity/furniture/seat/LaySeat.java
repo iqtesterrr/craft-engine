@@ -10,6 +10,10 @@ import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurniture;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.plugin.network.BukkitNetworkManager;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MEntityTypes;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MItems;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.bukkit.plugin.scheduler.impl.FoliaTask;
 import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.*;
@@ -74,41 +78,41 @@ public class LaySeat extends AbstractSeat {
 		try {
 			List<Object> packets = new ArrayList<>();
 			// NPC
-			Object server = Reflections.method$MinecraftServer$getServer.invoke(null);
+			Object server = CoreReflections.method$MinecraftServer$getServer.invoke(null);
 			Object level = FastNMS.INSTANCE.field$CraftWorld$ServerLevel(player.getWorld());
 			UUID uuid = UUID.randomUUID();
-			Object npcProfile = Reflections.constructor$GameProfile.newInstance(uuid, player.getName());
-			Object playerProfile = Reflections.method$ServerPlayer$getGameProfile.invoke(serverPlayer);
+			Object npcProfile = CoreReflections.constructor$GameProfile.newInstance(uuid, player.getName());
+			Object playerProfile = CoreReflections.method$ServerPlayer$getGameProfile.invoke(serverPlayer);
 
-			Multimap<String, Object> properties = (Multimap<String, Object>) Reflections.method$GameProfile$getProperties.invoke(npcProfile);
-			properties.putAll((Multimap<String, Object>) Reflections.method$GameProfile$getProperties.invoke(playerProfile));
+			Multimap<String, Object> properties = (Multimap<String, Object>) CoreReflections.method$GameProfile$getProperties.invoke(npcProfile);
+			properties.putAll((Multimap<String, Object>) CoreReflections.method$GameProfile$getProperties.invoke(playerProfile));
 
 			Object npc;
 			if (VersionHelper.isOrAbove1_20_2()) {
-				Object clientInfo = Reflections.method$ServerPlayer$clientInformation.invoke(serverPlayer);
-				npc = Reflections.constructor$ServerPlayer.newInstance(server, level, npcProfile, clientInfo);
+				Object clientInfo = CoreReflections.method$ServerPlayer$clientInformation.invoke(serverPlayer);
+				npc = CoreReflections.constructor$ServerPlayer.newInstance(server, level, npcProfile, clientInfo);
 			} else {
-				npc = Reflections.constructor$ServerPlayer.newInstance(server, level, npcProfile);
+				npc = CoreReflections.constructor$ServerPlayer.newInstance(server, level, npcProfile);
 			}
 			int npcId = FastNMS.INSTANCE.method$Entity$getId(npc);
-			Reflections.method$Entity$absSnapTo.invoke(npc, loc.getX(), loc.getY(), loc.getZ(), 0, 0);
+			CoreReflections.method$Entity$absSnapTo.invoke(npc, loc.getX(), loc.getY(), loc.getZ(), 0, 0);
 			Object npcSpawnPacket = FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(npcId, uuid,
 					loc.getX(), loc.getY(), loc.getZ(), 0, 0,
-					Reflections.instance$EntityType$PLAYER, 0, Reflections.instance$Vec3$Zero, 0);
+					MEntityTypes.instance$EntityType$PLAYER, 0, CoreReflections.instance$Vec3$Zero, 0);
 
 			// Info
-			EnumSet enumSet = EnumSet.noneOf((Class<? extends Enum>) Reflections.clazz$ClientboundPlayerInfoUpdatePacket$Action);
-			enumSet.add(Reflections.instance$ClientboundPlayerInfoUpdatePacket$Action$ADD_PLAYER);
+			EnumSet enumSet = EnumSet.noneOf((Class<? extends Enum>) CoreReflections.clazz$ClientboundPlayerInfoUpdatePacket$Action);
+			enumSet.add(CoreReflections.instance$ClientboundPlayerInfoUpdatePacket$Action$ADD_PLAYER);
 			Object entry;
 			if (VersionHelper.isOrAbove1_21_4()) {
-				entry = Reflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
-						uuid, npcProfile, false, 0, Reflections.instance$GameType$SURVIVAL, null, true, 0, null);
+				entry = CoreReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
+						uuid, npcProfile, false, 0, CoreReflections.instance$GameType$SURVIVAL, null, true, 0, null);
 			} else if (VersionHelper.isOrAbove1_21_3()) {
-				entry = Reflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
-						uuid, npcProfile, false, 0, Reflections.instance$GameType$SURVIVAL, null, 0, null);
+				entry = CoreReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
+						uuid, npcProfile, false, 0, CoreReflections.instance$GameType$SURVIVAL, null, 0, null);
 			} else {
-				entry = Reflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
-						uuid, npcProfile, false, 0, Reflections.instance$GameType$SURVIVAL, null, null);
+				entry = CoreReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
+						uuid, npcProfile, false, 0, CoreReflections.instance$GameType$SURVIVAL, null, null);
 			}
 			Object npcInfoPacket = FastNMS.INSTANCE.constructor$ClientboundPlayerInfoUpdatePacket(enumSet, Collections.singletonList(entry));
 
@@ -120,50 +124,50 @@ public class LaySeat extends AbstractSeat {
 			bedLoc.setY(bedLoc.getWorld().getMinHeight());
 			Object bedPos = LocationUtils.toBlockPos(new BlockPos(bedLoc.getBlockX(), bedLoc.getBlockY(), bedLoc.getBlockZ()));
 			Object blockState = BlockStateUtils.blockDataToBlockState(bedData);
-			Object bedPacket = Reflections.constructor$ClientboundBlockUpdatePacket.newInstance(bedPos, blockState);
+			Object bedPacket = CoreReflections.constructor$ClientboundBlockUpdatePacket.newInstance(bedPos, blockState);
 
 			// Data
-			Object npcData = Reflections.method$Entity$getEntityData.invoke(npc);
-			Object playerData = Reflections.method$Entity$getEntityData.invoke(serverPlayer);
-			Reflections.method$Entity$setInvisible.invoke(serverPlayer, true);
-			Reflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.Pose.entityDataAccessor(), Reflections.instance$Pose$SLEEPING);
-			Reflections.method$SynchedEntityData$set.invoke(npcData, LivingEntityData.SleepingPos.entityDataAccessor(), Optional.of(bedPos));
-			Reflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.Skin.entityDataAccessor(), Reflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.Skin.entityDataAccessor()));
-			Reflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.Hand.entityDataAccessor(), Reflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.Hand.entityDataAccessor()));
-			Reflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.LShoulder.entityDataAccessor(), Reflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.LShoulder.entityDataAccessor()));
-			Reflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.RShoulder.entityDataAccessor(), Reflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.RShoulder.entityDataAccessor()));
-			Reflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.LShoulder.entityDataAccessor(), Reflections.instance$CompoundTag$Empty);
-			Reflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.RShoulder.entityDataAccessor(), Reflections.instance$CompoundTag$Empty);
+			Object npcData = CoreReflections.method$Entity$getEntityData.invoke(npc);
+			Object playerData = CoreReflections.method$Entity$getEntityData.invoke(serverPlayer);
+			CoreReflections.method$Entity$setInvisible.invoke(serverPlayer, true);
+			CoreReflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.Pose.entityDataAccessor(), CoreReflections.instance$Pose$SLEEPING);
+			CoreReflections.method$SynchedEntityData$set.invoke(npcData, LivingEntityData.SleepingPos.entityDataAccessor(), Optional.of(bedPos));
+			CoreReflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.Skin.entityDataAccessor(), CoreReflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.Skin.entityDataAccessor()));
+			CoreReflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.Hand.entityDataAccessor(), CoreReflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.Hand.entityDataAccessor()));
+			CoreReflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.LShoulder.entityDataAccessor(), CoreReflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.LShoulder.entityDataAccessor()));
+			CoreReflections.method$SynchedEntityData$set.invoke(npcData, PlayerData.RShoulder.entityDataAccessor(), CoreReflections.method$SynchedEntityData$get.invoke(playerData, PlayerData.RShoulder.entityDataAccessor()));
+			CoreReflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.LShoulder.entityDataAccessor(), CoreReflections.instance$CompoundTag$Empty);
+			CoreReflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.RShoulder.entityDataAccessor(), CoreReflections.instance$CompoundTag$Empty);
 
 			// SetData
-			Reflections.method$Entity$setInvisible.invoke(serverPlayer, true);
+			CoreReflections.method$Entity$setInvisible.invoke(serverPlayer, true);
 			Object npcDataPacket = FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(
-					npcId, (List) Reflections.method$SynchedEntityData$packDirty.invoke(npcData)
+					npcId, (List) CoreReflections.method$SynchedEntityData$packDirty.invoke(npcData)
 			);
 
 			// Remove
-			Object npcRemovePacket = Reflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{npcId});
+			Object npcRemovePacket = CoreReflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{npcId});
 
 			// TP
 			Object npcTeleportPacket;
 			if (VersionHelper.isOrAbove1_21_3()) {
-				Object positionMoveRotation = Reflections.method$PositionMoveRotation$of.invoke(null, npc);
-				npcTeleportPacket = Reflections.constructor$ClientboundTeleportEntityPacket.newInstance(npcId, positionMoveRotation, Set.of(), false);
+				Object positionMoveRotation = CoreReflections.method$PositionMoveRotation$of.invoke(null, npc);
+				npcTeleportPacket = CoreReflections.constructor$ClientboundTeleportEntityPacket.newInstance(npcId, positionMoveRotation, Set.of(), false);
 			} else {
-				npcTeleportPacket = Reflections.constructor$ClientboundTeleportEntityPacket.newInstance(npc);
+				npcTeleportPacket = CoreReflections.constructor$ClientboundTeleportEntityPacket.newInstance(npc);
 			}
 
 
 			// Equipment
 			List<Pair<Object, Object>> emptySlots = new ArrayList<>();
 
-			emptySlots.add(Pair.of(Reflections.instance$EquipmentSlot$MAINHAND, Reflections.instance$ItemStack$Air));
-			emptySlots.add(Pair.of(Reflections.instance$EquipmentSlot$OFFHAND, Reflections.instance$ItemStack$Air));
-			emptySlots.add(Pair.of(Reflections.instance$EquipmentSlot$HEAD, Reflections.instance$ItemStack$Air));
-			emptySlots.add(Pair.of(Reflections.instance$EquipmentSlot$CHEST, Reflections.instance$ItemStack$Air));
-			emptySlots.add(Pair.of(Reflections.instance$EquipmentSlot$LEGS, Reflections.instance$ItemStack$Air));
-			emptySlots.add(Pair.of(Reflections.instance$EquipmentSlot$FEET, Reflections.instance$ItemStack$Air));
-			Object emptyEquipPacket = Reflections.constructor$ClientboundSetEquipmentPacket.newInstance(player.getEntityId(), emptySlots);
+			emptySlots.add(Pair.of(CoreReflections.instance$EquipmentSlot$MAINHAND, MItems.Air$ItemStack));
+			emptySlots.add(Pair.of(CoreReflections.instance$EquipmentSlot$OFFHAND, MItems.Air$ItemStack));
+			emptySlots.add(Pair.of(CoreReflections.instance$EquipmentSlot$HEAD, MItems.Air$ItemStack));
+			emptySlots.add(Pair.of(CoreReflections.instance$EquipmentSlot$CHEST, MItems.Air$ItemStack));
+			emptySlots.add(Pair.of(CoreReflections.instance$EquipmentSlot$LEGS, MItems.Air$ItemStack));
+			emptySlots.add(Pair.of(CoreReflections.instance$EquipmentSlot$FEET, MItems.Air$ItemStack));
+			Object emptyEquipPacket = NetworkReflections.constructor$ClientboundSetEquipmentPacket.newInstance(player.getEntityId(), emptySlots);
 
 			Map<EquipmentSlot, ItemStack> equipments = new HashMap<>();
 			EntityEquipment equipment = player.getEquipment();
@@ -178,7 +182,7 @@ public class LaySeat extends AbstractSeat {
 			}
 			List<Pair<Object, Object>> npcSlots = new ArrayList<>();
 			equipments.forEach((slot, item) -> npcSlots.add(Pair.of(EntityUtils.fromEquipmentSlot(slot), FastNMS.INSTANCE.method$CraftItemStack$asNMSCopy(item))));
-			Object fullEquipPacket = Reflections.constructor$ClientboundSetEquipmentPacket.newInstance(npcId, npcSlots);
+			Object fullEquipPacket = NetworkReflections.constructor$ClientboundSetEquipmentPacket.newInstance(npcId, npcSlots);
 
 
 			packets.add(npcInfoPacket);
@@ -341,16 +345,16 @@ public class LaySeat extends AbstractSeat {
 			Object blockPos = LocationUtils.toBlockPos(bedLoc.getBlockX(), bedLoc.getBlockY(), bedLoc.getBlockZ());
 			Object blockState = BlockStateUtils.blockDataToBlockState(bedLoc.getBlock().getBlockData());
 			try {
-				Object blockUpdatePacket = Reflections.constructor$ClientboundBlockUpdatePacket.newInstance(blockPos, blockState);
-				if (player.getPotionEffect(PotionEffectType.INVISIBILITY) == null) Reflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), false);
+				Object blockUpdatePacket = CoreReflections.constructor$ClientboundBlockUpdatePacket.newInstance(blockPos, blockState);
+				if (player.getPotionEffect(PotionEffectType.INVISIBILITY) == null) CoreReflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), false);
 				from.sendPacket(this.npcRemovePacket, true);
 				from.sendPacket(blockUpdatePacket, true);
 
-				Object npcData = Reflections.method$Entity$getEntityData.invoke(npc);
-				Object playerData = Reflections.method$Entity$getEntityData.invoke(serverPlayer.serverPlayer());
-				Reflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.LShoulder.entityDataAccessor(), Reflections.method$SynchedEntityData$get.invoke(npcData, PlayerData.LShoulder.entityDataAccessor()));
-				Reflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.RShoulder.entityDataAccessor(), Reflections.method$SynchedEntityData$get.invoke(npcData, PlayerData.RShoulder.entityDataAccessor()));
-				if (player.getPotionEffect(PotionEffectType.INVISIBILITY) == null) Reflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), false);
+				Object npcData = CoreReflections.method$Entity$getEntityData.invoke(npc);
+				Object playerData = CoreReflections.method$Entity$getEntityData.invoke(serverPlayer.serverPlayer());
+				CoreReflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.LShoulder.entityDataAccessor(), CoreReflections.method$SynchedEntityData$get.invoke(npcData, PlayerData.LShoulder.entityDataAccessor()));
+				CoreReflections.method$SynchedEntityData$set.invoke(playerData, PlayerData.RShoulder.entityDataAccessor(), CoreReflections.method$SynchedEntityData$get.invoke(npcData, PlayerData.RShoulder.entityDataAccessor()));
+				if (player.getPotionEffect(PotionEffectType.INVISIBILITY) == null) CoreReflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), false);
 
 				player.updateInventory();
 
@@ -358,8 +362,8 @@ public class LaySeat extends AbstractSeat {
 					player.setSleepingIgnored(false);
 				}
 
-				Object fullSlots = Reflections.method$ClientboundSetEquipmentPacket$getSlots.invoke(this.fullEquipPacket);
-				Object recoverEquip = Reflections.constructor$ClientboundSetEquipmentPacket.newInstance(player.getEntityId(), fullSlots);
+				Object fullSlots = CoreReflections.method$ClientboundSetEquipmentPacket$getSlots.invoke(this.fullEquipPacket);
+				Object recoverEquip = NetworkReflections.constructor$ClientboundSetEquipmentPacket.newInstance(player.getEntityId(), fullSlots);
 
 				for (org.bukkit.entity.Player p : PlayerUtils.getTrackedBy(player)) {
 					BukkitServerPlayer sp = BukkitAdaptors.adapt(p);
@@ -388,8 +392,8 @@ public class LaySeat extends AbstractSeat {
 			equipments.forEach((slot, item) ->
 					allSlots.add(Pair.of(EntityUtils.fromEquipmentSlot(slot), FastNMS.INSTANCE.method$CraftItemStack$asNMSCopy(item))));
 			try {
-				this.updateEquipPacket = Reflections.constructor$ClientboundSetEquipmentPacket.newInstance(npcID, changedSlots);
-				this.fullEquipPacket = Reflections.constructor$ClientboundSetEquipmentPacket.newInstance(npcID, allSlots);
+				this.updateEquipPacket = NetworkReflections.constructor$ClientboundSetEquipmentPacket.newInstance(npcID, changedSlots);
+				this.fullEquipPacket = NetworkReflections.constructor$ClientboundSetEquipmentPacket.newInstance(npcID, allSlots);
 				if (previousSlot != -1) {
 					player.updateInventory();
 				}
@@ -414,7 +418,7 @@ public class LaySeat extends AbstractSeat {
 		@Override
 		public void handleContainerSetSlot(NetWorkUser user, NMSPacketEvent event, Object packet) {
 			try {
-				int slot = (int) Reflections.method$ClientboundContainerSetSlotPacket$getSlot.invoke(packet);
+				int slot = (int) CoreReflections.method$ClientboundContainerSetSlotPacket$getSlot.invoke(packet);
 				org.bukkit.entity.Player player = (org.bukkit.entity.Player) user.platformPlayer();
 
 				int convertSlot;
@@ -437,9 +441,9 @@ public class LaySeat extends AbstractSeat {
 				}
 
 				if (!(convertSlot == player.getInventory().getHeldItemSlot() || (isPlayerInv && (slot == 45 || (slot >= 5 && slot <= 8))))) return;
-				int containerId = (int) Reflections.method$ClientboundContainerSetSlotPacket$getContainerId.invoke(packet);
-				int stateId = (int) Reflections.method$ClientboundContainerSetSlotPacket$getStateId.invoke(packet);
-				Object replacePacket = Reflections.constructor$ClientboundContainerSetSlotPacket.newInstance(containerId, stateId, slot, Reflections.instance$ItemStack$Air);
+				int containerId = (int) CoreReflections.method$ClientboundContainerSetSlotPacket$getContainerId.invoke(packet);
+				int stateId = (int) CoreReflections.method$ClientboundContainerSetSlotPacket$getStateId.invoke(packet);
+				Object replacePacket = CoreReflections.constructor$ClientboundContainerSetSlotPacket.newInstance(containerId, stateId, slot, MItems.Air$ItemStack);
 				event.replacePacket(replacePacket);
 			} catch (Exception e) {
 				CraftEngine.instance().logger().warn("Failed to handleContainerSetSlotPacket", e);
@@ -452,9 +456,9 @@ public class LaySeat extends AbstractSeat {
 				try {
 					Object animatePacket;
 					if (e.getAnimationType() == PlayerAnimationType.ARM_SWING) {
-						animatePacket = Reflections.constructor$ClientboundAnimatePacket.newInstance(npc, 0);
+						animatePacket = CoreReflections.constructor$ClientboundAnimatePacket.newInstance(npc, 0);
 					} else {
-						animatePacket = Reflections.constructor$ClientboundAnimatePacket.newInstance(npc, 3);
+						animatePacket = CoreReflections.constructor$ClientboundAnimatePacket.newInstance(npc, 3);
 					}
 					serverPlayer.sendPacket(animatePacket, true);
 					for (org.bukkit.entity.Player other : PlayerUtils.getTrackedBy(serverPlayer.platformPlayer())) {
@@ -502,7 +506,7 @@ public class LaySeat extends AbstractSeat {
 				// Invisible
 				updateNpcInvisible();
 				try {
-					if (!player.isInvisible()) Reflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), true);
+					if (!player.isInvisible()) CoreReflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), true);
 				} catch (Exception exception) {
 					CraftEngine.instance().logger().warn("Failed to set shared flag", exception);
 				}
@@ -545,7 +549,7 @@ public class LaySeat extends AbstractSeat {
 		private void updateNpcYaw(float playerYaw) {
 			byte packYaw = getRot(playerYaw);
 			try {
-				this.npcRotHeadPacket = Reflections.constructor$ClientboundRotateHeadPacket.newInstance(npc, packYaw);
+				this.npcRotHeadPacket = CoreReflections.constructor$ClientboundRotateHeadPacket.newInstance(npc, packYaw);
 			} catch (Exception exception) {
 				CraftEngine.instance().logger().warn("Failed to sync NPC yaw", exception);
 			}
@@ -584,20 +588,20 @@ public class LaySeat extends AbstractSeat {
 				org.bukkit.entity.Player player = serverPlayer.platformPlayer();
 				if (player.getPotionEffect(PotionEffectType.INVISIBILITY) == null && npcDataPacket != null) {
 					npcDataPacket = null;
-					Reflections.method$Entity$setInvisible.invoke(npc, false);
-					Object npcData = Reflections.method$Entity$getEntityData.invoke(npc);
-					Object dataItem = Reflections.method$SynchedEntityData$getItem.invoke(npcData, PlayerData.SharedFlags.entityDataAccessor());
-					Object dataValue = Reflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
+					CoreReflections.method$Entity$setInvisible.invoke(npc, false);
+					Object npcData = CoreReflections.method$Entity$getEntityData.invoke(npc);
+					Object dataItem = CoreReflections.method$SynchedEntityData$getItem.invoke(npcData, PlayerData.SharedFlags.entityDataAccessor());
+					Object dataValue = CoreReflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
 					Object packet = FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(npcID, List.of(dataValue));
 					serverPlayer.sendPacket(packet, false);
 					for (org.bukkit.entity.Player p : PlayerUtils.getTrackedBy(player)) {
 						BukkitNetworkManager.instance().getOnlineUser(p).sendPacket(packet, false);
 					}
 				} else if (player.getPotionEffect(PotionEffectType.INVISIBILITY) != null && npcDataPacket == null) {
-					Reflections.method$Entity$setInvisible.invoke(npc, true);
-					Object npcData = Reflections.method$Entity$getEntityData.invoke(npc);
-					Object dataItem = Reflections.method$SynchedEntityData$getItem.invoke(npcData, PlayerData.SharedFlags.entityDataAccessor());
-					Object dataValue = Reflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
+					CoreReflections.method$Entity$setInvisible.invoke(npc, true);
+					Object npcData = CoreReflections.method$Entity$getEntityData.invoke(npc);
+					Object dataItem = CoreReflections.method$SynchedEntityData$getItem.invoke(npcData, PlayerData.SharedFlags.entityDataAccessor());
+					Object dataValue = CoreReflections.method$SynchedEntityData$DataItem$value.invoke(dataItem);
 					npcDataPacket = FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(npcID, List.of(dataValue));
 					serverPlayer.sendPacket(npcDataPacket, false);
 					for (org.bukkit.entity.Player p : PlayerUtils.getTrackedBy(player)) {

@@ -111,24 +111,24 @@ public class EntityUtils {
 
     public static Object fromEquipmentSlot(org.bukkit.inventory.EquipmentSlot slot) {
         return switch (slot) {
-            case HAND -> Reflections.instance$EquipmentSlot$MAINHAND;
-            case OFF_HAND -> Reflections.instance$EquipmentSlot$OFFHAND;
-            case HEAD -> Reflections.instance$EquipmentSlot$HEAD;
-            case CHEST -> Reflections.instance$EquipmentSlot$CHEST;
-            case LEGS -> Reflections.instance$EquipmentSlot$LEGS;
-            case FEET -> Reflections.instance$EquipmentSlot$FEET;
+            case HAND -> CoreReflections.instance$EquipmentSlot$MAINHAND;
+            case OFF_HAND -> CoreReflections.instance$EquipmentSlot$OFFHAND;
+            case HEAD -> CoreReflections.instance$EquipmentSlot$HEAD;
+            case CHEST -> CoreReflections.instance$EquipmentSlot$CHEST;
+            case LEGS -> CoreReflections.instance$EquipmentSlot$LEGS;
+            case FEET -> CoreReflections.instance$EquipmentSlot$FEET;
             default -> new Object();
         };
     };
 
     public static Object fromEquipmentSlot(EquipmentSlot slot) {
         return switch (slot) {
-            case MAIN_HAND -> Reflections.instance$EquipmentSlot$MAINHAND;
-            case OFF_HAND -> Reflections.instance$EquipmentSlot$OFFHAND;
-            case HEAD -> Reflections.instance$EquipmentSlot$HEAD;
-            case CHEST -> Reflections.instance$EquipmentSlot$CHEST;
-            case LEGS -> Reflections.instance$EquipmentSlot$LEGS;
-            case FEET -> Reflections.instance$EquipmentSlot$FEET;
+            case MAIN_HAND -> CoreReflections.instance$EquipmentSlot$MAINHAND;
+            case OFF_HAND -> CoreReflections.instance$EquipmentSlot$OFFHAND;
+            case HEAD -> CoreReflections.instance$EquipmentSlot$HEAD;
+            case CHEST -> CoreReflections.instance$EquipmentSlot$CHEST;
+            case LEGS -> CoreReflections.instance$EquipmentSlot$LEGS;
+            case FEET -> CoreReflections.instance$EquipmentSlot$FEET;
             default -> new Object();
         };
     }

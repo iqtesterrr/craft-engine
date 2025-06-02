@@ -2331,7 +2331,7 @@ public class PacketConsumers {
 
     public static final TriConsumer<NetWorkUser, NMSPacketEvent, Object> SET_EQUIPMENT_NMS = (user, event, packet) -> {
         try {
-            int entityId = (int) Reflections.method$ClientboundSetEquipmentPacket$getEntity.invoke(packet);
+            int entityId = (int) CoreReflections.method$ClientboundSetEquipmentPacket$getEntity.invoke(packet);
             EntityPacketHandler handler = user.entityPacketHandlers().get(entityId);
             if (handler != null) {
                 handler.handleSetEquipment(user, event, packet);
