@@ -1,10 +1,11 @@
 package net.momirealms.craftengine.bukkit.block.behavior;
 
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.core.block.BlockBehavior;
 import net.momirealms.craftengine.core.block.CustomBlock;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
+import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import net.momirealms.craftengine.core.util.Tuple;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
 
 import java.util.List;
 import java.util.Map;
@@ -13,8 +14,8 @@ import java.util.Set;
 public class HangingBlockBehavior extends BushBlockBehavior {
     public static final Factory FACTORY = new Factory();
 
-    public HangingBlockBehavior(CustomBlock block, List<Object> tagsCanSurviveOn, Set<Object> blocksCansSurviveOn, Set<String> customBlocksCansSurviveOn) {
-        super(block, tagsCanSurviveOn, blocksCansSurviveOn, customBlocksCansSurviveOn);
+    public HangingBlockBehavior(CustomBlock block, int delay, boolean blacklist, boolean stackable, List<Object> tagsCanSurviveOn, Set<Object> blocksCansSurviveOn, Set<String> customBlocksCansSurviveOn) {
+        super(block, delay, blacklist, stackable, tagsCanSurviveOn, blocksCansSurviveOn, customBlocksCansSurviveOn);
     }
 
     @Override
@@ -32,7 +33,10 @@ public class HangingBlockBehavior extends BushBlockBehavior {
         @Override
         public BlockBehavior create(CustomBlock block, Map<String, Object> arguments) {
             Tuple<List<Object>, Set<Object>, Set<String>> tuple = readTagsAndState(arguments, true);
-            return new HangingBlockBehavior(block, tuple.left(), tuple.mid(), tuple.right());
+            boolean stackable = (boolean) arguments.getOrDefault("stackable", false);
+            int delay = ResourceConfigUtils.getAsInt(arguments.getOrDefault("delay", 0), "delay");
+            boolean blacklistMode = (boolean) arguments.getOrDefault("blacklist", false);
+            return new HangingBlockBehavior(block, delay, blacklistMode, stackable, tuple.left(), tuple.mid(), tuple.right());
         }
     }
 }

@@ -5,16 +5,19 @@ import net.momirealms.craftengine.core.plugin.classpath.ClassPathAppender;
 import net.momirealms.craftengine.core.plugin.dependency.classloader.IsolatedClassLoader;
 import net.momirealms.craftengine.core.plugin.dependency.relocation.Relocation;
 import net.momirealms.craftengine.core.plugin.dependency.relocation.RelocationHandler;
+import net.momirealms.craftengine.core.util.FileUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.stream.Stream;
 
 public class DependencyManagerImpl implements DependencyManager {
     private final DependencyRegistry registry;
@@ -112,18 +115,38 @@ public class DependencyManagerImpl implements DependencyManager {
 
     private Path downloadDependency(Dependency dependency) throws DependencyDownloadException {
         String fileName = dependency.fileName(null);
-        Path file = this.cacheDirectory.resolve(fileName);
+        Path file = this.cacheDirectory.resolve(dependency.toLocalPath()).resolve(fileName);
         // if the file already exists, don't attempt to re-download it.
         if (Files.exists(file)) {
             return file;
         }
+        // before downloading a newer version, delete those outdated files
+        Path versionFolder = file.getParent().getParent();
+        if (Files.exists(versionFolder) && Files.isDirectory(versionFolder)) {
+            String version = dependency.getVersion();
+            try (Stream<Path> dirStream = Files.list(versionFolder)) {
+                dirStream.filter(Files::isDirectory)
+                        .filter(it -> !it.getFileName().toString().equals(version))
+                        .forEach(dir -> {
+                            try {
+                                FileUtils.deleteDirectory(dir);
+                                plugin.logger().info("Cleaned up outdated dependency " + dir);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to clean " + versionFolder, e);
+            }
+        }
+
         DependencyDownloadException lastError = null;
         List<DependencyRepository> repository = DependencyRepository.getByID("maven");
         if (!repository.isEmpty()) {
             int i = 0;
             while (i < repository.size()) {
                 try {
-                    plugin.logger().info("Downloading dependency(" + fileName + ")[" + repository.get(i).getUrl() + dependency.mavenPath() + "]");
+                    plugin.logger().info("Downloading dependency " + repository.get(i).getUrl() + dependency.mavenPath());
                     repository.get(i).download(dependency, file);
                     plugin.logger().info("Successfully downloaded " + fileName);
                     return file;
@@ -142,10 +165,10 @@ public class DependencyManagerImpl implements DependencyManager {
             return normalFile;
         }
 
-        Path remappedFile = this.cacheDirectory.resolve(dependency.fileName(DependencyRegistry.isGsonRelocated() ? "remapped-legacy" : "remapped"));
+        Path remappedFile = this.cacheDirectory.resolve(dependency.toLocalPath()).resolve(dependency.fileName(DependencyRegistry.isGsonRelocated() ? "remapped-legacy" : "remapped"));
 
         // if the remapped source exists already, just use that.
-        if (Files.exists(remappedFile)) {
+        if (Files.exists(remappedFile) && dependency.verify(remappedFile)) {
             return remappedFile;
         }
 
@@ -159,6 +182,7 @@ public class DependencyManagerImpl implements DependencyManager {
         Path cacheDirectory = plugin.dataFolderPath().resolve("libs");
         try {
             if (Files.exists(cacheDirectory) && (Files.isDirectory(cacheDirectory) || Files.isSymbolicLink(cacheDirectory))) {
+                cleanDirectoryJars(cacheDirectory);
                 return cacheDirectory;
             }
 
@@ -172,6 +196,16 @@ public class DependencyManagerImpl implements DependencyManager {
         }
 
         return cacheDirectory;
+    }
+
+    private static void cleanDirectoryJars(Path directory) throws IOException {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(directory)) {
+            for (Path file : stream) {
+                if (Files.isRegularFile(file) && file.getFileName().toString().endsWith(".jar")) {
+                    Files.delete(file);
+                }
+            }
+        }
     }
 
     @Override

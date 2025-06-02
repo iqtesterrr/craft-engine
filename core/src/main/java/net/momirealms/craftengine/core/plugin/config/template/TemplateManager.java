@@ -2,6 +2,7 @@ package net.momirealms.craftengine.core.plugin.config.template;
 
 import net.momirealms.craftengine.core.plugin.Manageable;
 import net.momirealms.craftengine.core.plugin.config.ConfigParser;
+import net.momirealms.craftengine.core.util.Key;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -16,5 +17,5 @@ public interface TemplateManager extends Manageable {
 
     ConfigParser parser();
 
-    Map<String, Object> applyTemplates(Map<String, Object> input);
+    Map<String, Object> applyTemplates(Key id, Map<String, Object> input);
 }

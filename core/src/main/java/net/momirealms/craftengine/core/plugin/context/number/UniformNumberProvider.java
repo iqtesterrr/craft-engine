@@ -31,6 +31,11 @@ public class UniformNumberProvider implements NumberProvider {
     }
 
     @Override
+    public double getDouble(Context context) {
+        return RandomUtils.generateRandomDouble(this.min.getDouble(context), this.max.getDouble(context));
+    }
+
+    @Override
     public float getFloat(Context context) {
         return RandomUtils.generateRandomFloat(this.min.getFloat(context), this.max.getFloat(context));
     }

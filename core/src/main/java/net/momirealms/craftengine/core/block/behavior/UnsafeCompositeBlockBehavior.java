@@ -1,0 +1,166 @@
+package net.momirealms.craftengine.core.block.behavior;
+
+import net.momirealms.craftengine.core.block.BlockBehavior;
+import net.momirealms.craftengine.core.block.CustomBlock;
+import net.momirealms.craftengine.core.block.ImmutableBlockState;
+import net.momirealms.craftengine.core.entity.player.InteractionResult;
+import net.momirealms.craftengine.core.item.context.BlockPlaceContext;
+import net.momirealms.craftengine.core.item.context.UseOnContext;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+
+public class UnsafeCompositeBlockBehavior extends AbstractBlockBehavior {
+    private final AbstractBlockBehavior[] behaviors;
+
+    public UnsafeCompositeBlockBehavior(CustomBlock customBlock, List<AbstractBlockBehavior> behaviors) {
+        super(customBlock);
+        this.behaviors = behaviors.toArray(new AbstractBlockBehavior[0]);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends BlockBehavior> Optional<T> getAs(Class<T> tClass) {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            if (tClass.isInstance(behavior)) {
+                return Optional.of((T) behavior);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public InteractionResult useOnBlock(UseOnContext context, ImmutableBlockState state) {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            InteractionResult result = behavior.useOnBlock(context, state);
+            if (result != InteractionResult.PASS) {
+                return result;
+            }
+        }
+        return super.useOnBlock(context, state);
+    }
+
+    @Override
+    public ImmutableBlockState updateStateForPlacement(BlockPlaceContext context, ImmutableBlockState state) {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            state = behavior.updateStateForPlacement(context, state);
+        }
+        return state;
+    }
+
+    @Override
+    public Object updateShape(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        Object previous = args[0];
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            Object processed = behavior.updateShape(thisBlock, args, superMethod);
+            if (processed != previous) {
+                return processed;
+            }
+        }
+        return previous;
+    }
+
+    @Override
+    public void tick(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.tick(thisBlock, args, superMethod);
+        }
+    }
+
+    @Override
+    public void randomTick(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.randomTick(thisBlock, args, superMethod);
+        }
+    }
+
+    @Override
+    public Object rotate(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        Object previous = args[0];
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            Object processed = behavior.rotate(thisBlock, args, superMethod);
+            if (processed != previous) {
+                return processed;
+            }
+        }
+        return previous;
+    }
+
+    @Override
+    public Object mirror(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        Object previous = args[0];
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            Object processed = behavior.mirror(thisBlock, args, superMethod);
+            if (processed != previous) {
+                return processed;
+            }
+        }
+        return previous;
+    }
+
+    @Override
+    public void performBoneMeal(Object thisBlock, Object[] args) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.performBoneMeal(thisBlock, args);
+        }
+    }
+
+    @Override
+    public void onPlace(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.onPlace(thisBlock, args, superMethod);
+        }
+    }
+
+    @Override
+    public void onLand(Object thisBlock, Object[] args) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.onLand(thisBlock, args);
+        }
+    }
+
+    @Override
+    public void onBrokenAfterFall(Object thisBlock, Object[] args) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.onBrokenAfterFall(thisBlock, args);
+        }
+    }
+
+    @Override
+    public void neighborChanged(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            behavior.neighborChanged(thisBlock, args, superMethod);
+        }
+    }
+
+    @Override
+    public boolean isValidBoneMealTarget(Object thisBlock, Object[] args) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            if (behavior.isValidBoneMealTarget(thisBlock, args)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isBoneMealSuccess(Object thisBlock, Object[] args) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            if (behavior.isBoneMealSuccess(thisBlock, args)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean canSurvive(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        for (AbstractBlockBehavior behavior : this.behaviors) {
+            if (!behavior.canSurvive(thisBlock, args, superMethod)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}

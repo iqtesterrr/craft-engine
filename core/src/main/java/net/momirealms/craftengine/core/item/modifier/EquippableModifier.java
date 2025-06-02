@@ -20,9 +20,4 @@ public class EquippableModifier<I> implements ItemDataModifier<I> {
     public void apply(Item<I> item, ItemBuildContext context) {
         item.equippable(this.data);
     }
-
-    @Override
-    public void remove(Item<I> item) {
-        item.equippable(null);
-    }
 }

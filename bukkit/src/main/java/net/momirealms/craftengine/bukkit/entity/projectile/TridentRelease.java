@@ -2,7 +2,8 @@ package net.momirealms.craftengine.bukkit.entity.projectile;
 
 import com.destroystokyo.paper.event.player.PlayerLaunchProjectileEvent;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MSoundEvents;
 import net.momirealms.craftengine.core.util.MCUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
 import org.bukkit.entity.Entity;
@@ -70,7 +71,7 @@ public class TridentRelease {
 
             FastNMS.INSTANCE.field$AbstractArrow$pickupItemStack(trident, copyStack1);
             if (FastNMS.INSTANCE.method$Player$hasInfiniteMaterials(entity)) {
-                FastNMS.INSTANCE.field$AbstractArrow$pickup(trident, Reflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
+                FastNMS.INSTANCE.field$AbstractArrow$pickup(trident, CoreReflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
             }
 
             FastNMS.INSTANCE.method$Level$playSound(
@@ -78,7 +79,7 @@ public class TridentRelease {
                     null,
                     trident,
                     FastNMS.INSTANCE.method$Holder$value(sound),
-                    Reflections.instance$SoundSource$PLAYERS,
+                    CoreReflections.instance$SoundSource$PLAYERS,
                     1.0F, 1.0F
             );
             return true;
@@ -102,7 +103,7 @@ public class TridentRelease {
         FastNMS.INSTANCE.method$Player$startAutoSpinAttack(entity, 20, 8.0F, stack);
 
         if (FastNMS.INSTANCE.method$Entity$onGround(entity)) {
-            FastNMS.INSTANCE.method$Entity$move(entity, Reflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
+            FastNMS.INSTANCE.method$Entity$move(entity, CoreReflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
         }
 
         FastNMS.INSTANCE.method$Level$playSound(
@@ -110,7 +111,7 @@ public class TridentRelease {
                 null,
                 entity,
                 FastNMS.INSTANCE.method$Holder$value(sound),
-                Reflections.instance$SoundSource$PLAYERS,
+                CoreReflections.instance$SoundSource$PLAYERS,
                 1.0F, 1.0F
         );
         return true;
@@ -139,7 +140,7 @@ public class TridentRelease {
                     0.0F, 2.5F, 1.0F
             );
             if (FastNMS.INSTANCE.method$Player$hasInfiniteMaterials(entity)) {
-                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, Reflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
+                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, CoreReflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
             }
 
             PlayerLaunchProjectileEvent event = new PlayerLaunchProjectileEvent(
@@ -169,7 +170,7 @@ public class TridentRelease {
                     null,
                     entitythrowntrident,
                     FastNMS.INSTANCE.method$Holder$value(sound),
-                    Reflections.instance$SoundSource$PLAYERS,
+                    CoreReflections.instance$SoundSource$PLAYERS,
                     1.0F, 1.0F
             );
             if (event.shouldConsume() && !FastNMS.INSTANCE.method$Player$hasInfiniteMaterials(entity)) {
@@ -196,7 +197,7 @@ public class TridentRelease {
         FastNMS.INSTANCE.method$Player$startAutoSpinAttack(entity, 20, 8.0F, stack);
 
         if (FastNMS.INSTANCE.method$Entity$onGround(entity)) {
-            FastNMS.INSTANCE.method$Entity$move(entity, Reflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
+            FastNMS.INSTANCE.method$Entity$move(entity, CoreReflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
         }
 
         FastNMS.INSTANCE.method$Level$playSound(
@@ -204,7 +205,7 @@ public class TridentRelease {
                 null,
                 entity,
                 FastNMS.INSTANCE.method$Holder$value(sound),
-                Reflections.instance$SoundSource$PLAYERS,
+                CoreReflections.instance$SoundSource$PLAYERS,
                 1.0F, 1.0F
         );
         return true;
@@ -231,7 +232,7 @@ public class TridentRelease {
                     0.0F, 2.5F, 1.0F
             );
             if (FastNMS.INSTANCE.method$Player$hasInfiniteMaterials(entity)) {
-                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, Reflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
+                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, CoreReflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
             }
 
             PlayerLaunchProjectileEvent event = new PlayerLaunchProjectileEvent(
@@ -260,8 +261,8 @@ public class TridentRelease {
                     level,
                     null,
                     entitythrowntrident,
-                    Reflections.instance$SoundEvent$TRIDENT_THROW,
-                    Reflections.instance$SoundSource$PLAYERS,
+                    MSoundEvents.instance$SoundEvent$TRIDENT_THROW,
+                    CoreReflections.instance$SoundSource$PLAYERS,
                     1.0F, 1.0F
             );
             if (event.shouldConsume() && !FastNMS.INSTANCE.method$Player$hasInfiniteMaterials(entity)) {
@@ -288,16 +289,16 @@ public class TridentRelease {
         FastNMS.INSTANCE.method$Player$startAutoSpinAttack(entity, 20, -1.0F, null);
 
         if (FastNMS.INSTANCE.method$Entity$onGround(entity)) {
-            FastNMS.INSTANCE.method$Entity$move(entity, Reflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
+            FastNMS.INSTANCE.method$Entity$move(entity, CoreReflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
         }
 
         Object soundeffect;
         if (spinStrength >= 3) {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_3;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_3;
         } else if (spinStrength == 2) {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_2;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_2;
         } else {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_1;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_1;
         }
 
         FastNMS.INSTANCE.method$Level$playSound(
@@ -305,7 +306,7 @@ public class TridentRelease {
                 null,
                 entity,
                 soundeffect,
-                Reflections.instance$SoundSource$PLAYERS,
+                CoreReflections.instance$SoundSource$PLAYERS,
                 1.0F, 1.0F
         );
         return true;
@@ -332,7 +333,7 @@ public class TridentRelease {
                     0.0F, 2.5F, 1.0F
             );
             if (FastNMS.INSTANCE.field$Abilities$instabuild(FastNMS.INSTANCE.method$Player$getAbilities(entity))) {
-                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, Reflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
+                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, CoreReflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
             }
 
             PlayerLaunchProjectileEvent event = new PlayerLaunchProjectileEvent(
@@ -361,8 +362,8 @@ public class TridentRelease {
                     level,
                     null,
                     entitythrowntrident,
-                    Reflections.instance$SoundEvent$TRIDENT_THROW,
-                    Reflections.instance$SoundSource$PLAYERS,
+                    MSoundEvents.instance$SoundEvent$TRIDENT_THROW,
+                    CoreReflections.instance$SoundSource$PLAYERS,
                     1.0F, 1.0F
             );
             if (event.shouldConsume() && !FastNMS.INSTANCE.field$Abilities$instabuild(FastNMS.INSTANCE.method$Player$getAbilities(entity))) {
@@ -389,16 +390,16 @@ public class TridentRelease {
         FastNMS.INSTANCE.method$Player$startAutoSpinAttack(entity, 20, -1.0F, null);
 
         if (FastNMS.INSTANCE.method$Entity$onGround(entity)) {
-            FastNMS.INSTANCE.method$Entity$move(entity, Reflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
+            FastNMS.INSTANCE.method$Entity$move(entity, CoreReflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
         }
 
         Object soundeffect;
         if (spinStrength >= 3) {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_3;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_3;
         } else if (spinStrength == 2) {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_2;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_2;
         } else {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_1;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_1;
         }
 
         FastNMS.INSTANCE.method$Level$playSound(
@@ -406,7 +407,7 @@ public class TridentRelease {
                 null,
                 entity,
                 soundeffect,
-                Reflections.instance$SoundSource$PLAYERS,
+                CoreReflections.instance$SoundSource$PLAYERS,
                 1.0F, 1.0F
         );
         return true;
@@ -433,7 +434,7 @@ public class TridentRelease {
                     0.0F, 2.5F, 1.0F
             );
             if (FastNMS.INSTANCE.field$Abilities$instabuild(FastNMS.INSTANCE.method$Player$getAbilities(entity))) {
-                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, Reflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
+                FastNMS.INSTANCE.field$AbstractArrow$pickup(entitythrowntrident, CoreReflections.instance$AbstractArrow$Pickup$CREATIVE_ONLY);
             }
 
             PlayerLaunchProjectileEvent event = new PlayerLaunchProjectileEvent(
@@ -462,8 +463,8 @@ public class TridentRelease {
                     level,
                     null,
                     entitythrowntrident,
-                    Reflections.instance$SoundEvent$TRIDENT_THROW,
-                    Reflections.instance$SoundSource$PLAYERS,
+                    MSoundEvents.instance$SoundEvent$TRIDENT_THROW,
+                    CoreReflections.instance$SoundSource$PLAYERS,
                     1.0F, 1.0F
             );
             if (event.shouldConsume() && !FastNMS.INSTANCE.field$Abilities$instabuild(FastNMS.INSTANCE.method$Player$getAbilities(entity))) {
@@ -489,16 +490,16 @@ public class TridentRelease {
         FastNMS.INSTANCE.method$Player$startAutoSpinAttack(entity, 20, -1.0F, null);
 
         if (FastNMS.INSTANCE.method$Entity$onGround(entity)) {
-            FastNMS.INSTANCE.method$Entity$move(entity, Reflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
+            FastNMS.INSTANCE.method$Entity$move(entity, CoreReflections.instance$MoverType$SELF, FastNMS.INSTANCE.constructor$Vec3(0.0D, 1.1999999D, 0.0D));
         }
 
         Object soundeffect;
         if (spinStrength >= 3) {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_3;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_3;
         } else if (spinStrength == 2) {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_2;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_2;
         } else {
-            soundeffect = Reflections.instance$SoundEvent$TRIDENT_RIPTIDE_1;
+            soundeffect = MSoundEvents.instance$SoundEvent$TRIDENT_RIPTIDE_1;
         }
 
         FastNMS.INSTANCE.method$Level$playSound(
@@ -506,7 +507,7 @@ public class TridentRelease {
                 null,
                 entity,
                 soundeffect,
-                Reflections.instance$SoundSource$PLAYERS,
+                CoreReflections.instance$SoundSource$PLAYERS,
                 1.0F, 1.0F
         );
         return true;

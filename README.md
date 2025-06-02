@@ -125,15 +125,14 @@ The code you contribute will be open-sourced under the GPLv3 license. If you pre
 
 ### 🌍 Translations
 1. Clone this repository.
-2. Create a new language file in: `/bukkit/loader/src/main/resources/translations`
+2. Create a new language file in: `/common-files/src/main/resources/translations`
 3. Once done, submit a **pull request** for review. We appreciate your contributions!
 
 ## Differences Between Versions
-| Version           | Official Support | Max Players | Online Mode Required | Commercial Use |
-|-------------------|------------------|-------------|----------------------|----------------|
-| Community Edition | ❌ No             | 20          | ✔️ Yes               | ✔️ Allowed     |
-| GitHub Edition    | ❌ No             | Unlimited   | ❌ No                 | ✔️ Allowed     |
-| Premium Edition   | ✔️ Yes           | Unlimited   | ❌ No                 | ✔️ Allowed     |
+| Version           | Official Support | Max Players | Dev Builds |
+|-------------------|------------------|-------------|------------|
+| Community Edition | ❌ No             | 20          | ❌ No       |
+| Premium Edition   | ✔️ Yes           | Unlimited   | ✔️ Yes     |
 
 ### 💖 Support the Developer
 Help sustain CraftEngine's development by going Premium!
@@ -151,7 +150,7 @@ repositories {
 ```
 ```kotlin
 dependencies {
-    compileOnly("net.momirealms:craft-engine-core:0.0.54")
-    compileOnly("net.momirealms:craft-engine-bukkit:0.0.54")
+    compileOnly("net.momirealms:craft-engine-core:0.0.55")
+    compileOnly("net.momirealms:craft-engine-bukkit:0.0.55")
 }
 ```

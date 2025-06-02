@@ -20,9 +20,4 @@ public class JukeboxSongModifier<I> implements ItemDataModifier<I> {
     public void apply(Item<I> item, ItemBuildContext context) {
         item.jukeboxSong(this.song);
     }
-
-    @Override
-    public void remove(Item<I> item) {
-        item.jukeboxSong(null);
-    }
 }

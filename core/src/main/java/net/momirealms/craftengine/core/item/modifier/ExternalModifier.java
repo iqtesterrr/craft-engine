@@ -30,9 +30,4 @@ public class ExternalModifier<I> implements ItemDataModifier<I> {
         Item<I> anotherWrapped = (Item<I>) CraftEngine.instance().itemManager().wrap(another);
         item.merge(anotherWrapped);
     }
-
-    @Override
-    public void remove(Item<I> item) {
-        // cannot remove
-    }
 }

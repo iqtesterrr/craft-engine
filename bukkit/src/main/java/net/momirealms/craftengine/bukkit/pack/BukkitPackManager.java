@@ -3,10 +3,10 @@ package net.momirealms.craftengine.bukkit.pack;
 import net.momirealms.craftengine.bukkit.api.event.AsyncResourcePackGenerateEvent;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.plugin.command.feature.ReloadCommand;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.ComponentUtils;
 import net.momirealms.craftengine.bukkit.util.EventUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.bukkit.util.ResourcePackUtils;
 import net.momirealms.craftengine.core.entity.player.Player;
 import net.momirealms.craftengine.core.pack.AbstractPackManager;
@@ -43,7 +43,7 @@ public class BukkitPackManager extends AbstractPackManager implements Listener {
     @Override
     public void delayedInit() {
         super.delayedInit();
-        Bukkit.getPluginManager().registerEvents(this, plugin.bootstrap());
+        Bukkit.getPluginManager().registerEvents(this, plugin.javaPlugin());
     }
 
     @EventHandler(priority = EventPriority.LOW)
@@ -66,15 +66,15 @@ public class BukkitPackManager extends AbstractPackManager implements Listener {
 
     public void modifyServerSettings() {
         try {
-            Object settings = Reflections.field$DedicatedServer$settings.get(Reflections.method$MinecraftServer$getServer.invoke(null));
-            Object properties = Reflections.field$DedicatedServerSettings$properties.get(settings);
+            Object settings = CoreReflections.field$DedicatedServer$settings.get(CoreReflections.method$MinecraftServer$getServer.invoke(null));
+            Object properties = CoreReflections.field$DedicatedServerSettings$properties.get(settings);
             Object info;
             if (VersionHelper.isOrAbove1_20_3()) {
-                info = Reflections.constructor$ServerResourcePackInfo.newInstance(new UUID(0, 0), FAKE_URL, "", Config.kickOnDeclined(), ComponentUtils.adventureToMinecraft(Config.resourcePackPrompt()));
+                info = CoreReflections.constructor$ServerResourcePackInfo.newInstance(new UUID(0, 0), FAKE_URL, "", Config.kickOnDeclined(), ComponentUtils.adventureToMinecraft(Config.resourcePackPrompt()));
             } else {
-                info = Reflections.constructor$ServerResourcePackInfo.newInstance(FAKE_URL, "", Config.kickOnDeclined(), ComponentUtils.adventureToMinecraft(Config.resourcePackPrompt()));
+                info = CoreReflections.constructor$ServerResourcePackInfo.newInstance(FAKE_URL, "", Config.kickOnDeclined(), ComponentUtils.adventureToMinecraft(Config.resourcePackPrompt()));
             }
-            Reflections.field$DedicatedServerProperties$serverResourcePackInfo.set(properties, Optional.of(info));
+            CoreReflections.field$DedicatedServerProperties$serverResourcePackInfo.set(properties, Optional.of(info));
         } catch (Exception e) {
             this.plugin.logger().warn("Failed to update resource pack settings", e);
         }
@@ -99,9 +99,9 @@ public class BukkitPackManager extends AbstractPackManager implements Listener {
 
     public void resetServerSettings() {
         try {
-            Object settings = Reflections.field$DedicatedServer$settings.get(Reflections.method$MinecraftServer$getServer.invoke(null));
-            Object properties = Reflections.field$DedicatedServerSettings$properties.get(settings);
-            Reflections.field$DedicatedServerProperties$serverResourcePackInfo.set(properties, Optional.empty());
+            Object settings = CoreReflections.field$DedicatedServer$settings.get(CoreReflections.method$MinecraftServer$getServer.invoke(null));
+            Object properties = CoreReflections.field$DedicatedServerSettings$properties.get(settings);
+            CoreReflections.field$DedicatedServerProperties$serverResourcePackInfo.set(properties, Optional.empty());
         } catch (Exception e) {
             this.plugin.logger().warn("Failed to reset resource pack settings", e);
         }
@@ -121,6 +121,7 @@ public class BukkitPackManager extends AbstractPackManager implements Listener {
                 return;
             }
             if (!Config.sendPackOnUpload()) return;
+            CraftEngine.instance().logger().info("Complete uploading resource pack");
             for (BukkitServerPlayer player : this.plugin.networkManager().onlineUsers()) {
                 sendResourcePack(player);
             }

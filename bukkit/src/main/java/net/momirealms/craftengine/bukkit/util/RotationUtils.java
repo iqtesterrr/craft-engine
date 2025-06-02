@@ -1,5 +1,6 @@
 package net.momirealms.craftengine.bukkit.util;
 
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.core.util.Rotation;
 
 public class RotationUtils {
@@ -8,7 +9,7 @@ public class RotationUtils {
 
     public static Rotation fromNMSRotation(Object rotation) {
         try {
-            int index = (int) Reflections.method$Rotation$ordinal.invoke(rotation);
+            int index = (int) CoreReflections.method$Rotation$ordinal.invoke(rotation);
             return Rotation.values()[index];
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
@@ -18,16 +19,16 @@ public class RotationUtils {
     public static Object toNMSRotation(Rotation rotation) {
         switch (rotation) {
             case CLOCKWISE_90 -> {
-                return Reflections.instance$Rotation$CLOCKWISE_90;
+                return CoreReflections.instance$Rotation$CLOCKWISE_90;
             }
             case CLOCKWISE_180 -> {
-                return Reflections.instance$Rotation$CLOCKWISE_180;
+                return CoreReflections.instance$Rotation$CLOCKWISE_180;
             }
             case COUNTERCLOCKWISE_90 -> {
-                return Reflections.instance$Rotation$COUNTERCLOCKWISE_90;
+                return CoreReflections.instance$Rotation$COUNTERCLOCKWISE_90;
             }
             default -> {
-                return Reflections.instance$Rotation$NONE;
+                return CoreReflections.instance$Rotation$NONE;
             }
         }
     }

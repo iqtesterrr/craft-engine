@@ -43,7 +43,7 @@ public interface CustomBlock {
 
         Builder appearances(Map<String, Integer> appearances);
 
-        Builder behavior(Map<String, Object> behavior);
+        Builder behavior(List<Map<String, Object>> behavior);
 
         Builder lootTable(LootTable<?> lootTable);
 

@@ -1,8 +1,10 @@
 package net.momirealms.craftengine.core.item;
 
 import com.google.gson.JsonElement;
+import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.item.behavior.ItemBehavior;
 import net.momirealms.craftengine.core.util.Key;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.List;
 import java.util.Optional;
@@ -89,7 +91,7 @@ public class AbstractItem<W extends ItemWrapper<I>, I> implements Item<I> {
     }
 
     @Override
-    public Optional<Integer> maxDamage() {
+    public int maxDamage() {
         return this.factory.maxDamage(this.item);
     }
 
@@ -180,25 +182,47 @@ public class AbstractItem<W extends ItemWrapper<I>, I> implements Item<I> {
     }
 
     @Override
-    public Optional<String> customName() {
-        return this.factory.customName(this.item);
+    public Optional<String> customNameJson() {
+        return this.factory.customNameJson(this.item);
     }
 
     @Override
-    public Item<I> customName(String displayName) {
-        this.factory.customName(this.item, displayName);
+    public Item<I> customNameJson(String displayName) {
+        this.factory.customNameJson(this.item, displayName);
         return this;
     }
 
     @Override
-    public Item<I> lore(List<String> lore) {
-        this.factory.lore(this.item, lore);
+    public Optional<Component> customNameComponent() {
+        return this.factory.customNameComponent(this.item);
+    }
+
+    @Override
+    public Item<I> customNameComponent(Component displayName) {
+        this.factory.customNameComponent(this.item, displayName);
         return this;
     }
 
     @Override
-    public Optional<List<String>> lore() {
-        return this.factory.lore(this.item);
+    public Item<I> loreJson(List<String> lore) {
+        this.factory.loreJson(this.item, lore);
+        return this;
+    }
+
+    @Override
+    public Optional<List<String>> loreJson() {
+        return this.factory.loreJson(this.item);
+    }
+
+    @Override
+    public Item<I> loreComponent(List<Component> lore) {
+        this.factory.loreComponent(this.item, lore);
+        return this;
+    }
+
+    @Override
+    public Optional<List<Component>> loreComponent() {
+        return this.factory.loreComponent(this.item);
     }
 
     @Override
@@ -212,16 +236,26 @@ public class AbstractItem<W extends ItemWrapper<I>, I> implements Item<I> {
         return this.factory.unbreakable(this.item);
     }
 
-
     @Override
-    public Optional<String> itemName() {
-        return this.factory.itemName(this.item);
+    public Item<I> itemNameJson(String itemName) {
+        this.factory.itemNameJson(this.item, itemName);
+        return this;
     }
 
     @Override
-    public Item<I> itemName(String itemName) {
-        this.factory.itemName(this.item, itemName);
+    public Optional<String> itemNameJson() {
+        return this.factory.itemNameJson(this.item);
+    }
+
+    @Override
+    public Item<I> itemNameComponent(Component itemName) {
+        this.factory.itemNameComponent(this.item, itemName);
         return this;
+    }
+
+    @Override
+    public Optional<Component> itemNameComponent() {
+        return this.factory.itemNameComponent(this.item);
     }
 
     @Override
@@ -277,8 +311,13 @@ public class AbstractItem<W extends ItemWrapper<I>, I> implements Item<I> {
     }
 
     @Override
-    public Object getTag(Object... path) {
-        return this.factory.getTag(this.item, path);
+    public Object getJavaTag(Object... path) {
+        return this.factory.getJavaTag(this.item, path);
+    }
+
+    @Override
+    public Tag getNBTTag(Object... path) {
+        return this.factory.getNBTTag(this.item, path);
     }
 
     @Override
@@ -308,23 +347,43 @@ public class AbstractItem<W extends ItemWrapper<I>, I> implements Item<I> {
     }
 
     @Override
-    public Object getComponent(Object type) {
-        return this.factory.getComponent(this.item, type);
+    public Object getExactComponent(Object type) {
+        return this.factory.getExactComponent(this.item, type);
     }
 
     @Override
-    public Object getJavaTypeComponent(Object type) {
-        return this.factory.encodeJava(type, getComponent(type));
+    public Object getJavaComponent(Object type) {
+        return this.factory.getJavaComponent(this.item, type);
     }
 
     @Override
-    public JsonElement getJsonTypeComponent(Object type) {
-        return this.factory.encodeJson(type, getComponent(type));
+    public JsonElement getJsonComponent(Object type) {
+        return this.factory.getJsonComponent(this.item, type);
+    }
+
+    @Override
+    public Tag getNBTComponent(Object type) {
+        return this.factory.getNBTComponent(this.item, type);
     }
 
     @Override
     public void setComponent(Object type, Object value) {
         this.factory.setComponent(this.item, type, value);
+    }
+
+    @Override
+    public void setJavaComponent(Object type, Object value) {
+        this.factory.setJavaComponent(this.item, type, value);
+    }
+
+    @Override
+    public void setJsonComponent(Object type, JsonElement value) {
+        this.factory.setJsonComponent(this.item, type, value);
+    }
+
+    @Override
+    public void setNBTComponent(Object type, Tag value) {
+        this.factory.setNBTComponent(this.item, type, value);
     }
 
     @Override

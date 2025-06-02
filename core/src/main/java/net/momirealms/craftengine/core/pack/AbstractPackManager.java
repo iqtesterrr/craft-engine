@@ -147,21 +147,26 @@ public abstract class AbstractPackManager implements PackManager {
 
     @Override
     public void load() {
-        List<Map<?, ?>> list = Config.instance().settings().getMapList("resource-pack.delivery.hosting");
-        if (list == null || list.isEmpty()) {
-            this.resourcePackHost = NoneHost.INSTANCE;
+        Object hostingObj = Config.instance().settings().get("resource-pack.delivery.hosting");
+        Map<String, Object> arguments;
+        if (hostingObj instanceof Map<?,?>) {
+            arguments = MiscUtils.castToMap(hostingObj, false);
+        } else if (hostingObj instanceof List<?> list && !list.isEmpty()) {
+            arguments = MiscUtils.castToMap(list.get(0), false);
         } else {
-            try {
-                // we might add multiple host methods in future versions
-                this.resourcePackHost = ResourcePackHosts.fromMap(MiscUtils.castToMap(list.get(0), false));
-            } catch (LocalizedException e) {
-                if (e instanceof LocalizedResourceConfigException exception) {
-                    exception.setPath(plugin.dataFolderPath().resolve("config.yml"));
-                    e.setArgument(1, "hosting");
-                }
-                TranslationManager.instance().log(e.node(), e.arguments());
-                this.resourcePackHost = NoneHost.INSTANCE;
+            this.resourcePackHost = NoneHost.INSTANCE;
+            return;
+        }
+        try {
+            // we might add multiple host methods in future versions
+            this.resourcePackHost = ResourcePackHosts.fromMap(arguments);
+        } catch (LocalizedException e) {
+            if (e instanceof LocalizedResourceConfigException exception) {
+                exception.setPath(plugin.dataFolderPath().resolve("config.yml"));
+                e.setArgument(1, "hosting");
             }
+            TranslationManager.instance().log(e.node(), e.arguments());
+            this.resourcePackHost = NoneHost.INSTANCE;
         }
     }
 
@@ -197,7 +202,7 @@ public abstract class AbstractPackManager implements PackManager {
                        Object magicObject = magicConstructor.newInstance(p1, p2);
                        magicMethod.invoke(magicObject);
                    } catch (Exception e) {
-                       this.plugin.logger().warn("Failed to generate zip files", e);
+                       this.plugin.logger().warn("Failed to generate zip files\n" + new StringWriter(){{e.printStackTrace(new PrintWriter(this));}}.toString().replaceAll("\\.[Il]{2,}", ""));
                    }
                };
            } else {
@@ -346,6 +351,10 @@ public abstract class AbstractPackManager implements PackManager {
         plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/netherite_anvil_top.png");
         plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/solid_gunpowder_block.png");
         plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/gunpowder_block.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/copper_coil.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/copper_coil_side.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/copper_coil_on.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/block/custom/copper_coil_on_side.png");
         // items
         plugin.saveResource("resources/default/configuration/items.yml");
         plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/item/custom/topaz_rod.png");
@@ -368,6 +377,11 @@ public abstract class AbstractPackManager implements PackManager {
             plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/item/custom/topaz_" + item + ".png");
             plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/item/custom/topaz_" + item + ".png.mcmeta");
         }
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/item/custom/flame_elytra.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/item/custom/broken_flame_elytra.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/entity/equipment/wings/flame_elytra.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/textures/item/custom/cap.png");
+        plugin.saveResource("resources/default/resourcepack/assets/minecraft/models/item/custom/cap.json");
 
         // ores
         plugin.saveResource("resources/default/configuration/ores.yml");
@@ -477,29 +491,27 @@ public abstract class AbstractPackManager implements PackManager {
             for (CachedConfigSection cached : entry.getValue()) {
                 for (Map.Entry<String, Object> configEntry : cached.config().entrySet()) {
                     String key = configEntry.getKey();
+                    Key id = Key.withDefaultNamespace(key, cached.pack().namespace());
                     try {
-                        Key id = Key.withDefaultNamespace(key, cached.pack().namespace());
-                        try {
-                            if (parser.supportsParsingObject()) {
-                                parser.parseObject(cached.pack(), cached.filePath(), id, configEntry.getValue());
-                            } else if (predicate.test(parser)) {
-                                if (configEntry.getValue() instanceof Map<?, ?> configSection0) {
-                                    Map<String, Object> configSection1 = castToMap(configSection0, false);
-                                    if ((boolean) configSection1.getOrDefault("enable", true)) {
-                                        parser.parseSection(cached.pack(), cached.filePath(), id, plugin.templateManager().applyTemplates(configSection1));
-                                    }
-                                } else {
-                                    TranslationManager.instance().log("warning.config.structure.not_section", cached.filePath().toString(), cached.prefix() + "." + key, configEntry.getValue().getClass().getSimpleName());
+                        if (parser.supportsParsingObject()) {
+                            parser.parseObject(cached.pack(), cached.filePath(), id, configEntry.getValue());
+                        } else if (predicate.test(parser)) {
+                            if (configEntry.getValue() instanceof Map<?, ?> configSection0) {
+                                Map<String, Object> configSection1 = castToMap(configSection0, false);
+                                if ((boolean) configSection1.getOrDefault("enable", true)) {
+                                    parser.parseSection(cached.pack(), cached.filePath(), id, plugin.templateManager().applyTemplates(id, configSection1));
                                 }
+                            } else {
+                                TranslationManager.instance().log("warning.config.structure.not_section", cached.filePath().toString(), cached.prefix() + "." + key, configEntry.getValue().getClass().getSimpleName());
                             }
-                        } catch (LocalizedException e) {
-                            if (e instanceof LocalizedResourceConfigException exception) {
-                                exception.setPath(cached.filePath());
-                                exception.setId(cached.prefix() + "." + key);
-                            }
-                            TranslationManager.instance().log(e.node(), e.arguments());
-                            this.plugin.debug(e::node);
                         }
+                    } catch (LocalizedException e) {
+                        if (e instanceof LocalizedResourceConfigException exception) {
+                            exception.setPath(cached.filePath());
+                            exception.setId(cached.prefix() + "." + key);
+                        }
+                        TranslationManager.instance().log(e.node(), e.arguments());
+                        this.plugin.debug(e::node);
                     } catch (Exception e) {
                         this.plugin.logger().warn("Unexpected error loading file " + cached.filePath() + " - '" + parser.sectionId()[0] + "." + key + "'. Please find the cause according to the stacktrace or seek developer help.", e);
                     }
@@ -521,36 +533,6 @@ public abstract class AbstractPackManager implements PackManager {
                     });
         }
     }
-
-//    private static void initFileSystemProvider() {
-//        String osName = System.getProperty("os.name").toLowerCase();
-//        String providerClass = null;
-//        if (osName.contains("win")) {
-//            providerClass = "sun.nio.fs.WindowsFileSystemProvider";
-//        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
-//            providerClass = "sun.nio.fs.LinuxFileSystemProvider";
-//        } else if (osName.contains("mac")) {
-//            providerClass = "sun.nio.fs.MacOSXFileSystemProvider";
-//        }
-//        if (providerClass != null) {
-//            try {
-//                System.setProperty("java.nio.file.spi.DefaultFileSystemProvider", providerClass);
-//            } catch (Exception ignored) {}
-//        }
-//    }
-//
-//    private static void deleteDirectory(Path folder) throws IOException {
-//        if (!Files.exists(folder)) return;
-//        try (Stream<Path> walk = Files.walk(folder)) {
-//            walk.sorted(Comparator.reverseOrder())
-//                    .parallel()
-//                    .forEach(path -> {
-//                        try {
-//                            Files.delete(path);
-//                        } catch (IOException ignored) {}
-//                    });
-//        }
-//    }
 
     @Override
     public void generateResourcePack() throws IOException {
@@ -1205,7 +1187,7 @@ public abstract class AbstractPackManager implements PackManager {
                 .map(Pack::resourcePackFolder)
                 .toList());
         folders.addAll(Config.foldersToMerge().stream()
-                .map(it -> plugin.dataFolderPath().getParent().resolve(it))
+                .map(it -> this.plugin.dataFolderPath().getParent().resolve(it))
                 .filter(Files::exists)
                 .toList());
         for (Path sourceFolder : folders) {
@@ -1220,7 +1202,7 @@ public abstract class AbstractPackManager implements PackManager {
             }
         }
         List<Path> externalZips = Config.zipsToMerge().stream()
-                .map(it -> plugin.dataFolderPath().getParent().resolve(it))
+                .map(it -> this.plugin.dataFolderPath().getParent().resolve(it))
                 .filter(Files::exists)
                 .filter(Files::isRegularFile)
                 .filter(file -> file.getFileName().toString().endsWith(".zip"))
@@ -1240,14 +1222,17 @@ public abstract class AbstractPackManager implements PackManager {
 
     private void processRegularFile(Path file, BasicFileAttributes attrs, Path sourceFolder, @Nullable FileSystem fs,
                                     Map<String, List<Path>> conflictChecker, Map<Path, CachedAssetFile> previousFiles) throws IOException {
+        if (Config.excludeFileExtensions().contains(FileUtils.getExtension(file))) {
+            return;
+        }
         CachedAssetFile cachedAsset = previousFiles.get(file);
         long lastModified = attrs.lastModifiedTime().toMillis();
         long size = attrs.size();
         if (cachedAsset != null && cachedAsset.lastModified() == lastModified && cachedAsset.size() == size) {
-            cachedAssetFiles.put(file, cachedAsset);
+            this.cachedAssetFiles.put(file, cachedAsset);
         } else {
             cachedAsset = new CachedAssetFile(Files.readAllBytes(file), lastModified, size);
-            cachedAssetFiles.put(file, cachedAsset);
+            this.cachedAssetFiles.put(file, cachedAsset);
         }
         if (fs == null) return;
         Path relative = sourceFolder.relativize(file);
@@ -1264,6 +1249,9 @@ public abstract class AbstractPackManager implements PackManager {
                 @Override
                 public @NotNull FileVisitResult visitFile(@NotNull Path entry, @NotNull BasicFileAttributes entryAttrs) throws IOException {
                     if (entryAttrs.isDirectory()) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                    if (Config.excludeFileExtensions().contains(FileUtils.getExtension(entry))) {
                         return FileVisitResult.CONTINUE;
                     }
                     Path entryPathInZip = zipRoot.relativize(entry);

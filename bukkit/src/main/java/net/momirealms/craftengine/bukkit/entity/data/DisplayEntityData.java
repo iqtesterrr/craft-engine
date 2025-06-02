@@ -1,7 +1,8 @@
 package net.momirealms.craftengine.bukkit.entity.data;
 
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.util.VersionHelper;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public class DisplayEntityData<T> extends BaseEntityData<T> {
     // Display only
@@ -14,10 +15,10 @@ public class DisplayEntityData<T> extends BaseEntityData<T> {
     public static final DisplayEntityData<Integer> TransformationInterpolationDuration = of(9, EntityDataValue.Serializers$INT, 0);
     public static final DisplayEntityData<Integer> PositionRotationInterpolationDuration = of(10, EntityDataValue.Serializers$INT, 0);
 
-    public static final DisplayEntityData<Object> Translation = of(11, EntityDataValue.Serializers$VECTOR3, Reflections.instance$Vector3f$None);
-    public static final DisplayEntityData<Object> Scale = of(12, EntityDataValue.Serializers$VECTOR3, Reflections.instance$Vector3f$Normal);
-    public static final DisplayEntityData<Object> RotationLeft = of(13, EntityDataValue.Serializers$QUATERNION, Reflections.instance$Quaternionf$None);
-    public static final DisplayEntityData<Object> RotationRight = of(14, EntityDataValue.Serializers$QUATERNION, Reflections.instance$Quaternionf$None);
+    public static final DisplayEntityData<Object> Translation = of(11, EntityDataValue.Serializers$VECTOR3, new Vector3f(0f));
+    public static final DisplayEntityData<Object> Scale = of(12, EntityDataValue.Serializers$VECTOR3, new Vector3f(1f));
+    public static final DisplayEntityData<Object> RotationLeft = of(13, EntityDataValue.Serializers$QUATERNION, new Quaternionf(0f, 0f, 0f, 1f));
+    public static final DisplayEntityData<Object> RotationRight = of(14, EntityDataValue.Serializers$QUATERNION, new Quaternionf(0f, 0f, 0f, 1f));
     /**
      * 	Billboard Constraints (0 = FIXED, 1 = VERTICAL, 2 = HORIZONTAL, 3 = CENTER)
      */

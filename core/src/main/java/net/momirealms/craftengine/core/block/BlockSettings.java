@@ -12,11 +12,11 @@ public class BlockSettings {
     boolean burnable;
     int burnChance;
     int fireSpreadChance;
-    int blockLight = -1; // TODO investigate how starlight works
+    int blockLight = -1;
     boolean replaceable;
     float hardness = 2f;
     float resistance = 2f;
-    boolean canOcclude;
+    Tristate canOcclude = Tristate.UNDEFINED;
     boolean fluidState;
     boolean requireCorrectTools;
     boolean respectToolComponent;
@@ -34,6 +34,8 @@ public class BlockSettings {
     float incorrectToolSpeed = 0.3f;
     Set<Key> correctTools = Set.of();
     String name;
+    String supportShapeBlockState;
+    boolean propagatesSkylightDown;
 
     private BlockSettings() {}
 
@@ -44,6 +46,11 @@ public class BlockSettings {
     public static BlockSettings fromMap(Map<String, Object> map) {
         if (map == null || map.isEmpty()) return BlockSettings.of();
         return applyModifiers(BlockSettings.of(), map);
+    }
+
+    public static BlockSettings fromMap(Key id, Map<String, Object> map) {
+        if (map == null || map.isEmpty()) return BlockSettings.of().itemId(id);
+        return applyModifiers(BlockSettings.of().itemId(id), map);
     }
 
     public static BlockSettings ofFullCopy(BlockSettings settings, Map<String, Object> map) {
@@ -89,6 +96,8 @@ public class BlockSettings {
         newSettings.blockLight = settings.blockLight;
         newSettings.name = settings.name;
         newSettings.incorrectToolSpeed = settings.incorrectToolSpeed;
+        newSettings.supportShapeBlockState = settings.supportShapeBlockState;
+        newSettings.propagatesSkylightDown = settings.propagatesSkylightDown;
         return newSettings;
     }
 
@@ -128,7 +137,7 @@ public class BlockSettings {
         return hardness;
     }
 
-    public boolean canOcclude() {
+    public Tristate canOcclude() {
         return canOcclude;
     }
 
@@ -190,6 +199,14 @@ public class BlockSettings {
 
     public boolean respectToolComponent() {
         return respectToolComponent;
+    }
+
+    public String supportShapeBlockState() {
+        return supportShapeBlockState;
+    }
+
+    public boolean propagatesSkylightDown() {
+        return propagatesSkylightDown;
     }
 
     public BlockSettings correctTools(Set<Key> correctTools) {
@@ -257,7 +274,7 @@ public class BlockSettings {
         return this;
     }
 
-    public BlockSettings canOcclude(boolean canOcclude) {
+    public BlockSettings canOcclude(Tristate canOcclude) {
         this.canOcclude = canOcclude;
         return this;
     }
@@ -284,6 +301,11 @@ public class BlockSettings {
 
     public BlockSettings burnable(boolean burnable) {
         this.burnable = burnable;
+        return this;
+    }
+
+    public BlockSettings propagatesSkylightDown(boolean propagatesSkylightDown) {
+        this.propagatesSkylightDown = propagatesSkylightDown;
         return this;
     }
 
@@ -314,6 +336,11 @@ public class BlockSettings {
 
     public BlockSettings fluidState(boolean state) {
         this.fluidState = state;
+        return this;
+    }
+
+    public BlockSettings supportShapeBlockState(String supportShapeBlockState) {
+        this.supportShapeBlockState = supportShapeBlockState;
         return this;
     }
 
@@ -350,6 +377,10 @@ public class BlockSettings {
             registerFactory("is-randomly-ticking", (value -> {
                 boolean booleanValue = (boolean) value;
                 return settings -> settings.isRandomlyTicking(booleanValue);
+            }));
+            registerFactory("propagate-skylight", (value -> {
+                boolean booleanValue = (boolean) value;
+                return settings -> settings.propagatesSkylightDown(booleanValue);
             }));
             registerFactory("push-reaction", (value -> {
                 PushReaction reaction = PushReaction.valueOf(value.toString().toUpperCase(Locale.ENGLISH));
@@ -409,7 +440,7 @@ public class BlockSettings {
             }));
             registerFactory("can-occlude", (value -> {
                 boolean booleanValue = (boolean) value;
-                return settings -> settings.canOcclude(booleanValue);
+                return settings -> settings.canOcclude(booleanValue ? Tristate.FALSE : Tristate.TRUE);
             }));
             registerFactory("correct-tools", (value -> {
                 List<String> tools = MiscUtils.getAsStringList(value);
@@ -430,6 +461,10 @@ public class BlockSettings {
             registerFactory("name", (value -> {
                 String name = value.toString();
                 return settings -> settings.name(name);
+            }));
+            registerFactory("support-shape", (value -> {
+                String shape = value.toString();
+                return settings -> settings.supportShapeBlockState(shape);
             }));
         }
 

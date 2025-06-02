@@ -3,7 +3,8 @@ package net.momirealms.craftengine.bukkit.entity.furniture.hitbox;
 import net.momirealms.craftengine.bukkit.entity.data.InteractionEntityData;
 import net.momirealms.craftengine.bukkit.entity.furniture.BukkitCollider;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MEntityTypes;
 import net.momirealms.craftengine.core.entity.furniture.*;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.MiscUtils;
@@ -61,7 +62,7 @@ public class InteractionHitBox extends AbstractHitBox {
         float yaw = position.xRot();
         packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                 entityId[0], UUID.randomUUID(), x + offset.x, y + offset.y, z - offset.z, 0, yaw,
-                Reflections.instance$EntityType$INTERACTION, 0, Reflections.instance$Vec3$Zero, 0
+                MEntityTypes.instance$EntityType$INTERACTION, 0, CoreReflections.instance$Vec3$Zero, 0
         ), true);
         packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityId[0], List.copyOf(this.cachedValues)), true);
         if (canUseItemOn()) {

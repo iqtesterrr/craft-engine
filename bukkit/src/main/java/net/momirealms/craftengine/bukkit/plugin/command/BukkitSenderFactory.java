@@ -42,7 +42,7 @@ public class BukkitSenderFactory extends SenderFactory<BukkitCraftEngine, Comman
     protected void sendMessage(CommandSender sender, Component message) {
         // we can safely send async for players and the console - otherwise, send it sync
         if (sender instanceof Player player) {
-            FastNMS.INSTANCE.sendPacket(FastNMS.INSTANCE.method$CraftPlayer$getHandle(player), FastNMS.INSTANCE.constructor$ClientboundSystemChatPacket(ComponentUtils.adventureToMinecraft(message), false));
+            FastNMS.INSTANCE.sendPacket(FastNMS.INSTANCE.field$Player$connection$connection(FastNMS.INSTANCE.method$CraftPlayer$getHandle(player)), FastNMS.INSTANCE.constructor$ClientboundSystemChatPacket(ComponentUtils.adventureToMinecraft(message), false));
         } else if (sender instanceof ConsoleCommandSender commandSender) {
             commandSender.sendMessage(LegacyComponentSerializer.legacySection().serialize(message));
         } else if (sender instanceof RemoteConsoleCommandSender commandSender) {
@@ -71,7 +71,7 @@ public class BukkitSenderFactory extends SenderFactory<BukkitCraftEngine, Comman
 
     @Override
     protected void performCommand(CommandSender sender, String command) {
-        plugin().bootstrap().getServer().dispatchCommand(sender, command);
+        plugin().javaPlugin().getServer().dispatchCommand(sender, command);
     }
 
     @Override

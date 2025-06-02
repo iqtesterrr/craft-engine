@@ -1,7 +1,9 @@
 package net.momirealms.craftengine.bukkit.item;
 
 import com.saicone.rtag.RtagItem;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MRegistryOps;
 import net.momirealms.craftengine.core.item.ItemWrapper;
+import net.momirealms.sparrow.nbt.Tag;
 import org.bukkit.inventory.ItemStack;
 
 public class LegacyItemWrapper implements ItemWrapper<ItemStack> {
@@ -20,16 +22,30 @@ public class LegacyItemWrapper implements ItemWrapper<ItemStack> {
         return itemStack;
     }
 
-    public boolean set(Object value, Object... path) {
-        return this.rtagItem.set(value, path);
+    public boolean setTag(Object value, Object... path) {
+        if (value instanceof Tag tag) {
+            return this.rtagItem.set(MRegistryOps.SPARROW_NBT.convertTo(MRegistryOps.NBT, tag), path);
+        } else {
+            return this.rtagItem.set(value, path);
+        }
     }
 
     public boolean add(Object value, Object... path) {
-        return this.rtagItem.add(value, path);
+        if (value instanceof Tag tag) {
+            return this.rtagItem.add(MRegistryOps.SPARROW_NBT.convertTo(MRegistryOps.NBT, tag), path);
+        } else {
+            return this.rtagItem.add(value, path);
+        }
     }
 
-    public <V> V get(Object... path) {
+    public <V> V getJavaTag(Object... path) {
         return this.rtagItem.get(path);
+    }
+
+    public Tag getNBTTag(Object... path) {
+        Object tag = getExactTag(path);
+        if (tag == null) return null;
+        return MRegistryOps.NBT.convertTo(MRegistryOps.SPARROW_NBT, tag);
     }
 
     public int count() {
@@ -41,8 +57,8 @@ public class LegacyItemWrapper implements ItemWrapper<ItemStack> {
         this.count = amount;
     }
 
-    public <V> V getExact(Object... path) {
-        return this.rtagItem.get(path);
+    public Object getExactTag(Object... path) {
+        return this.rtagItem.getExact(path);
     }
 
     public boolean remove(Object... path) {
@@ -60,7 +76,7 @@ public class LegacyItemWrapper implements ItemWrapper<ItemStack> {
     @Override
     public ItemStack load() {
         ItemStack itemStack = this.rtagItem.load();
-        itemStack.setAmount(this.count);
+        itemStack.setAmount(Math.max(this.count, 0));
         return itemStack;
     }
 

@@ -11,6 +11,7 @@ import net.momirealms.craftengine.core.loot.VanillaLootManager;
 import net.momirealms.craftengine.core.pack.PackManager;
 import net.momirealms.craftengine.core.plugin.classpath.ClassPathAppender;
 import net.momirealms.craftengine.core.plugin.command.sender.SenderFactory;
+import net.momirealms.craftengine.core.plugin.compatibility.CompatibilityManager;
 import net.momirealms.craftengine.core.plugin.config.Config;
 import net.momirealms.craftengine.core.plugin.config.template.TemplateManager;
 import net.momirealms.craftengine.core.plugin.context.GlobalVariableManager;

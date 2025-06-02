@@ -6,13 +6,14 @@ import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.sparrow.nbt.CompoundTag;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class InactiveCustomBlock extends AbstractCustomBlock {
     private final Map<CompoundTag, ImmutableBlockState> cachedData = new HashMap<>();
 
     public InactiveCustomBlock(Key id, Holder.Reference<CustomBlock> holder) {
-        super(id, holder, Map.of(), Map.of(), Map.of(), BlockSettings.of(), Map.of(), null, null);
+        super(id, holder, Map.of(), Map.of(), Map.of(), BlockSettings.of(), Map.of(), List.of(), null);
     }
 
     @Override

@@ -12,7 +12,7 @@ import java.nio.file.Path;
  * This class provides access to the resource pack folder
  * and configuration folder within the specified directory.
  */
-public class Pack {
+public final class Pack {
     private final Path folder;
     private final PackMeta meta;
     private final boolean enabled;

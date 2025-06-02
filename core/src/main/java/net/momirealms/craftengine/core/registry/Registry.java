@@ -2,8 +2,8 @@ package net.momirealms.craftengine.core.registry;
 
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceKey;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;

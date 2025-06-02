@@ -6,6 +6,6 @@ public abstract class AbstractEntity implements Entity {
 
     @Override
     public WorldPosition position() {
-        return new WorldPosition(world(), x(), y(), z(), getXRot(), getYRot());
+        return new WorldPosition(world(), x(), y(), z(), xRot(), yRot());
     }
 }

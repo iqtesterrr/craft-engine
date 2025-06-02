@@ -1,6 +1,6 @@
 package net.momirealms.craftengine.bukkit.api.event;
 
-import net.momirealms.craftengine.bukkit.entity.furniture.LoadedFurniture;
+import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurniture;
 import net.momirealms.craftengine.core.entity.player.InteractionHand;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -12,12 +12,12 @@ import org.jetbrains.annotations.NotNull;
 public class FurnitureInteractEvent extends PlayerEvent implements Cancellable {
     private static final HandlerList HANDLER_LIST = new HandlerList();
     private boolean cancelled;
-    private final LoadedFurniture furniture;
+    private final BukkitFurniture furniture;
     private final InteractionHand hand;
     private final Location interactionPoint;
 
     public FurnitureInteractEvent(@NotNull Player player,
-                                  @NotNull LoadedFurniture furniture,
+                                  @NotNull BukkitFurniture furniture,
                                   @NotNull InteractionHand hand,
                                   @NotNull Location interactionPoint) {
         super(player);
@@ -42,7 +42,7 @@ public class FurnitureInteractEvent extends PlayerEvent implements Cancellable {
     }
 
     @NotNull
-    public LoadedFurniture furniture() {
+    public BukkitFurniture furniture() {
         return this.furniture;
     }
 

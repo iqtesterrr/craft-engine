@@ -19,7 +19,7 @@ public class BlockParameterProvider implements ChainParameterProvider<BlockInWor
         CONTEXT_FUNCTIONS.put(DirectContextParameters.BLOCK_Y, BlockInWorld::y);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.BLOCK_Z, BlockInWorld::z);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.CUSTOM_BLOCK, BlockInWorld::customBlock);
-        CONTEXT_FUNCTIONS.put(DirectContextParameters.BLOCK_STATE, BlockInWorld::customBlockState);
+        CONTEXT_FUNCTIONS.put(DirectContextParameters.CUSTOM_BLOCK_STATE, BlockInWorld::customBlockState);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.WORLD, BlockInWorld::world);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.POSITION, BlockInWorld::position);
     }

@@ -12,8 +12,12 @@ import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONOptions;
 import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
 import net.momirealms.sparrow.nbt.Tag;
-import net.momirealms.sparrow.nbt.serializer.NBTComponentSerializer;
-import net.momirealms.sparrow.nbt.serializer.NBTSerializerOptions;
+import net.momirealms.sparrow.nbt.adventure.NBTComponentSerializer;
+import net.momirealms.sparrow.nbt.adventure.NBTSerializerOptions;
+
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Helper class for handling Adventure components and related functionalities.
@@ -44,6 +48,10 @@ public class AdventureHelper {
         }
         this.gsonComponentSerializer = builder.build();
         this.nbtComponentSerializer = NBTComponentSerializer.builder()
+                .editItem(item -> {
+                    if (VersionHelper.isOrAbove1_20_5()) {
+                    }
+                })
                 .editOptions((b) -> {
                     if (!VersionHelper.isOrAbove1_21_5()) {
                         b.value(NBTSerializerOptions.EMIT_CLICK_EVENT_TYPE, false);
@@ -169,6 +177,14 @@ public class AdventureHelper {
 
     public static Component jsonElementToComponent(JsonElement json) {
         return getInstance().gsonComponentSerializer.deserializeFromTree(json);
+    }
+
+    public static Component nbtToComponent(Tag tag) {
+        return getInstance().nbtComponentSerializer.deserialize(tag);
+    }
+
+    public static Tag componentToNbt(Component component) {
+        return getInstance().nbtComponentSerializer.serialize(component);
     }
 
     /**
@@ -298,5 +314,14 @@ public class AdventureHelper {
             }
         }
         return true;
+    }
+
+    public static Component replaceText(Component text, Map<String, Component> replacements) {
+        String patternString = replacements.keySet().stream()
+                .map(Pattern::quote)
+                .collect(Collectors.joining("|"));
+        return text.replaceText(builder ->
+                builder.match(Pattern.compile(patternString))
+                .replacement((result, b) -> replacements.get(result.group())));
     }
 }

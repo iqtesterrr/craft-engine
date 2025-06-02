@@ -1,13 +1,16 @@
 package net.momirealms.craftengine.core.item;
 
 import com.google.gson.JsonElement;
+import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
+import net.momirealms.craftengine.core.util.AdventureHelper;
 import net.momirealms.craftengine.core.util.Key;
-import org.jetbrains.annotations.Nullable;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class ItemFactory<W extends ItemWrapper<I>, I> {
     protected final CraftEngine plugin;
@@ -25,13 +28,11 @@ public abstract class ItemFactory<W extends ItemWrapper<I>, I> {
 
     protected abstract void merge(W item1, W item2);
 
-    protected abstract Object encodeJava(Object type, @Nullable Object component);
-
-    protected abstract JsonElement encodeJson(Object type, Object component);
-
     protected abstract W wrapInternal(I item);
 
-    protected abstract Object getTag(W item, Object... path);
+    protected abstract Object getJavaTag(W item, Object... path);
+
+    protected abstract Tag getNBTTag(W item, Object... path);
 
     protected abstract void setTag(W item, Object value, Object... path);
 
@@ -41,7 +42,13 @@ public abstract class ItemFactory<W extends ItemWrapper<I>, I> {
 
     protected abstract void setComponent(W item, Object type, Object value);
 
-    protected abstract Object getComponent(W item, Object type);
+    protected abstract Object getExactComponent(W item, Object type);
+
+    protected abstract Object getJavaComponent(W item, Object type);
+
+    protected abstract JsonElement getJsonComponent(W item, Object type);
+
+    protected abstract Tag getNBTComponent(W item, Object type);
 
     protected abstract boolean hasComponent(W item, Object type);
 
@@ -57,19 +64,55 @@ public abstract class ItemFactory<W extends ItemWrapper<I>, I> {
 
     protected abstract Optional<Integer> customModelData(W item);
 
-    protected abstract void customName(W item, String json);
+    protected abstract void customNameJson(W item, String json);
 
-    protected abstract Optional<String> customName(W item);
+    protected abstract Optional<String> customNameJson(W item);
 
-    protected abstract void itemName(W item, String json);
+    protected void customNameComponent(W item, Component component) {
+        if (component != null) {
+            customNameJson(item, AdventureHelper.componentToJson(component));
+        } else {
+            customNameJson(item, null);
+        }
+    }
 
-    protected abstract Optional<String> itemName(W item);
+    protected Optional<Component> customNameComponent(W item) {
+        return customNameJson(item).map(AdventureHelper::jsonToComponent);
+    }
+
+    protected abstract void itemNameJson(W item, String json);
+
+    protected abstract Optional<String> itemNameJson(W item);
+
+    protected void itemNameComponent(W item, Component component) {
+        if (component != null) {
+            itemNameJson(item, AdventureHelper.componentToJson(component));
+        } else {
+            itemNameJson(item, null);
+        }
+    }
+
+    protected Optional<Component> itemNameComponent(W item) {
+        return itemNameJson(item).map(AdventureHelper::jsonToComponent);
+    }
+
+    protected abstract Optional<List<String>> loreJson(W item);
+
+    protected abstract void loreJson(W item, List<String> lore);
+
+    protected void loreComponent(W item, List<Component> component) {
+        if (component != null && !component.isEmpty()) {
+            loreJson(item, component.stream().map(AdventureHelper::componentToJson).collect(Collectors.toList()));
+        } else {
+            loreJson(item, null);
+        }
+    }
+
+    protected Optional<List<Component>> loreComponent(W item) {
+        return loreJson(item).map(list -> list.stream().map(AdventureHelper::jsonToComponent).toList());
+    }
 
     protected abstract void skull(W item, String skullData);
-
-    protected abstract Optional<List<String>> lore(W item);
-
-    protected abstract void lore(W item, List<String> lore);
 
     protected abstract boolean unbreakable(W item);
 
@@ -87,7 +130,7 @@ public abstract class ItemFactory<W extends ItemWrapper<I>, I> {
 
     protected abstract void dyedColor(W item, Integer color);
 
-    protected abstract Optional<Integer> maxDamage(W item);
+    protected abstract int maxDamage(W item);
 
     protected abstract void maxDamage(W item, Integer damage);
 
@@ -145,4 +188,9 @@ public abstract class ItemFactory<W extends ItemWrapper<I>, I> {
 
     protected abstract byte[] toByteArray(W item);
 
+    protected abstract void setJavaComponent(W item, Object type, Object value);
+
+    protected abstract void setJsonComponent(W item, Object type, JsonElement value);
+
+    protected abstract void setNBTComponent(W item, Object type, Tag value);
 }

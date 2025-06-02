@@ -1,9 +1,9 @@
 package net.momirealms.craftengine.bukkit.entity.data;
 
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 
 public class TextDisplayEntityData<T> extends DisplayEntityData<T> {
-    public static final DisplayEntityData<Object> Text = of(23, EntityDataValue.Serializers$COMPONENT, Reflections.instance$Component$empty);
+    public static final DisplayEntityData<Object> Text = of(23, EntityDataValue.Serializers$COMPONENT, CoreReflections.instance$Component$empty);
     public static final DisplayEntityData<Integer> LineWidth = of(24, EntityDataValue.Serializers$INT, 200);
     public static final DisplayEntityData<Integer> BackgroundColor = of(25, EntityDataValue.Serializers$INT, 0x40000000);
     public static final DisplayEntityData<Byte> TextOpacity = of(26, EntityDataValue.Serializers$BYTE, (byte) -1);

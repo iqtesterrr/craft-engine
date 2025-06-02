@@ -5,13 +5,15 @@ import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.item.BukkitItemManager;
 import net.momirealms.craftengine.bukkit.item.behavior.BlockItemBehavior;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MFluids;
 import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
 import net.momirealms.craftengine.bukkit.util.LocationUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.block.CustomBlock;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.item.CustomItem;
 import net.momirealms.craftengine.core.item.Item;
+import net.momirealms.craftengine.core.item.behavior.ItemBehavior;
 import net.momirealms.craftengine.core.item.context.BlockPlaceContext;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.util.Key;
@@ -40,10 +42,12 @@ public class BukkitBlockInWorld implements BlockInWorld {
             Optional<CustomItem<ItemStack>> customItem = BukkitItemManager.instance().getCustomItem(item.id());
             if (customItem.isPresent()) {
                 CustomItem<ItemStack> custom = customItem.get();
-                if (custom.behaviors() instanceof BlockItemBehavior blockItemBehavior) {
-                    Key blockId = blockItemBehavior.blockId();
-                    if (blockId.equals(clickedBlockId)) {
-                        return false;
+                for (ItemBehavior behavior : custom.behaviors()) {
+                    if (behavior instanceof BlockItemBehavior blockItemBehavior) {
+                        Key blockId = blockItemBehavior.blockId();
+                        if (blockId.equals(clickedBlockId)) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -56,9 +60,9 @@ public class BukkitBlockInWorld implements BlockInWorld {
         try {
             Location location = this.block.getLocation();
             Object serverLevel = FastNMS.INSTANCE.field$CraftWorld$ServerLevel(this.block.getWorld());
-            Object fluidData = Reflections.method$Level$getFluidState.invoke(serverLevel, LocationUtils.toBlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            Object fluidData = CoreReflections.method$Level$getFluidState.invoke(serverLevel, LocationUtils.toBlockPos(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
             if (fluidData == null) return false;
-            return Reflections.method$FluidState$getType.invoke(fluidData) == Reflections.instance$Fluids$WATER;
+            return CoreReflections.method$FluidState$getType.invoke(fluidData) == MFluids.instance$Fluids$WATER;
         } catch (ReflectiveOperationException e) {
             CraftEngine.instance().logger().warn("Failed to check if water source is available", e);
             return false;

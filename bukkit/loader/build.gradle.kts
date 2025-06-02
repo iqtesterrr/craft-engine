@@ -14,12 +14,12 @@ dependencies {
     // Platform
     compileOnly("io.papermc.paper:paper-api:${rootProject.properties["paper_version"]}-R0.1-SNAPSHOT")
 
-    implementation(project(":shared"))
     implementation(project(":core"))
     implementation(project(":bukkit"))
     implementation(project(":bukkit:legacy"))
     implementation(project(":bukkit:compatibility"))
     implementation(project(":bukkit:compatibility:legacy"))
+    implementation(project(":common-files"))
 
     implementation("com.saicone.rtag:rtag-item:${rootProject.properties["rtag_version"]}")
     implementation("net.momirealms:sparrow-util:${rootProject.properties["sparrow_util_version"]}")
@@ -43,7 +43,7 @@ tasks.withType<JavaCompile> {
 
 bukkit {
     load = net.minecrell.pluginyml.bukkit.BukkitPluginDescription.PluginLoadOrder.POSTWORLD
-    main = "net.momirealms.craftengine.bukkit.BukkitBootstrap"
+    main = "net.momirealms.craftengine.bukkit.plugin.BukkitCraftEnginePlugin"
     version = rootProject.properties["project_version"] as String
     name = "CraftEngine"
     apiVersion = "1.20"
@@ -67,7 +67,6 @@ tasks {
         relocate("com.saicone.rtag", "net.momirealms.craftengine.libraries.tag")
         relocate("org.incendo", "net.momirealms.craftengine.libraries")
         relocate("dev.dejvokep", "net.momirealms.craftengine.libraries")
-        relocate("org.apache.commons.io", "net.momirealms.craftengine.libraries.commons.io")
         relocate("org.bstats", "net.momirealms.craftengine.libraries.bstats")
         relocate("com.github.benmanes.caffeine", "net.momirealms.craftengine.libraries.caffeine")
         relocate("com.ezylang.evalex", "net.momirealms.craftengine.libraries.evalex")
@@ -78,6 +77,6 @@ tasks {
         relocate("software.amazon.awssdk", "net.momirealms.craftengine.libraries.awssdk")
         relocate("software.amazon.eventstream", "net.momirealms.craftengine.libraries.eventstream")
         relocate("com.google.common.jimfs", "net.momirealms.craftengine.libraries.jimfs")
-        relocate("org.apache.commons.imaging", "net.momirealms.craftengine.libraries.imaging")
+        relocate("org.apache.commons", "net.momirealms.craftengine.libraries.commons")
     }
 }

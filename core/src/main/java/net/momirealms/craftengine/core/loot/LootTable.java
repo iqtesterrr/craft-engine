@@ -78,15 +78,15 @@ public class LootTable<T> {
         );
     }
 
-    public ArrayList<Item<T>> getRandomItems(ContextHolder parameters, World world) {
+    public List<Item<T>> getRandomItems(ContextHolder parameters, World world) {
         return this.getRandomItems(parameters, world, null);
     }
 
-    public ArrayList<Item<T>> getRandomItems(ContextHolder parameters, World world, @Nullable Player player) {
+    public List<Item<T>> getRandomItems(ContextHolder parameters, World world, @Nullable Player player) {
         return this.getRandomItems(new LootContext(world, player, player == null ? 1f : (float) player.luck(), parameters));
     }
 
-    private ArrayList<Item<T>> getRandomItems(LootContext context) {
+    private List<Item<T>> getRandomItems(LootContext context) {
         ArrayList<Item<T>> list = new ArrayList<>();
         this.getRandomItems(context, list::add);
         return list;

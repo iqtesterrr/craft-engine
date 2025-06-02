@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.entity.AbstractEntity;
 import net.momirealms.craftengine.core.entity.seat.SeatEntity;
 import net.momirealms.craftengine.core.item.Item;
+import net.momirealms.craftengine.core.plugin.context.CooldownData;
 import net.momirealms.craftengine.core.plugin.network.NetWorkUser;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.world.BlockPos;
@@ -36,6 +37,8 @@ public abstract class Player extends AbstractEntity implements NetWorkUser {
     public abstract void preventMiningBlock();
 
     public abstract void abortMiningBlock();
+
+    public abstract void breakBlock(int x, int y, int z);
 
     public abstract double getCachedInteractionRange();
 
@@ -119,4 +122,20 @@ public abstract class Player extends AbstractEntity implements NetWorkUser {
     public boolean isAdventureMode() {
         return gameMode() == GameMode.ADVENTURE;
     }
+
+    public abstract int foodLevel();
+
+    public abstract void setFoodLevel(int foodLevel);
+
+    public abstract float saturation();
+
+    public abstract void setSaturation(float saturation);
+
+    public abstract void addPotionEffect(Key potionEffectType, int duration, int amplifier, boolean ambient, boolean particles);
+
+    public abstract void removePotionEffect(Key potionEffectType);
+
+    public abstract void clearPotionEffects();
+
+    public abstract CooldownData cooldown();
 }

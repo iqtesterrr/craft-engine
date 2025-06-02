@@ -2,10 +2,11 @@ package net.momirealms.craftengine.bukkit.block.behavior;
 
 import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
 import net.momirealms.craftengine.bukkit.util.LocationUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.bukkit.world.BukkitWorld;
+import net.momirealms.craftengine.core.block.BlockBehavior;
 import net.momirealms.craftengine.core.block.CustomBlock;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
@@ -16,7 +17,6 @@ import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
 import net.momirealms.craftengine.core.world.Vec3d;
 import net.momirealms.craftengine.core.world.WorldPosition;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -36,7 +36,7 @@ public class FallingBlockBehavior extends BukkitBlockBehavior {
     public void onPlace(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
         Object world = args[1];
         Object blockPos = args[2];
-        Reflections.method$LevelAccessor$scheduleTick.invoke(world, blockPos, thisBlock, 2);
+        CoreReflections.method$LevelAccessor$scheduleTick.invoke(world, blockPos, thisBlock, 2);
     }
 
     @Override
@@ -50,8 +50,8 @@ public class FallingBlockBehavior extends BukkitBlockBehavior {
             world = args[3];
             blockPos = args[4];
         }
-        Reflections.method$LevelAccessor$scheduleTick.invoke(world, blockPos, thisBlock, 2);
-        return super.updateShape(thisBlock, args, superMethod);
+        CoreReflections.method$LevelAccessor$scheduleTick.invoke(world, blockPos, thisBlock, 2);
+        return args[0];
     }
 
     @Override
@@ -59,8 +59,8 @@ public class FallingBlockBehavior extends BukkitBlockBehavior {
         Object blockPos = args[2];
         int y = FastNMS.INSTANCE.field$Vec3i$y(blockPos);
         Object world = args[1];
-        Object dimension = Reflections.method$$LevelReader$dimensionType.invoke(world);
-        int minY = Reflections.field$DimensionType$minY.getInt(dimension);
+        Object dimension = CoreReflections.method$$LevelReader$dimensionType.invoke(world);
+        int minY = CoreReflections.field$DimensionType$minY.getInt(dimension);
         if (y < minY) {
             return;
         }
@@ -68,14 +68,14 @@ public class FallingBlockBehavior extends BukkitBlockBehavior {
         int z = FastNMS.INSTANCE.field$Vec3i$z(blockPos);
         Object belowPos = LocationUtils.toBlockPos(x, y - 1, z);
         Object belowState = FastNMS.INSTANCE.method$BlockGetter$getBlockState(world, belowPos);
-        boolean isFree = (boolean) Reflections.method$FallingBlock$isFree.invoke(null, belowState);
+        boolean isFree = (boolean) CoreReflections.method$FallingBlock$isFree.invoke(null, belowState);
         if (!isFree) {
             return;
         }
         Object blockState = args[0];
-        Object fallingBlockEntity = Reflections.method$FallingBlockEntity$fall.invoke(null, world, blockPos, blockState);
+        Object fallingBlockEntity = CoreReflections.method$FallingBlockEntity$fall.invoke(null, world, blockPos, blockState);
         if (this.hurtAmount > 0 && this.maxHurt > 0) {
-            Reflections.method$FallingBlockEntity$setHurtsEntities.invoke(fallingBlockEntity, this.hurtAmount, this.maxHurt);
+            CoreReflections.method$FallingBlockEntity$setHurtsEntities.invoke(fallingBlockEntity, this.hurtAmount, this.maxHurt);
         }
     }
 
@@ -85,22 +85,22 @@ public class FallingBlockBehavior extends BukkitBlockBehavior {
         if (VersionHelper.isOrAbove1_20_3()) return;
         Object level = args[0];
         Object fallingBlockEntity = args[2];
-        boolean cancelDrop = (boolean) Reflections.field$FallingBlockEntity$cancelDrop.get(fallingBlockEntity);
+        boolean cancelDrop = (boolean) CoreReflections.field$FallingBlockEntity$cancelDrop.get(fallingBlockEntity);
         if (cancelDrop) return;
-        Object blockState = Reflections.field$FallingBlockEntity$blockState.get(fallingBlockEntity);
+        Object blockState = CoreReflections.field$FallingBlockEntity$blockState.get(fallingBlockEntity);
         int stateId = BlockStateUtils.blockStateToId(blockState);
         ImmutableBlockState immutableBlockState = BukkitBlockManager.instance().getImmutableBlockState(stateId);
         if (immutableBlockState == null || immutableBlockState.isEmpty()) return;
         net.momirealms.craftengine.core.world.World world = new BukkitWorld(FastNMS.INSTANCE.method$Level$getCraftWorld(level));
-        WorldPosition position = new WorldPosition(world, Reflections.field$Entity$xo.getDouble(fallingBlockEntity), Reflections.field$Entity$yo.getDouble(fallingBlockEntity), Reflections.field$Entity$zo.getDouble(fallingBlockEntity));
+        WorldPosition position = new WorldPosition(world, CoreReflections.field$Entity$xo.getDouble(fallingBlockEntity), CoreReflections.field$Entity$yo.getDouble(fallingBlockEntity), CoreReflections.field$Entity$zo.getDouble(fallingBlockEntity));
         ContextHolder.Builder builder = ContextHolder.builder()
                 .withParameter(DirectContextParameters.FALLING_BLOCK, true)
                 .withParameter(DirectContextParameters.POSITION, position);
         for (Item<Object> item : immutableBlockState.getDrops(builder, world, null)) {
             world.dropItemNaturally(position, item);
         }
-        Object entityData = Reflections.field$Entity$entityData.get(fallingBlockEntity);
-        boolean isSilent = (boolean) Reflections.method$SynchedEntityData$get.invoke(entityData, Reflections.instance$Entity$DATA_SILENT);
+        Object entityData = CoreReflections.field$Entity$entityData.get(fallingBlockEntity);
+        boolean isSilent = (boolean) CoreReflections.method$SynchedEntityData$get.invoke(entityData, CoreReflections.instance$Entity$DATA_SILENT);
         if (!isSilent) {
             world.playBlockSound(position, immutableBlockState.sounds().destroySound());
         }
@@ -109,15 +109,15 @@ public class FallingBlockBehavior extends BukkitBlockBehavior {
     @Override
     public void onLand(Object thisBlock, Object[] args) throws Exception {
         Object fallingBlock = args[4];
-        Object entityData = Reflections.field$Entity$entityData.get(fallingBlock);
-        boolean isSilent = (boolean) Reflections.method$SynchedEntityData$get.invoke(entityData, Reflections.instance$Entity$DATA_SILENT);
+        Object level = args[0];
+        Object pos = args[1];
+        Object entityData = CoreReflections.field$Entity$entityData.get(fallingBlock);
+        boolean isSilent = (boolean) CoreReflections.method$SynchedEntityData$get.invoke(entityData, CoreReflections.instance$Entity$DATA_SILENT);
         if (!isSilent) {
             Object blockState = args[2];
             int stateId = BlockStateUtils.blockStateToId(blockState);
             ImmutableBlockState immutableBlockState = BukkitBlockManager.instance().getImmutableBlockState(stateId);
             if (immutableBlockState == null || immutableBlockState.isEmpty()) return;
-            Object level = args[0];
-            Object pos = args[1];
             net.momirealms.craftengine.core.world.World world = new BukkitWorld(FastNMS.INSTANCE.method$Level$getCraftWorld(level));
             world.playBlockSound(Vec3d.atCenterOf(LocationUtils.fromBlockPos(pos)), immutableBlockState.sounds().landSound());
         }

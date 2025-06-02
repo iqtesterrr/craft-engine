@@ -1,7 +1,7 @@
 package net.momirealms.craftengine.bukkit.plugin.gui;
 
 import net.momirealms.craftengine.core.plugin.gui.Gui;
-import net.momirealms.craftengine.shared.ObjectHolder;
+import net.momirealms.craftengine.core.util.ObjectHolder;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;

@@ -1,9 +1,9 @@
 package net.momirealms.craftengine.bukkit.block.behavior;
 
+import net.momirealms.craftengine.core.block.BlockBehavior;
 import net.momirealms.craftengine.core.block.CustomBlock;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
 import net.momirealms.craftengine.core.block.properties.Property;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;

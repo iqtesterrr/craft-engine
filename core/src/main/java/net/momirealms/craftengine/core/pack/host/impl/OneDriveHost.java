@@ -189,7 +189,6 @@ public class OneDriveHost implements ResourcePackHost {
             try (HttpClient client = HttpClient.newBuilder().proxy(this.proxy).build()) {
                 String formData = "client_id=" + URLEncoder.encode(this.clientId, StandardCharsets.UTF_8) +
                         "&client_secret=" + URLEncoder.encode(this.clientSecret, StandardCharsets.UTF_8) +
-                        "&redirect_uri=" + URLEncoder.encode("https://alist.nn.ci/tool/onedrive/callback", StandardCharsets.UTF_8) +
                         "&refresh_token=" + URLEncoder.encode(this.refreshToken.left(), StandardCharsets.UTF_8) +
                         "&grant_type=refresh_token" +
                         "&scope=Files.ReadWrite.All+offline_access";

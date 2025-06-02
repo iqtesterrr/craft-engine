@@ -5,9 +5,12 @@ import com.google.gson.JsonObject;
 import net.momirealms.craftengine.core.item.ComponentKeys;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.item.ItemBuildContext;
+import net.momirealms.craftengine.core.item.NetworkItemHandler;
 import net.momirealms.craftengine.core.util.GsonHelper;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.Pair;
+import net.momirealms.sparrow.nbt.CompoundTag;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,7 +68,7 @@ public class ComponentModifier<I> implements ItemDataModifier<I> {
             item.setComponent(entry.left(), entry.right());
         }
         if (this.customData != null) {
-            JsonObject tag = (JsonObject) item.getJsonTypeComponent(ComponentKeys.CUSTOM_DATA);
+            JsonObject tag = (JsonObject) item.getJsonComponent(ComponentKeys.CUSTOM_DATA);
             if (tag != null) {
                 item.setComponent(ComponentKeys.CUSTOM_DATA, GsonHelper.shallowMerge(this.customData, tag));
             } else {
@@ -75,18 +78,13 @@ public class ComponentModifier<I> implements ItemDataModifier<I> {
     }
 
     @Override
-    public void remove(Item<I> item) {
+    public void prepareNetworkItem(Item<I> item, ItemBuildContext context, CompoundTag networkData) {
         for (Pair<Key, Object> entry : this.arguments) {
-            item.resetComponent(entry.left());
-        }
-        if (this.customData != null) {
-            JsonObject tag = (JsonObject) item.getJsonTypeComponent(ComponentKeys.CUSTOM_DATA);
-            if (tag != null) {
-                // crude method
-                for (String key : this.customData.keySet()) {
-                    tag.remove(key);
-                }
-                item.setComponent(ComponentKeys.CUSTOM_DATA, tag);
+            Tag previous = item.getNBTComponent(entry.left());
+            if (previous != null) {
+                networkData.put(entry.left().asString(), NetworkItemHandler.pack(NetworkItemHandler.Operation.ADD, previous));
+            } else {
+                networkData.put(entry.left().asString(), NetworkItemHandler.pack(NetworkItemHandler.Operation.REMOVE));
             }
         }
     }

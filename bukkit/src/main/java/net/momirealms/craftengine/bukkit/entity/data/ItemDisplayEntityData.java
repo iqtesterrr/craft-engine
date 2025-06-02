@@ -1,10 +1,10 @@
 package net.momirealms.craftengine.bukkit.entity.data;
 
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MItems;
 
 public class ItemDisplayEntityData<T> extends DisplayEntityData<T> {
     // Item display only
-    public static final DisplayEntityData<Object> DisplayedItem = of(23, EntityDataValue.Serializers$ITEM_STACK, Reflections.instance$ItemStack$Air);
+    public static final DisplayEntityData<Object> DisplayedItem = of(23, EntityDataValue.Serializers$ITEM_STACK, MItems.Air$ItemStack);
     /**
      * Display type:
      * 0 = NONE

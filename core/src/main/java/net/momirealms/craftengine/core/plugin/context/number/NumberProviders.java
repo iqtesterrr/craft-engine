@@ -41,6 +41,10 @@ public class NumberProviders {
         return functions;
     }
 
+    public static NumberProvider direct(double value) {
+        return new FixedNumberProvider(value);
+    }
+
     public static NumberProvider fromMap(Map<String, Object> map) {
         String type = ResourceConfigUtils.requireNonEmptyStringOrThrow(map.get("type"), "warning.config.number.missing_type");
         Key key = Key.withDefaultNamespace(type, Key.DEFAULT_NAMESPACE);

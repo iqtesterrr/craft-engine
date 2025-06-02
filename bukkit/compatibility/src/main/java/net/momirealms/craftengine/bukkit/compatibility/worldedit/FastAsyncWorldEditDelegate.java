@@ -19,7 +19,7 @@ import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockStateHolder;
 import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
-import net.momirealms.craftengine.bukkit.plugin.injector.BukkitInjector;
+import net.momirealms.craftengine.bukkit.plugin.injector.WorldStorageInjector;
 import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
 import net.momirealms.craftengine.core.block.EmptyBlock;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
@@ -87,7 +87,7 @@ public class FastAsyncWorldEditDelegate extends AbstractDelegateExtent {
                 CESection ceSection = ceSections[i];
                 Object section = sections[i];
                 int finalI = i;
-                BukkitInjector.injectLevelChunkSection(section, ceSection, ceChunk, new SectionPos(pos.x, ceChunk.sectionY(i), pos.z),
+                WorldStorageInjector.injectLevelChunkSection(section, ceSection, ceChunk, new SectionPos(pos.x, ceChunk.sectionY(i), pos.z),
                         (injected) -> sections[finalI] = injected);
             }
         }

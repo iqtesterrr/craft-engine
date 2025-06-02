@@ -2,8 +2,11 @@ package net.momirealms.craftengine.core.item.modifier;
 
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.item.ItemBuildContext;
+import net.momirealms.craftengine.core.item.NetworkItemHandler;
 import net.momirealms.craftengine.core.util.MiscUtils;
 import net.momirealms.craftengine.core.util.TypeUtils;
+import net.momirealms.sparrow.nbt.CompoundTag;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,17 +29,23 @@ public class TagsModifier<I> implements ItemDataModifier<I> {
 
     @Override
     public void apply(Item<I> item, ItemBuildContext context) {
-        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
+        for (Map.Entry<String, Object> entry : this.arguments.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             item.setTag(value, key);
         }
     }
 
+    // TODO NOT PERFECT
     @Override
-    public void remove(Item<I> item) {
-        for (Map.Entry<String, Object> entry : arguments.entrySet()) {
-            item.removeTag(entry.getKey());
+    public void prepareNetworkItem(Item<I> item, ItemBuildContext context, CompoundTag networkData) {
+        for (Map.Entry<String, Object> entry : this.arguments.entrySet()) {
+            Tag previous = item.getNBTTag(entry.getKey());
+            if (previous != null) {
+                networkData.put(entry.getKey(), NetworkItemHandler.pack(NetworkItemHandler.Operation.ADD, previous));
+            } else {
+                networkData.put(entry.getKey(), NetworkItemHandler.pack(NetworkItemHandler.Operation.REMOVE));
+            }
         }
     }
 

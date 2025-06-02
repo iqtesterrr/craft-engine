@@ -1,9 +1,14 @@
 package net.momirealms.craftengine.core.item.modifier;
 
+import net.momirealms.craftengine.core.item.ComponentKeys;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.item.ItemBuildContext;
+import net.momirealms.craftengine.core.item.NetworkItemHandler;
 import net.momirealms.craftengine.core.plugin.config.Config;
 import net.momirealms.craftengine.core.util.AdventureHelper;
+import net.momirealms.craftengine.core.util.VersionHelper;
+import net.momirealms.sparrow.nbt.CompoundTag;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.List;
 
@@ -21,12 +26,26 @@ public class LoreModifier<I> implements ItemDataModifier<I> {
 
     @Override
     public void apply(Item<I> item, ItemBuildContext context) {
-        item.lore(this.argument.stream().map(it -> AdventureHelper.componentToJson(AdventureHelper.miniMessage().deserialize(
-                it, context.tagResolvers()))).toList());
+        item.loreComponent(this.argument.stream().map(it -> AdventureHelper.miniMessage().deserialize(
+                it, context.tagResolvers())).toList());
     }
 
     @Override
-    public void remove(Item<I> item) {
-        item.lore(null);
+    public void prepareNetworkItem(Item<I> item, ItemBuildContext context, CompoundTag networkData) {
+        if (VersionHelper.isOrAbove1_20_5()) {
+            Tag previous = item.getNBTComponent(ComponentKeys.LORE);
+            if (previous != null) {
+                networkData.put(ComponentKeys.LORE.asString(), NetworkItemHandler.pack(NetworkItemHandler.Operation.ADD, previous));
+            } else {
+                networkData.put(ComponentKeys.LORE.asString(), NetworkItemHandler.pack(NetworkItemHandler.Operation.REMOVE));
+            }
+        } else {
+            Tag previous = item.getNBTTag("display", "Lore");
+            if (previous != null) {
+                networkData.put("display.Lore", NetworkItemHandler.pack(NetworkItemHandler.Operation.ADD, previous));
+            } else {
+                networkData.put("display.Lore", NetworkItemHandler.pack(NetworkItemHandler.Operation.REMOVE));
+            }
+        }
     }
 }

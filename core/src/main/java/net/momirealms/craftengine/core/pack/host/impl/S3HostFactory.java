@@ -15,7 +15,6 @@ public class S3HostFactory implements ResourcePackHostFactory {
     public ResourcePackHost create(Map<String, Object> arguments) {
         CraftEngine.instance().dependencyManager().loadDependencies(
                 List.of(
-                        Dependencies.NETTY_HTTP,
                         Dependencies.NETTY_HTTP2,
                         Dependencies.REACTIVE_STREAMS,
                         Dependencies.AMAZON_AWSSDK_S3,

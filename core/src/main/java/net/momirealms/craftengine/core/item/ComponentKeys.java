@@ -2,7 +2,9 @@ package net.momirealms.craftengine.core.item;
 
 import net.momirealms.craftengine.core.util.Key;
 
-public class ComponentKeys {
+public final class ComponentKeys {
+    private ComponentKeys() {}
+
     public static final Key CUSTOM_MODEL_DATA = Key.of("minecraft", "custom_model_data");
     public static final Key CUSTOM_NAME = Key.of("minecraft", "custom_name");
     public static final Key ITEM_NAME = Key.of("minecraft", "item_name");

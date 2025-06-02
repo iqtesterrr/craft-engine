@@ -11,11 +11,10 @@ import net.momirealms.craftengine.core.util.AdventureHelper;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.MiscUtils;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class MessageFunction<CTX extends Context> extends AbstractConditionalFunction<CTX> {
     private final List<TextProvider> messages;
@@ -31,9 +30,8 @@ public class MessageFunction<CTX extends Context> extends AbstractConditionalFun
 
     @Override
     public void runInternal(CTX ctx) {
-        Optional<Player> owner = ctx.getOptionalParameter(DirectContextParameters.PLAYER);
         if (this.selector == null) {
-            owner.ifPresent(it -> {
+            ctx.getOptionalParameter(DirectContextParameters.PLAYER).ifPresent(it -> {
                 for (TextProvider c : this.messages) {
                     it.sendMessage(AdventureHelper.miniMessage().deserialize(c.get(ctx), ctx.tagResolvers()), this.overlay);
                 }

@@ -94,8 +94,8 @@ public enum Direction {
     }
 
     public static Direction[] orderedByNearest(AbstractEntity entity) {
-        float xRotation = entity.getXRot() * (float) (Math.PI / 180.0);
-        float yRotation = -entity.getYRot() * (float) (Math.PI / 180.0);
+        float xRotation = entity.xRot() * (float) (Math.PI / 180.0);
+        float yRotation = -entity.yRot() * (float) (Math.PI / 180.0);
         float sinX = (float) Math.sin(xRotation);
         float cosX = (float) Math.cos(xRotation);
         float sinY = (float) Math.sin(yRotation);

@@ -1,6 +1,7 @@
 package net.momirealms.craftengine.core.font;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 public class Emoji {

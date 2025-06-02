@@ -114,7 +114,7 @@ CraftEngine 的實現依賴於以下基礎庫：
 
 ### 🌍 翻譯
 1. 克隆此倉庫。
-2. 在 '/bukkit/loader/src/main/resources/translations' 中創建一個新的語言檔。
+2. 在 '/common-files/src/main/resources/translations' 中創建一個新的語言檔。
 3. 完成後，提交 **pull request** 以供審核。我們感謝您的貢獻！
 
 ### 💖 支持開發者
@@ -129,13 +129,11 @@ CraftEngine 的實現依賴於以下基礎庫：
 ```kotlin
 repositories {
     maven("https://repo.momirealms.net/releases/")
-    // 如果你的網路環境受限可以嘗試下面的存儲庫位址
-    // maven("https://repo-momi.gtemc.cn/releases/")
 }
 ```
 ```kotlin
 dependencies {
-    compileOnly("net.momirealms:craft-engine-core:0.0.54")
-    compileOnly("net.momirealms:craft-engine-bukkit:0.0.54")
+    compileOnly("net.momirealms:craft-engine-core:0.0.55")
+    compileOnly("net.momirealms:craft-engine-bukkit:0.0.55")
 }
 ```

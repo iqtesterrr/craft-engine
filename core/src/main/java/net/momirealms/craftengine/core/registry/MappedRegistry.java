@@ -3,8 +3,8 @@ package net.momirealms.craftengine.core.registry;
 import com.google.common.collect.Maps;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceKey;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public class MappedRegistry<T> implements WritableRegistry<T> {

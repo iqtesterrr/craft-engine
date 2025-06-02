@@ -6,9 +6,10 @@ import io.papermc.paper.event.player.AsyncChatCommandDecorateEvent;
 import io.papermc.paper.event.player.AsyncChatDecorateEvent;
 import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
+import net.momirealms.craftengine.bukkit.plugin.reflection.bukkit.CraftBukkitReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.paper.PaperReflections;
 import net.momirealms.craftengine.bukkit.util.ComponentUtils;
 import net.momirealms.craftengine.bukkit.util.LegacyInventoryUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.font.*;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.plugin.config.Config;
@@ -42,7 +43,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
 
     @Override
     public void delayedInit() {
-        Bukkit.getPluginManager().registerEvents(this, plugin.bootstrap());
+        Bukkit.getPluginManager().registerEvents(this, plugin.javaPlugin());
     }
 
     @Override
@@ -132,7 +133,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
         if (result == null) return;
         Player player;
         try {
-            player = (Player) Reflections.method$InventoryView$getPlayer.invoke(VersionHelper.isOrAbove1_21() ? event.getView() : LegacyInventoryUtils.getView(event));
+            player = (Player) CraftBukkitReflections.method$InventoryView$getPlayer.invoke(VersionHelper.isOrAbove1_21() ? event.getView() : LegacyInventoryUtils.getView(event));
         } catch (ReflectiveOperationException e) {
             this.plugin.logger().warn("Failed to get inventory viewer", e);
             return;
@@ -151,7 +152,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
         EmojiComponentProcessResult replaceProcessResult = replaceComponentEmoji(itemName, plugin.adapt(player), renameText);
         if (replaceProcessResult.changed()) {
             Item<ItemStack> wrapped = this.plugin.itemManager().wrap(result);
-            wrapped.customName(AdventureHelper.componentToJson(replaceProcessResult.newText()));
+            wrapped.customNameJson(AdventureHelper.componentToJson(replaceProcessResult.newText()));
             event.setResult(wrapped.load());
         }
     }
@@ -168,7 +169,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
             EmojiComponentProcessResult result = replaceComponentEmoji(line, plugin.adapt(player));
             if (result.changed()) {
                 try {
-                    Reflections.method$SignChangeEvent$line.invoke(event, i, ComponentUtils.jsonElementToPaperAdventure(AdventureHelper.componentToJsonElement(result.newText())));
+                    PaperReflections.method$SignChangeEvent$line.invoke(event, i, ComponentUtils.jsonElementToPaperAdventure(AdventureHelper.componentToJsonElement(result.newText())));
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     plugin.logger().warn("Failed to set sign line", e);
                 }
@@ -177,7 +178,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
                 try {
                     JsonObject jo = new JsonObject();
                     jo.addProperty("text", plainText);
-                    Reflections.method$SignChangeEvent$line.invoke(event, i, ComponentUtils.jsonElementToPaperAdventure(jo));
+                    PaperReflections.method$SignChangeEvent$line.invoke(event, i, ComponentUtils.jsonElementToPaperAdventure(jo));
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     plugin.logger().warn("Failed to reset sign line", e);
                 }
@@ -200,7 +201,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
             if (result.changed()) {
                 changed = true;
                 try {
-                    Reflections.method$BookMeta$page.invoke(newBookMeta, i + 1, ComponentUtils.jsonElementToPaperAdventure(AdventureHelper.componentToJsonElement(result.newText())));
+                    PaperReflections.method$BookMeta$page.invoke(newBookMeta, i + 1, ComponentUtils.jsonElementToPaperAdventure(AdventureHelper.componentToJsonElement(result.newText())));
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     this.plugin.logger().warn("Failed to set book page", e);
                 }
@@ -216,7 +217,7 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
         Player player = event.player();
         if (player == null) return;
         try {
-            Object originalMessage = Reflections.field$AsyncChatDecorateEvent$originalMessage.get(event);
+            Object originalMessage = PaperReflections.field$AsyncChatDecorateEvent$originalMessage.get(event);
             String rawJsonMessage = ComponentUtils.paperAdventureToJson(originalMessage);
             if (Config.allowEmojiChat()) {
                 EmojiTextProcessResult processResult = replaceJsonEmoji(rawJsonMessage, this.plugin.adapt(player));
@@ -225,21 +226,21 @@ public class BukkitFontManager extends AbstractFontManager implements Listener {
                     IllegalCharacterProcessResult result = processIllegalCharacters(processResult.text());
                     if (result.has()) {
                         Object component = ComponentUtils.jsonToPaperAdventure(result.text());
-                        Reflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
+                        PaperReflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
                     } else if (hasChanged) {
                         Object component = ComponentUtils.jsonToPaperAdventure(processResult.text());
-                        Reflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
+                        PaperReflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
                     }
                 } else if (hasChanged) {
                     Object component = ComponentUtils.jsonToPaperAdventure(processResult.text());
-                    Reflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
+                    PaperReflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
                 }
             } else {
                 if (!player.hasPermission(FontManager.BYPASS_CHAT))  {
                     IllegalCharacterProcessResult result = processIllegalCharacters(rawJsonMessage);
                     if (result.has()) {
                         Object component = ComponentUtils.jsonToPaperAdventure(result.text());
-                        Reflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
+                        PaperReflections.method$AsyncChatDecorateEvent$result.invoke(event, component);
                     }
                 }
             }

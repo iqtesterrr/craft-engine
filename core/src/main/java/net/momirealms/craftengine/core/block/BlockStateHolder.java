@@ -19,7 +19,7 @@ public class BlockStateHolder {
     }
 
     public Holder<CustomBlock> owner() {
-        return owner;
+        return this.owner;
     }
 
     public <T extends Comparable<T>> ImmutableBlockState cycle(Property<T> property) {
@@ -38,14 +38,14 @@ public class BlockStateHolder {
 
     @Override
     public String toString() {
-        if (propertyMap.isEmpty()) {
-            return owner.value().id().toString();
+        if (this.propertyMap.isEmpty()) {
+            return this.owner.value().id().toString();
         }
-        return owner.value().id() + "[" + getPropertiesAsString() + "]";
+        return this.owner.value().id() + "[" + getPropertiesAsString() + "]";
     }
 
     public String getPropertiesAsString() {
-        return propertyMap.entrySet().stream()
+        return this.propertyMap.entrySet().stream()
                 .map(entry -> {
                     Property<?> property = entry.getKey();
                     return property.name() + "=" + Property.formatValue(property, entry.getValue());
@@ -54,17 +54,17 @@ public class BlockStateHolder {
     }
 
     public Collection<Property<?>> getProperties() {
-        return Collections.unmodifiableSet(propertyMap.keySet());
+        return Collections.unmodifiableSet(this.propertyMap.keySet());
     }
 
     public <T extends Comparable<T>> boolean contains(Property<T> property) {
-        return propertyMap.containsKey(property);
+        return this.propertyMap.containsKey(property);
     }
 
     public <T extends Comparable<T>> T get(Property<T> property) {
         T value = getNullable(property);
         if (value == null) {
-            throw new IllegalArgumentException("Property " + property + " not found in " + owner.value().id());
+            throw new IllegalArgumentException("Property " + property + " not found in " + this.owner.value().id());
         }
         return value;
     }
@@ -75,19 +75,19 @@ public class BlockStateHolder {
 
     @Nullable
     public <T extends Comparable<T>> T getNullable(Property<T> property) {
-        Comparable<?> value = propertyMap.get(property);
+        Comparable<?> value = this.propertyMap.get(property);
         return value != null ? property.valueClass().cast(value) : null;
     }
 
     public <T extends Comparable<T>, V extends T> ImmutableBlockState with(Property<T> property, V value) {
-        if (!propertyMap.containsKey(property)) {
-            throw new IllegalArgumentException("Property " + property + " not found in " + owner.value().id());
+        if (!this.propertyMap.containsKey(property)) {
+            throw new IllegalArgumentException("Property " + property + " not found in " + this.owner.value().id());
         }
         return withInternal(property, value);
     }
 
     private <T extends Comparable<T>, V extends T> ImmutableBlockState withInternal(Property<T> property, V newValue) {
-        if (newValue.equals(propertyMap.get(property))) {
+        if (newValue.equals(this.propertyMap.get(property))) {
             return (ImmutableBlockState) this;
         }
 
@@ -96,20 +96,20 @@ public class BlockStateHolder {
             throw new IllegalArgumentException("Invalid value " + newValue + " for property " + property);
         }
 
-        return withMap.get(property)[index];
+        return this.withMap.get(property)[index];
     }
 
     public void createWithMap(Map<Map<Property<?>, Comparable<?>>, ImmutableBlockState> states) {
-        if (withMap != null) {
+        if (this.withMap != null) {
             throw new IllegalStateException("WithMap already initialized");
         }
 
-        Reference2ObjectArrayMap<Property<?>, ImmutableBlockState[]> map = new Reference2ObjectArrayMap<>(propertyMap.size());
+        Reference2ObjectArrayMap<Property<?>, ImmutableBlockState[]> map = new Reference2ObjectArrayMap<>(this.propertyMap.size());
 
-        for (Property<?> property : propertyMap.keySet()) {
+        for (Property<?> property : this.propertyMap.keySet()) {
             ImmutableBlockState[] statesArray = property.possibleValues().stream()
                     .map(value -> {
-                        Map<Property<?>, Comparable<?>> testMap = new Reference2ObjectArrayMap<>(propertyMap);
+                        Map<Property<?>, Comparable<?>> testMap = new Reference2ObjectArrayMap<>(this.propertyMap);
                         testMap.put(property, value);
                         ImmutableBlockState state = states.get(testMap);
                         if (state == null) {
@@ -126,6 +126,6 @@ public class BlockStateHolder {
     }
 
     public Map<Property<?>, Comparable<?>> propertyEntries() {
-        return Collections.unmodifiableMap(propertyMap);
+        return Collections.unmodifiableMap(this.propertyMap);
     }
 }

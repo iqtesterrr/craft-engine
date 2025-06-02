@@ -1,6 +1,8 @@
 package net.momirealms.craftengine.core.block.behavior;
 
+import net.momirealms.craftengine.core.block.BlockBehavior;
 import net.momirealms.craftengine.core.block.CustomBlock;
+import net.momirealms.craftengine.core.block.EmptyBlockBehavior;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.registry.BuiltInRegistries;
 import net.momirealms.craftengine.core.registry.Holder;
@@ -9,8 +11,6 @@ import net.momirealms.craftengine.core.registry.WritableRegistry;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import net.momirealms.craftengine.core.util.ResourceKey;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
-import net.momirealms.craftengine.shared.block.EmptyBlockBehavior;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;

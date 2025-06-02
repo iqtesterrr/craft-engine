@@ -1,5 +1,6 @@
 package net.momirealms.craftengine.core.plugin.text.minimessage;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.ParsingException;
 import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
@@ -9,6 +10,9 @@ import net.momirealms.craftengine.core.plugin.context.Context;
 import net.momirealms.craftengine.core.util.AdventureHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GlobalVariableTag implements TagResolver {
     private final Context context;
@@ -27,7 +31,18 @@ public class GlobalVariableTag implements TagResolver {
         if (value == null) {
             throw ctx.newException("Unknown variable: ", arguments);
         }
-        return Tag.selfClosingInserting(AdventureHelper.miniMessage().deserialize(value, this.context.tagResolvers()));
+        if (!arguments.hasNext()) {
+            return Tag.selfClosingInserting(AdventureHelper.miniMessage().deserialize(value, this.context.tagResolvers()));
+        } else {
+            List<Component> args = new ArrayList<>();
+            while (arguments.hasNext()) {
+                args.add(AdventureHelper.miniMessage().deserialize(arguments.popOr("No index argument variable id provided").toString(), this.context.tagResolvers()));
+            }
+            return Tag.selfClosingInserting(AdventureHelper.miniMessage().deserialize(value, TagResolver.builder()
+                    .resolvers(this.context.tagResolvers())
+                    .resolver(new IndexedArgumentTag(args))
+                    .build()));
+        }
     }
 
     @Override

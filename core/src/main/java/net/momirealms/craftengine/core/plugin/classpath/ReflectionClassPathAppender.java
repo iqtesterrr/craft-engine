@@ -1,7 +1,5 @@
 package net.momirealms.craftengine.core.plugin.classpath;
 
-import net.momirealms.craftengine.core.plugin.Plugin;
-
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -15,10 +13,6 @@ public class ReflectionClassPathAppender implements ClassPathAppender {
         } else {
             throw new IllegalStateException("ClassLoader is not instance of URLClassLoader");
         }
-    }
-
-    public ReflectionClassPathAppender(Plugin plugin) throws IllegalStateException {
-        this(plugin.getClass().getClassLoader());
     }
 
     @Override

@@ -1,8 +1,8 @@
 package net.momirealms.craftengine.core.util;
 
 import com.google.common.collect.Iterators;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;

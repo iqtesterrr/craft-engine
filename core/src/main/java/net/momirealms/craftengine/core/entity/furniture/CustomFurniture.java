@@ -5,74 +5,53 @@ import net.momirealms.craftengine.core.plugin.context.PlayerOptionalContext;
 import net.momirealms.craftengine.core.plugin.context.event.EventTrigger;
 import net.momirealms.craftengine.core.plugin.context.function.Function;
 import net.momirealms.craftengine.core.util.Key;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-public class CustomFurniture {
-    private final Key id;
-    private final FurnitureSettings settings;
-    private final EnumMap<AnchorType, Placement> placements;
-    private final AnchorType anyType;
-    private final Map<EventTrigger, List<Function<PlayerOptionalContext>>> events;
-    @Nullable
-    private final LootTable<?> lootTable;
+// TODO 家具的设计存在问题。家具也应该存在不同的状态，而不是根据放置规则直接决定状态类型
+public interface CustomFurniture {
 
-    public CustomFurniture(@NotNull Key id,
-                           @NotNull FurnitureSettings settings,
-                           @NotNull EnumMap<AnchorType, Placement> placements,
-                           @NotNull Map<EventTrigger, List<Function<PlayerOptionalContext>>> events,
-                           @Nullable LootTable<?> lootTable) {
-        this.id = id;
-        this.settings = settings;
-        this.placements = placements;
-        this.lootTable = lootTable;
-        this.events = events;
-        this.anyType = placements.keySet().stream().findFirst().orElse(null);
-    }
+    void execute(PlayerOptionalContext context, EventTrigger trigger);
 
-    public void execute(PlayerOptionalContext context, EventTrigger trigger) {
-        for (Function<PlayerOptionalContext> function : Optional.ofNullable(this.events.get(trigger)).orElse(Collections.emptyList())) {
-            function.run(context);
-        }
-    }
+    Key id();
 
-    public Key id() {
-        return id;
-    }
+    Map<AnchorType, Placement> placements();
 
-    public EnumMap<AnchorType, Placement> placements() {
-        return placements;
-    }
-
-    public FurnitureSettings settings() {
-        return settings;
-    }
+    FurnitureSettings settings();
 
     @Nullable
-    public LootTable<?> lootTable() {
-        return lootTable;
+    LootTable<?> lootTable();
+
+    AnchorType getAnyPlacement();
+
+    boolean isAllowedPlacement(AnchorType anchorType);
+
+    Placement getPlacement(AnchorType anchorType);
+
+    interface Builder {
+
+        Builder id(Key id);
+
+        Builder placement(Map<AnchorType, Placement> placements);
+
+        Builder settings(FurnitureSettings settings);
+
+        Builder lootTable(LootTable<?> lootTable);
+
+        Builder events(Map<EventTrigger, List<Function<PlayerOptionalContext>>> events);
+
+        CustomFurniture build();
     }
 
-    public AnchorType getAnyPlacement() {
-        return this.anyType;
-    }
-
-    public boolean isAllowedPlacement(AnchorType anchorType) {
-        return placements.containsKey(anchorType);
-    }
-
-    public Placement getPlacement(AnchorType anchorType) {
-        return placements.get(anchorType);
-    }
-
-    public record Placement(FurnitureElement[] elements,
-                            HitBox[] hitBoxes,
-                            RotationRule rotationRule,
-                            AlignmentRule alignmentRule,
-                            Optional<ExternalModel> externalModel,
-                            Optional<Vector3f> dropOffset) {
+    record Placement(FurnitureElement[] elements,
+                     HitBox[] hitBoxes,
+                     RotationRule rotationRule,
+                     AlignmentRule alignmentRule,
+                     Optional<ExternalModel> externalModel,
+                     Optional<Vector3f> dropOffset) {
     }
 }

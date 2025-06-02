@@ -225,7 +225,7 @@ public class DropboxHost implements ResourcePackHost {
 
             try (HttpClient client = HttpClient.newBuilder().proxy(this.proxy).build()) {
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create("https://alist.nn.ci/tool/dropbox/callback"))
+                        .uri(URI.create("https://api.dropboxapi.com/oauth2/token"))
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .header("Authorization", authHeader)
                         .POST(HttpRequest.BodyPublishers.ofString(

@@ -212,4 +212,6 @@ public class BlockKeys {
     public static final Key CRIMSON_WALL_HANGING_SIGN = Key.of("minecraft:crimson_wall_hanging_sign");
     public static final Key WARPED_WALL_HANGING_SIGN = Key.of("minecraft:warped_wall_hanging_sign");
     public static final Key BAMBOO_WALL_HANGING_SIGN = Key.of("minecraft:bamboo_wall_hanging_sign");
+
+    public static final Key CACTUS = Key.of("minecraft:cactus");
 }

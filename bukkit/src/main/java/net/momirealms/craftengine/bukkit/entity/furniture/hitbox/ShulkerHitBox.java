@@ -4,8 +4,11 @@ import net.momirealms.craftengine.bukkit.entity.data.InteractionEntityData;
 import net.momirealms.craftengine.bukkit.entity.data.ShulkerData;
 import net.momirealms.craftengine.bukkit.entity.furniture.BukkitCollider;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MAttributeHolders;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MEntityTypes;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.bukkit.util.DirectionUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.entity.furniture.*;
 import net.momirealms.craftengine.core.util.*;
 import net.momirealms.craftengine.core.world.Vec3d;
@@ -58,7 +61,7 @@ public class ShulkerHitBox extends AbstractHitBox {
                 if (interactionEntity) {
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                             entityIds[2], UUID.randomUUID(), x + offset.x, y + offset.y - 0.005f, z - offset.z, 0, yaw,
-                            Reflections.instance$EntityType$INTERACTION, 0, Reflections.instance$Vec3$Zero, 0
+                            MEntityTypes.instance$EntityType$INTERACTION, 0, CoreReflections.instance$Vec3$Zero, 0
                     ), true);
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[2], List.copyOf(cachedInteractionValues)), true);
                     if (canUseOn) {
@@ -73,11 +76,11 @@ public class ShulkerHitBox extends AbstractHitBox {
             InteractionEntityData.Responsive.addEntityDataIfNotDefaultValue(interactive, cachedInteractionValues);
             this.spawner = (entityIds, world, x, y, z, yaw, offset, packets, collider, aabb) -> {
                 collider.accept(this.createCollider(Direction.DOWN, world, offset, x, y, z, entityIds[1], aabb));
-                packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[1], List.of(ShulkerData.AttachFace.createEntityDataIfNotDefaultValue(Reflections.instance$Direction$UP))), false);
+                packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[1], List.of(ShulkerData.AttachFace.createEntityDataIfNotDefaultValue(CoreReflections.instance$Direction$UP))), false);
                 if (interactionEntity) {
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                             entityIds[2], UUID.randomUUID(), x + offset.x, y + offset.y - 0.005f - shulkerHeight + scale, z - offset.z, 0, yaw,
-                            Reflections.instance$EntityType$INTERACTION, 0, Reflections.instance$Vec3$Zero, 0
+                            MEntityTypes.instance$EntityType$INTERACTION, 0, CoreReflections.instance$Vec3$Zero, 0
                     ), true);
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[2], List.copyOf(cachedInteractionValues)), true);
                     if (canUseOn) {
@@ -99,14 +102,14 @@ public class ShulkerHitBox extends AbstractHitBox {
                     // first interaction
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                             entityIds[2], UUID.randomUUID(), x + offset.x, y + offset.y - 0.005f, z - offset.z, 0, yaw,
-                            Reflections.instance$EntityType$INTERACTION, 0, Reflections.instance$Vec3$Zero, 0
+                            MEntityTypes.instance$EntityType$INTERACTION, 0, CoreReflections.instance$Vec3$Zero, 0
                     ), true);
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[2], List.copyOf(cachedInteractionValues)), true);
                     // second interaction
                     double distance = shulkerHeight - scale;
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                             entityIds[3], UUID.randomUUID(), x + offset.x + shulkerDirection.stepX() * distance, y + offset.y - 0.005f, z - offset.z + shulkerDirection.stepZ() * distance, 0, yaw,
-                            Reflections.instance$EntityType$INTERACTION, 0, Reflections.instance$Vec3$Zero, 0
+                            MEntityTypes.instance$EntityType$INTERACTION, 0, CoreReflections.instance$Vec3$Zero, 0
                     ), true);
                     packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[3], List.copyOf(cachedInteractionValues)), true);
                     if (canUseOn) {
@@ -210,11 +213,11 @@ public class ShulkerHitBox extends AbstractHitBox {
             double processedY = (fractionalPart >= 0.5) ? integerPart + 1 : originalY;
             packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                     entityIds[0], UUID.randomUUID(), x + offset.x, originalY, z - offset.z, 0, yaw,
-                    Reflections.instance$EntityType$ITEM_DISPLAY, 0, Reflections.instance$Vec3$Zero, 0
+                    MEntityTypes.instance$EntityType$ITEM_DISPLAY, 0, CoreReflections.instance$Vec3$Zero, 0
             ), false);
             packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                     entityIds[1], UUID.randomUUID(), x + offset.x, processedY, z - offset.z, 0, yaw,
-                    Reflections.instance$EntityType$SHULKER, 0, Reflections.instance$Vec3$Zero, 0
+                    MEntityTypes.instance$EntityType$SHULKER, 0, CoreReflections.instance$Vec3$Zero, 0
             ), false);
             packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityIds[1], List.copyOf(this.cachedShulkerValues)), false);
             // add passengers
@@ -223,15 +226,15 @@ public class ShulkerHitBox extends AbstractHitBox {
             if (originalY != processedY) {
                 double deltaY = originalY - processedY;
                 short ya = (short) (deltaY * 8192);
-                packets.accept(Reflections.constructor$ClientboundMoveEntityPacket$Pos.newInstance(
+                packets.accept(NetworkReflections.constructor$ClientboundMoveEntityPacket$Pos.newInstance(
                         entityIds[1], (short) 0, ya, (short) 0, true
                 ), false);
             }
             // set shulker scale
             if (VersionHelper.isOrAbove1_20_5() && this.scale != 1) {
-                Object attributeInstance = Reflections.constructor$AttributeInstance.newInstance(Reflections.instance$Holder$Attribute$scale, (Consumer<?>) (o) -> {});
-                Reflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, this.scale);
-                packets.accept(Reflections.constructor$ClientboundUpdateAttributesPacket0.newInstance(entityIds[1], Collections.singletonList(attributeInstance)), false);
+                Object attributeInstance = CoreReflections.constructor$AttributeInstance.newInstance(MAttributeHolders.SCALE, (Consumer<?>) (o) -> {});
+                CoreReflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, this.scale);
+                packets.accept(NetworkReflections.constructor$ClientboundUpdateAttributesPacket0.newInstance(entityIds[1], Collections.singletonList(attributeInstance)), false);
             }
             this.spawner.accept(entityIds, position.world(), x, y, z, yaw, offset, packets, collider, aabb);
         } catch (ReflectiveOperationException e) {

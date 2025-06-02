@@ -14,9 +14,9 @@ public class BukkitSchedulerAdapter extends AbstractJavaScheduler<World> {
     public BukkitSchedulerAdapter(BukkitCraftEngine plugin) {
         super(plugin);
         if (VersionHelper.isFolia()) {
-            this.sync = new FoliaExecutor(plugin.bootstrap());
+            this.sync = new FoliaExecutor(plugin);
         } else {
-            this.sync = new BukkitExecutor(plugin.bootstrap());
+            this.sync = new BukkitExecutor(plugin);
         }
     }
 

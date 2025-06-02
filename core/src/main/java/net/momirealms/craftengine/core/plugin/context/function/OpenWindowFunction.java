@@ -14,8 +14,8 @@ import net.momirealms.craftengine.core.util.AdventureHelper;
 import net.momirealms.craftengine.core.util.EnumUtils;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -35,9 +35,8 @@ public class OpenWindowFunction<CTX extends Context> extends AbstractConditional
 
     @Override
     public void runInternal(CTX ctx) {
-        Optional<Player> owner = ctx.getOptionalParameter(DirectContextParameters.PLAYER);
         if (this.selector == null) {
-            owner.ifPresent(it -> {
+            ctx.getOptionalParameter(DirectContextParameters.PLAYER).ifPresent(it -> {
                 CraftEngine.instance().guiManager().openInventory(it, this.guiType);
                 if (this.optionalTitle != null) {
                     CraftEngine.instance().guiManager().updateInventoryTitle(it, AdventureHelper.miniMessage().deserialize(this.optionalTitle.get(ctx), ctx.tagResolvers()));

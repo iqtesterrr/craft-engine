@@ -3,6 +3,7 @@ package net.momirealms.craftengine.bukkit.util;
 import com.google.gson.JsonElement;
 import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.paper.PaperReflections;
 import net.momirealms.craftengine.core.util.AdventureHelper;
 
 public class ComponentUtils {
@@ -30,18 +31,18 @@ public class ComponentUtils {
     }
 
     public static String paperAdventureToJson(Object component) {
-        return Reflections.instance$GsonComponentSerializer$Gson.toJson(component);
+        return PaperReflections.instance$GsonComponentSerializer$Gson.toJson(component);
     }
 
     public static Object jsonToPaperAdventure(String json) {
-        return Reflections.instance$GsonComponentSerializer$Gson.fromJson(json, Reflections.clazz$AdventureComponent);
+        return PaperReflections.instance$GsonComponentSerializer$Gson.fromJson(json, PaperReflections.clazz$AdventureComponent);
     }
 
     public static JsonElement paperAdventureToJsonElement(Object component) {
-        return Reflections.instance$GsonComponentSerializer$Gson.toJsonTree(component);
+        return PaperReflections.instance$GsonComponentSerializer$Gson.toJsonTree(component);
     }
 
     public static Object jsonElementToPaperAdventure(JsonElement json) {
-        return Reflections.instance$GsonComponentSerializer$Gson.fromJson(json, Reflections.clazz$AdventureComponent);
+        return PaperReflections.instance$GsonComponentSerializer$Gson.fromJson(json, PaperReflections.clazz$AdventureComponent);
     }
 }

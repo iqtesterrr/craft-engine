@@ -2,15 +2,24 @@ package net.momirealms.craftengine.bukkit.block.behavior;
 
 import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
+import net.momirealms.craftengine.bukkit.util.LocationUtils;
 import net.momirealms.craftengine.bukkit.util.ParticleUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.world.BukkitBlockInWorld;
+import net.momirealms.craftengine.core.block.BlockBehavior;
 import net.momirealms.craftengine.core.block.CustomBlock;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
+import net.momirealms.craftengine.core.entity.player.InteractionResult;
+import net.momirealms.craftengine.core.item.Item;
+import net.momirealms.craftengine.core.item.ItemKeys;
+import net.momirealms.craftengine.core.item.context.UseOnContext;
+import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.util.VersionHelper;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
+import net.momirealms.craftengine.core.world.BlockPos;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 
 import java.util.Map;
 
@@ -38,8 +47,8 @@ public class GrassBlockBehavior extends BukkitBlockBehavior {
         }
         boolean sendParticles = false;
         Object visualState = immutableBlockState.vanillaBlockState().handle();
-        Object visualStateBlock = Reflections.method$BlockStateBase$getBlock.invoke(visualState);
-        if (Reflections.clazz$BonemealableBlock.isInstance(visualStateBlock)) {
+        Object visualStateBlock = CoreReflections.method$BlockStateBase$getBlock.invoke(visualState);
+        if (CoreReflections.clazz$BonemealableBlock.isInstance(visualStateBlock)) {
             boolean is = FastNMS.INSTANCE.method$BonemealableBlock$isValidBonemealTarget(visualStateBlock, level, blockPos, visualState);
             if (!is) {
                 sendParticles = true;
@@ -55,6 +64,39 @@ public class GrassBlockBehavior extends BukkitBlockBehavior {
             world.spawnParticle(ParticleUtils.HAPPY_VILLAGER, x + 0.5, y + 1.5, z + 0.5, 20, 2, 0, 2);
         }
         return true;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    public InteractionResult useOnBlock(UseOnContext context, ImmutableBlockState state) {
+        Item<?> item = context.getItem();
+        if (item == null || !item.vanillaId().equals(ItemKeys.BONE_MEAL) || context.getPlayer().isAdventureMode())
+            return InteractionResult.PASS;
+        BlockPos pos = context.getClickedPos();
+        BukkitBlockInWorld upper = (BukkitBlockInWorld) context.getLevel().getBlockAt(pos.x(), pos.y() + 1, pos.z());
+        Block block = upper.block();
+        if (!block.isEmpty())
+            return InteractionResult.PASS;
+        boolean sendSwing = false;
+        try {
+            Object visualState = state.vanillaBlockState().handle();
+            Object visualStateBlock = CoreReflections.method$BlockStateBase$getBlock.invoke(visualState);
+            if (CoreReflections.clazz$BonemealableBlock.isInstance(visualStateBlock)) {
+                boolean is = FastNMS.INSTANCE.method$BonemealableBlock$isValidBonemealTarget(visualStateBlock, context.getLevel().serverWorld(), LocationUtils.toBlockPos(context.getClickedPos()), visualState);
+                if (!is) {
+                    sendSwing = true;
+                }
+            } else {
+                sendSwing = true;
+            }
+        } catch (Exception e) {
+            CraftEngine.instance().logger().warn("Failed to check visual state bone meal state", e);
+            return InteractionResult.FAIL;
+        }
+        if (sendSwing) {
+            context.getPlayer().swingHand(context.getHand());
+        }
+        return InteractionResult.SUCCESS;
     }
 
     @Override

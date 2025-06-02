@@ -29,4 +29,25 @@ public interface FurnitureElement {
     Vector3f position();
 
     void initPackets(int entityId, @NotNull WorldPosition position, @NotNull Quaternionf conjugated, @Nullable Integer dyedColor, Consumer<Object> packets);
+
+    interface Builder {
+
+        Builder item(Key item);
+
+        Builder billboard(Billboard billboard);
+
+        Builder transform(ItemDisplayContext transform);
+
+        Builder scale(Vector3f scale);
+
+        Builder translation(Vector3f translation);
+
+        Builder position(Vector3f position);
+
+        Builder rotation(Quaternionf rotation);
+
+        Builder applyDyedColor(boolean applyDyedColor);
+
+        FurnitureElement build();
+    }
 }

@@ -6,6 +6,7 @@ import net.momirealms.craftengine.core.item.modifier.EquippableModifier;
 import net.momirealms.craftengine.core.item.modifier.ItemDataModifier;
 import net.momirealms.craftengine.core.pack.misc.EquipmentGeneration;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
+import net.momirealms.craftengine.core.sound.SoundData;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.MiscUtils;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
@@ -28,6 +29,7 @@ public class ItemSettings {
     boolean canPlaceRelatedVanillaBlock = false;
     ProjectileMeta projectileMeta;
     boolean dyeable = true;
+    Helmet helmet = null;
 
     private ItemSettings() {}
 
@@ -106,6 +108,11 @@ public class ItemSettings {
     }
 
     @Nullable
+    public Helmet helmet() {
+        return helmet;
+    }
+
+    @Nullable
     public EquipmentGeneration equipment() {
         return equipment;
     }
@@ -152,6 +159,11 @@ public class ItemSettings {
 
     public ItemSettings dyeable(boolean bool) {
         this.dyeable = bool;
+        return this;
+    }
+
+    public ItemSettings helmet(Helmet helmet) {
+        this.helmet = helmet;
         return this;
     }
 
@@ -228,6 +240,10 @@ public class ItemSettings {
                 Quaternionf rotation = MiscUtils.getAsQuaternionf(ResourceConfigUtils.get(args, "rotation-left", "rotation"), "rotation-left");
                 String type = args.getOrDefault("type", "none").toString();
                 return settings -> settings.projectileMeta(new ProjectileMeta(customTridentItemId, displayType, scale, translation, rotation, type));
+            }));
+            registerFactory("helmet", (value -> {
+                Map<String, Object> args = MiscUtils.castToMap(value, false);
+                return settings -> settings.helmet(new Helmet(SoundData.create(args.getOrDefault("equip-sound", "minecraft:intentionally_empty"), 1f, 1f)));
             }));
             registerFactory("dyeable", (value -> {
                 boolean bool = (boolean) value;

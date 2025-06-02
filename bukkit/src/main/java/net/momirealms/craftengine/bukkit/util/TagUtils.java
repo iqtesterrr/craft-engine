@@ -43,11 +43,14 @@ public final class TagUtils {
     public static Object createUpdateTagsPacket(Map<Object, List<TagEntry>> tags) {
         Map<Object, Object> registriesNetworkPayload = (Map<Object, Object>) FastNMS.INSTANCE.method$TagNetworkSerialization$serializeTagsToNetwork();
         Map<Object, Object> modified = new HashMap<>();
-        for (Map.Entry<Object, List<TagEntry>> entry : tags.entrySet()) {
-            Object existingPayload = registriesNetworkPayload.get(entry.getKey());
-            if (existingPayload == null) continue;
+        for (Map.Entry<Object, Object> payload : registriesNetworkPayload.entrySet()) {
+            List<TagEntry> overrides = tags.get(payload.getKey());
+            if (overrides == null || overrides.isEmpty()) {
+                modified.put(payload.getKey(), payload.getValue());
+                continue;
+            }
             FriendlyByteBuf deserializeBuf = new FriendlyByteBuf(Unpooled.buffer());
-            FastNMS.INSTANCE.method$TagNetworkSerialization$NetworkPayload$write(existingPayload, deserializeBuf);
+            FastNMS.INSTANCE.method$TagNetworkSerialization$NetworkPayload$write(payload.getValue(), deserializeBuf);
             Map<String, IntList> originalTags = deserializeBuf.readMap(
                     FriendlyByteBuf::readUtf,
                     FriendlyByteBuf::readIntIdList
@@ -58,7 +61,7 @@ public final class TagUtils {
                     reversedTags.computeIfAbsent(id, k -> new ArrayList<>()).add(tagEntry.getKey());
                 }
             }
-            for (TagEntry tagEntry : entry.getValue()) {
+            for (TagEntry tagEntry : overrides) {
                 reversedTags.remove(tagEntry.id);
                 for (String tag : tagEntry.tags) {
                     reversedTags.computeIfAbsent(tagEntry.id, k -> new ArrayList<>()).add(tag);
@@ -76,7 +79,7 @@ public final class TagUtils {
                     FriendlyByteBuf::writeIntIdList
             );
             Object mergedPayload = FastNMS.INSTANCE.method$TagNetworkSerialization$NetworkPayload$read(serializeBuf);
-            modified.put(entry.getKey(), mergedPayload);
+            modified.put(payload.getKey(), mergedPayload);
         }
         return FastNMS.INSTANCE.constructor$ClientboundUpdateTagsPacket(modified);
     }

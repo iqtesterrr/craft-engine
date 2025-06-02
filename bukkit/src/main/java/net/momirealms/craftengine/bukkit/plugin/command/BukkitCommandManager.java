@@ -22,7 +22,7 @@ public class BukkitCommandManager extends AbstractCommandManager<CommandSender> 
 
     public BukkitCommandManager(BukkitCraftEngine plugin) {
         super(plugin, new LegacyPaperCommandManager<>(
-                plugin.bootstrap(),
+                plugin.javaPlugin(),
                 ExecutionCoordinator.simpleCoordinator(),
                 SenderMapper.identity()
         ));
@@ -41,6 +41,7 @@ public class BukkitCommandManager extends AbstractCommandManager<CommandSender> 
                 new DebugGetBlockStateRegistryIdCommand(this, plugin),
                 new DebugGetBlockInternalIdCommand(this, plugin),
                 new DebugAppearanceStateUsageCommand(this, plugin),
+                new DebugClearCooldownCommand(this, plugin),
                 new DebugRealStateUsageCommand(this, plugin),
                 new DebugItemDataCommand(this, plugin),
                 new DebugSetBlockCommand(this, plugin),

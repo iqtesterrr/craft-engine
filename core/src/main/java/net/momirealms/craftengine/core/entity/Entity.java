@@ -20,11 +20,11 @@ public interface Entity {
 
     void tick();
 
-    float getXRot();
+    float xRot();
+
+    float yRot();
 
     int entityID();
-
-    float getYRot();
 
     World world();
 

@@ -2,16 +2,16 @@ package net.momirealms.craftengine.bukkit.item.factory;
 
 import com.google.gson.JsonElement;
 import com.saicone.rtag.item.ItemTagStream;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.bukkit.util.ItemTags;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.item.EquipmentData;
 import net.momirealms.craftengine.core.item.ItemFactory;
 import net.momirealms.craftengine.core.item.ItemWrapper;
 import net.momirealms.craftengine.core.item.JukeboxPlayable;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.util.Key;
+import net.momirealms.sparrow.nbt.Tag;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -83,19 +83,39 @@ public abstract class BukkitItemFactory<W extends ItemWrapper<ItemStack>> extend
         Object literalObject = item.getLiteralObject();
         Object tag = ItemTags.getOrCreate(itemTag);
         try {
-            return (boolean) Reflections.method$ItemStack$isTag.invoke(literalObject, tag);
+            return (boolean) CoreReflections.method$ItemStack$isTag.invoke(literalObject, tag);
         } catch (ReflectiveOperationException e) {
             return false;
         }
     }
 
     @Override
-    protected JsonElement encodeJson(Object type, Object component) {
+    protected void setJavaComponent(W item, Object type, Object value) {
         throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
     }
 
     @Override
-    public Object encodeJava(Object componentType, @Nullable Object component) {
+    protected void setJsonComponent(W item, Object type, JsonElement value) {
+        throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
+    }
+
+    @Override
+    protected void setNBTComponent(W item, Object type, Tag value) {
+        throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
+    }
+
+    @Override
+    protected Object getJavaComponent(W item, Object type) {
+        throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
+    }
+
+    @Override
+    protected JsonElement getJsonComponent(W item, Object type) {
+        throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
+    }
+
+    @Override
+    protected Tag getNBTComponent(W item, Object type) {
         throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
     }
 
@@ -110,7 +130,7 @@ public abstract class BukkitItemFactory<W extends ItemWrapper<ItemStack>> extend
     }
 
     @Override
-    protected Object getComponent(W item, Object type) {
+    protected Object getExactComponent(W item, Object type) {
         throw new UnsupportedOperationException("This feature is only available on 1.20.5+");
     }
 

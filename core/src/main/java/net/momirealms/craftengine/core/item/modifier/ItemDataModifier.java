@@ -2,6 +2,7 @@ package net.momirealms.craftengine.core.item.modifier;
 
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.item.ItemBuildContext;
+import net.momirealms.sparrow.nbt.CompoundTag;
 
 public interface ItemDataModifier<I> {
 
@@ -9,5 +10,6 @@ public interface ItemDataModifier<I> {
 
     void apply(Item<I> item, ItemBuildContext context);
 
-    void remove(Item<I> item);
+    default void prepareNetworkItem(Item<I> item, ItemBuildContext context, CompoundTag networkData) {
+    }
 }

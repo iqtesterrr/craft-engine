@@ -1,5 +1,7 @@
 package net.momirealms.craftengine.bukkit.util;
 
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MRegistries;
 import net.momirealms.craftengine.core.util.Key;
 
 import java.util.HashMap;
@@ -14,7 +16,7 @@ public class BlockTags {
         Object value = CACHE.get(key);
         if (value == null) {
             try {
-                value = Reflections.method$TagKey$create.invoke(null, Reflections.instance$Registries$BLOCK, KeyUtils.toResourceLocation(key));
+                value = CoreReflections.method$TagKey$create.invoke(null, MRegistries.instance$Registries$BLOCK, KeyUtils.toResourceLocation(key));
                 CACHE.put(key, value);
                 return value;
             } catch (Exception e) {

@@ -41,6 +41,8 @@ dependencies {
     compileOnly("com.viaversion:viaversion-api:5.3.2")
     // Skript
     compileOnly("com.github.SkriptLang:Skript:2.11.0")
+    // AuraSkills
+    compileOnly("dev.aurelium:auraskills-api-bukkit:2.2.4")
     // FAWE
     compileOnly(platform("com.intellectualsites.bom:bom-newest:1.52"))
     compileOnly("com.fastasyncworldedit:FastAsyncWorldEdit-Core")

@@ -1,0 +1,94 @@
+package net.momirealms.craftengine.bukkit.block.behavior;
+
+import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
+import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.bukkit.CraftBukkitReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MBlocks;
+import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
+import net.momirealms.craftengine.bukkit.util.LocationUtils;
+import net.momirealms.craftengine.core.block.BlockBehavior;
+import net.momirealms.craftengine.core.block.CustomBlock;
+import net.momirealms.craftengine.core.block.ImmutableBlockState;
+import net.momirealms.craftengine.core.block.UpdateOption;
+import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
+import net.momirealms.craftengine.core.block.properties.IntegerProperty;
+import net.momirealms.craftengine.core.block.properties.Property;
+import net.momirealms.craftengine.core.util.RandomUtils;
+import net.momirealms.craftengine.core.util.ResourceConfigUtils;
+import net.momirealms.craftengine.core.util.VersionHelper;
+import net.momirealms.craftengine.core.world.BlockPos;
+
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+public class VerticalCropBlockBehavior extends BukkitBlockBehavior {
+    public static final Factory FACTORY = new Factory();
+    private final int maxHeight;
+    private final IntegerProperty ageProperty;
+    private final float growSpeed;
+    private final boolean direction;
+
+    public VerticalCropBlockBehavior(CustomBlock customBlock, Property<Integer> ageProperty,
+                                     int maxHeight, float growSpeed, boolean direction) {
+        super(customBlock);
+        this.maxHeight = maxHeight;
+        this.ageProperty = (IntegerProperty) ageProperty;
+        this.growSpeed = growSpeed;
+        this.direction = direction;
+    }
+
+    @Override
+    public void randomTick(Object thisBlock, Object[] args, Callable<Object> superMethod) throws Exception {
+        Object blockState = args[0];
+        Object level = args[1];
+        Object blockPos = args[2];
+        // above block is empty
+        if (FastNMS.INSTANCE.method$BlockGetter$getBlockState(level, (this.direction ? LocationUtils.above(blockPos) : LocationUtils.below(blockPos))) == MBlocks.AIR$defaultState) {
+            int currentHeight = 1;
+            BlockPos currentPos = LocationUtils.fromBlockPos(blockPos);
+            ImmutableBlockState currentState = BukkitBlockManager.instance().getImmutableBlockState(BlockStateUtils.blockStateToId(blockState));
+            if (currentState != null && !currentState.isEmpty()) {
+                while (true) {
+                    Object nextPos = LocationUtils.toBlockPos(currentPos.x(), this.direction ? currentPos.y() - currentHeight : currentPos.y() + currentHeight, currentPos.z());
+                    Object nextState = FastNMS.INSTANCE.method$BlockGetter$getBlockState(level, nextPos);
+                    ImmutableBlockState belowImmutableState = BukkitBlockManager.instance().getImmutableBlockState(BlockStateUtils.blockStateToId(nextState));
+                    if (belowImmutableState != null && !belowImmutableState.isEmpty() && belowImmutableState.owner() == currentState.owner()) {
+                        currentHeight++;
+                    } else {
+                        break;
+                    }
+                }
+            } else {
+                return;
+            }
+
+            if (currentHeight < this.maxHeight) {
+                int age = currentState.get(ageProperty);
+                if (age >= this.ageProperty.max || RandomUtils.generateRandomFloat(0, 1) < this.growSpeed) {
+                    Object nextPos = this.direction ? LocationUtils.above(blockPos) : LocationUtils.below(blockPos);
+                    if (VersionHelper.isOrAbove1_21_5()) {
+                        CraftBukkitReflections.method$CraftEventFactory$handleBlockGrowEvent.invoke(null, level, nextPos, super.customBlock.defaultState().customBlockState().handle(), UpdateOption.UPDATE_ALL.flags());
+                    } else {
+                        CraftBukkitReflections.method$CraftEventFactory$handleBlockGrowEvent.invoke(null, level, nextPos, super.customBlock.defaultState().customBlockState().handle());
+                    }
+                    FastNMS.INSTANCE.method$LevelWriter$setBlock(level, blockPos, currentState.with(this.ageProperty, this.ageProperty.min).customBlockState().handle(), UpdateOption.UPDATE_NONE.flags());
+                } else if (RandomUtils.generateRandomFloat(0, 1) < this.growSpeed) {
+                    FastNMS.INSTANCE.method$LevelWriter$setBlock(level, blockPos, currentState.with(this.ageProperty, age + 1).customBlockState().handle(), UpdateOption.UPDATE_NONE.flags());
+                }
+            }
+        }
+    }
+
+    public static class Factory implements BlockBehaviorFactory {
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public BlockBehavior create(CustomBlock block, Map<String, Object> arguments) {
+            Property<Integer> ageProperty = (Property<Integer>) ResourceConfigUtils.requireNonNullOrThrow(block.getProperty("age"), "warning.config.block.behavior.sugar_cane.missing_age");
+            int maxHeight = ResourceConfigUtils.getAsInt(arguments.getOrDefault("max-height", 3), "max-height");
+            boolean direction = arguments.getOrDefault("direction", "up").toString().equalsIgnoreCase("up");
+            return new VerticalCropBlockBehavior(block, ageProperty, maxHeight,
+                    ResourceConfigUtils.getAsFloat(arguments.getOrDefault("grow-speed", 1), "grow-speed"), direction);
+        }
+    }
+}

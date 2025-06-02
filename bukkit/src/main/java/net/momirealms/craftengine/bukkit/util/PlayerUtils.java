@@ -1,9 +1,12 @@
 package net.momirealms.craftengine.bukkit.util;
 
 import com.mojang.datafixers.util.Pair;
+import net.momirealms.craftengine.bukkit.api.BukkitAdaptors;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.plugin.network.BukkitNetworkManager;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.core.util.RandomUtils;
 import org.bukkit.Location;
 import org.bukkit.entity.Item;
@@ -20,29 +23,29 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
-public class PlayerUtils {
-
-    private PlayerUtils() {}
+public final class PlayerUtils {
+    private PlayerUtils() {
+    }
 
     public static void dropItem(@NotNull Player player, @NotNull ItemStack itemStack, boolean retainOwnership, boolean noPickUpDelay, boolean throwRandomly) {
         requireNonNull(player, "player");
         requireNonNull(itemStack, "itemStack");
         Location location = player.getLocation().clone();
-        Item item = player.getWorld().dropItem(player.getEyeLocation().clone().subtract(new Vector(0,0.3,0)), itemStack);
+        Item item = player.getWorld().dropItem(player.getEyeLocation().clone().subtract(new Vector(0, 0.3, 0)), itemStack);
         item.setPickupDelay(noPickUpDelay ? 0 : 40);
         item.setOwner(player.getUniqueId());
         if (retainOwnership) {
             item.setThrower(player.getUniqueId());
         }
         if (throwRandomly) {
-            double d1 = RandomUtils.generateRandomDouble(0,1) * 0.5f;
-            double d2 = RandomUtils.generateRandomDouble(0,1) * (Math.PI * 2);
+            double d1 = RandomUtils.generateRandomDouble(0, 1) * 0.5f;
+            double d2 = RandomUtils.generateRandomDouble(0, 1) * (Math.PI * 2);
             item.setVelocity(new Vector(-Math.sin(d2) * d1, 0.2f, Math.cos(d2) * d1));
         } else {
-            double d1 = Math.sin(location.getPitch() * (Math.PI/180));
+            double d1 = Math.sin(location.getPitch() * (Math.PI / 180));
             double d2 = RandomUtils.generateRandomDouble(0, 0.02);
-            double d3 = RandomUtils.generateRandomDouble(0,1) * (Math.PI * 2);
-            Vector vector = location.getDirection().multiply(0.3).setY(-d1 * 0.3 + 0.1 + (RandomUtils.generateRandomDouble(0,1) - RandomUtils.generateRandomDouble(0,1)) * 0.1);
+            double d3 = RandomUtils.generateRandomDouble(0, 1) * (Math.PI * 2);
+            Vector vector = location.getDirection().multiply(0.3).setY(-d1 * 0.3 + 0.1 + (RandomUtils.generateRandomDouble(0, 1) - RandomUtils.generateRandomDouble(0, 1)) * 0.1);
             vector.add(new Vector(Math.cos(d3) * d2, 0, Math.sin(d3) * d2));
             item.setVelocity(vector);
         }
@@ -155,18 +158,18 @@ public class PlayerUtils {
             Object previousItem = FastNMS.INSTANCE.method$CraftItemStack$asNMSCopy(offhandItem);
             Object totemItem = FastNMS.INSTANCE.method$CraftItemStack$asNMSCopy(totem);
 
-            Object packet1 = Reflections.constructor$ClientboundSetEquipmentPacket
-                    .newInstance(player.getEntityId(), List.of(Pair.of(Reflections.instance$EquipmentSlot$OFFHAND, totemItem)));
-            Object packet2 = Reflections.constructor$ClientboundEntityEventPacket
+            Object packet1 = NetworkReflections.constructor$ClientboundSetEquipmentPacket
+                    .newInstance(player.getEntityId(), List.of(Pair.of(CoreReflections.instance$EquipmentSlot$OFFHAND, totemItem)));
+            Object packet2 = NetworkReflections.constructor$ClientboundEntityEventPacket
                     .newInstance(FastNMS.INSTANCE.method$CraftPlayer$getHandle(player), (byte) 35);
-            Object packet3 = Reflections.constructor$ClientboundSetEquipmentPacket
-                    .newInstance(player.getEntityId(), List.of(Pair.of(Reflections.instance$EquipmentSlot$OFFHAND, previousItem)));
+            Object packet3 = NetworkReflections.constructor$ClientboundSetEquipmentPacket
+                    .newInstance(player.getEntityId(), List.of(Pair.of(CoreReflections.instance$EquipmentSlot$OFFHAND, previousItem)));
             packets.add(packet1);
             packets.add(packet2);
             packets.add(packet3);
 
             Object bundlePacket = FastNMS.INSTANCE.constructor$ClientboundBundlePacket(packets);
-            BukkitNetworkManager.instance().sendPacket(player, bundlePacket);
+            BukkitNetworkManager.instance().sendPacket(BukkitAdaptors.adapt(player), bundlePacket);
         } catch (ReflectiveOperationException e) {
             BukkitCraftEngine.instance().logger().warn("Failed to send totem animation");
         }

@@ -5,8 +5,8 @@ import net.momirealms.craftengine.core.plugin.logger.PluginLogger;
 import net.momirealms.craftengine.core.world.ChunkPos;
 import net.momirealms.sparrow.nbt.CompoundTag;
 import net.momirealms.sparrow.nbt.NBT;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;

@@ -3,7 +3,6 @@ package net.momirealms.craftengine.core.item;
 import com.google.common.collect.ImmutableMap;
 import net.momirealms.craftengine.core.item.behavior.ItemBehavior;
 import net.momirealms.craftengine.core.item.modifier.ItemDataModifier;
-import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.context.PlayerOptionalContext;
 import net.momirealms.craftengine.core.plugin.context.event.EventTrigger;
 import net.momirealms.craftengine.core.plugin.context.function.Function;
@@ -11,7 +10,10 @@ import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public abstract class AbstractCustomItem<I> implements CustomItem<I> {
     protected final Holder<Key> id;
@@ -20,11 +22,9 @@ public abstract class AbstractCustomItem<I> implements CustomItem<I> {
     protected final Map<String, ItemDataModifier<I>> modifierMap;
     protected final ItemDataModifier<I>[] clientBoundModifiers;
     protected final Map<String, ItemDataModifier<I>> clientBoundModifierMap;
-    protected final NetworkItemDataProcessor<I>[] networkItemDataProcessors;
     protected final List<ItemBehavior> behaviors;
     protected final ItemSettings settings;
     protected final Map<EventTrigger, List<Function<PlayerOptionalContext>>> events;
-    protected final Item<I> base;
 
     @SuppressWarnings("unchecked")
     public AbstractCustomItem(Holder<Key> id, Key material,
@@ -48,20 +48,8 @@ public abstract class AbstractCustomItem<I> implements CustomItem<I> {
         }
         this.modifierMap = modifierMapBuilder.build();
         ImmutableMap.Builder<String, ItemDataModifier<I>> clientSideModifierMapBuilder = ImmutableMap.builder();
-        List<NetworkItemDataProcessor<I>> networkItemDataProcessors = new ArrayList<>();
-        for (ItemDataModifier<I> modifier : clientBoundModifiers) {
-            String name = modifier.name();
-            clientSideModifierMapBuilder.put(name, modifier);
-            if (this.modifierMap.containsKey(name)) {
-                networkItemDataProcessors.add(NetworkItemDataProcessor.both(this.modifierMap.get(name), modifier));
-            } else {
-                networkItemDataProcessors.add(NetworkItemDataProcessor.clientOnly(modifier));
-            }
-        }
         this.clientBoundModifierMap = clientSideModifierMapBuilder.build();
-        // unchecked cast
-        this.networkItemDataProcessors = networkItemDataProcessors.toArray(new NetworkItemDataProcessor[0]);
-        this.base = (Item<I>) CraftEngine.instance().itemManager().wrap(CraftEngine.instance().itemManager().getVanillaItem(material).get().buildItemStack());
+
     }
 
     @Override
@@ -84,11 +72,6 @@ public abstract class AbstractCustomItem<I> implements CustomItem<I> {
     @Override
     public Key material() {
         return this.material;
-    }
-
-    @Override
-    public NetworkItemDataProcessor<I>[] networkItemDataProcessors() {
-        return this.networkItemDataProcessors;
     }
 
     @Override

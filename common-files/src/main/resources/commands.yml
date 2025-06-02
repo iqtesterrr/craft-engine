@@ -1,0 +1,190 @@
+#
+# Don't change this
+#
+config-version: "${config_version}"
+
+#
+# For safety reasons, editing this file requires a restart to apply
+#
+
+# A command to reload the plugin
+# Usage: [COMMAND]
+reload:
+  enable: true
+  permission: ce.command.admin.reload
+  usage:
+    - /craftengine reload
+    - /ce reload
+
+upload:
+  enable: true
+  permission: ce.command.admin.upload
+  usage:
+    - /craftengine upload
+    - /ce upload
+
+send_resource_pack:
+  enable: true
+  permission: ce.command.admin.send_resource_pack
+  usage:
+    - /craftengine feature send-pack
+    - /ce feature send-pack
+
+get_item:
+  enable: true
+  permission: ce.command.admin.get_item
+  usage:
+    - /craftengine item get
+    - /ce item get
+
+give_item:
+  enable: true
+  permission: ce.command.admin.give_item
+  usage:
+    - /craftengine item give
+    - /ce item give
+
+item_browser_player:
+  enable: true
+  permission: ce.command.player.item_browser
+  usage:
+    - /ce
+
+item_browser_admin:
+  enable: true
+  permission: ce.command.admin.item_browser
+  usage:
+    - /craftengine item browser
+    - /ce item browser
+
+search_usage_player:
+  enable: true
+  permission: ce.command.player.search_usage
+  usage:
+    - /search-usage
+
+search_recipe_player:
+  enable: true
+  permission: ce.command.player.search_recipe
+  usage:
+    - /search-recipe
+
+search_usage_admin:
+  enable: true
+  permission: ce.command.admin.search_usage
+  usage:
+    - /craftengine item search-usage
+    - /ce item search-usage
+
+search_recipe_admin:
+  enable: true
+  permission: ce.command.admin.search_recipe
+  usage:
+    - /craftengine item search-recipe
+    - /ce item search-recipe
+
+totem_animation:
+  enable: true
+  permission: ce.command.admin.totem_animation
+  usage:
+    - /craftengine feature totem-animation
+    - /ce feature totem-animation
+
+enable_resource:
+  enable: true
+  permission: ce.command.admin.resource
+  usage:
+    - /craftengine resource enable
+    - /ce resource enable
+
+disable_resource:
+  enable: true
+  permission: ce.command.admin.resource
+  usage:
+    - /craftengine resource disable
+    - /ce resource disable
+
+list_resource:
+  enable: true
+  permission: ce.command.admin.resource
+  usage:
+    - /craftengine resource list
+    - /ce resource list
+
+# Debug commands
+debug_set_block:
+  enable: true
+  permission: ce.command.debug.setblock
+  usage:
+    - /craftengine debug setblock
+    - /ce debug setblock
+
+debug_spawn_furniture:
+  enable: true
+  permission: ce.command.debug.spawn_furniture
+  usage:
+    - /craftengine debug spawn-furniture
+    - /ce debug spawn-furniture
+
+debug_get_block_state_registry_id:
+  enable: true
+  permission: ce.command.debug.get_block_state_registry_id
+  usage:
+    - /craftengine debug get-block-state-registry-id
+    - /ce debug get-block-state-registry-id
+
+debug_get_block_internal_id:
+  enable: true
+  permission: ce.command.debug.get_block_internal_id
+  usage:
+    - /craftengine debug get-block-internal-id
+    - /ce debug get-block-internal-id
+
+debug_appearance_state_usage:
+  enable: true
+  permission: ce.command.debug.state_usage
+  usage:
+    - /craftengine debug appearance-state-usage
+    - /ce debug appearance-state-usage
+
+debug_real_state_usage:
+  enable: true
+  permission: ce.command.debug.state_usage
+  usage:
+    - /craftengine debug real-state-usage
+    - /ce debug real-state-usage
+
+debug_item_data:
+  enable: true
+  permission: ce.command.debug.item_data
+  usage:
+    - /craftengine debug item-data
+    - /ce debug item-data
+
+debug_target_block:
+  enable: true
+  permission: ce.command.debug.target_block
+  usage:
+    - /craftengine debug target-block
+    - /ce debug target-block
+
+debug_is_section_injected:
+  enable: true
+  permission: ce.command.debug.is_section_injected
+  usage:
+    - /craftengine debug is-section-injected
+    - /ce debug is-section-injected
+
+debug_clear_cooldown:
+  enable: true
+  permission: ce.command.debug.clear_cooldown
+  usage:
+    - /craftengine debug clear-cooldown
+    - /ce debug clear-cooldown
+
+debug_test:
+  enable: true
+  permission: ce.command.debug.test
+  usage:
+    - /craftengine debug test
+    - /ce debug test

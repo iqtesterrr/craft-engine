@@ -32,6 +32,18 @@ public class ExpressionNumberProvider implements NumberProvider {
     }
 
     @Override
+    public double getDouble(Context context) {
+        Component resultComponent = AdventureHelper.customMiniMessage().deserialize(this.expr, context.tagResolvers());
+        String resultString = AdventureHelper.plainTextContent(resultComponent);
+        Expression expression = new Expression(resultString);
+        try {
+            return expression.evaluate().getNumberValue().doubleValue();
+        } catch (EvaluationException | ParseException e) {
+            throw new RuntimeException("Invalid expression: " + this.expr + " -> " + resultString + " -> Cannot parse", e);
+        }
+    }
+
+    @Override
     public Key type() {
         return NumberProviders.EXPRESSION;
     }

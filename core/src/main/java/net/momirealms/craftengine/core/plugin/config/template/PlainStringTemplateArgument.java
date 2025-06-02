@@ -12,6 +12,10 @@ public class PlainStringTemplateArgument implements TemplateArgument {
         this.value = value;
     }
 
+    public static PlainStringTemplateArgument plain(final String value) {
+        return new PlainStringTemplateArgument(value);
+    }
+
     @Override
     public String get() {
         return value;

@@ -12,7 +12,7 @@ public abstract class AbstractFurnitureElement implements FurnitureElement {
     private final ItemDisplayContext transform;
     private final Vector3f scale;
     private final Vector3f translation;
-    private final Vector3f offset;
+    private final Vector3f position;
     private final Quaternionf rotation;
     private final boolean applyDyedColor;
 
@@ -21,7 +21,7 @@ public abstract class AbstractFurnitureElement implements FurnitureElement {
                                     ItemDisplayContext transform,
                                     Vector3f scale,
                                     Vector3f translation,
-                                    Vector3f offset,
+                                    Vector3f position,
                                     Quaternionf rotation,
                                     boolean applyDyedColor) {
         this.billboard = billboard;
@@ -30,7 +30,7 @@ public abstract class AbstractFurnitureElement implements FurnitureElement {
         this.translation = translation;
         this.item = item;
         this.rotation = rotation;
-        this.offset = offset;
+        this.position = position;
         this.applyDyedColor = applyDyedColor;
     }
 
@@ -71,6 +71,6 @@ public abstract class AbstractFurnitureElement implements FurnitureElement {
 
     @Override
     public Vector3f position() {
-        return offset;
+        return position;
     }
 }

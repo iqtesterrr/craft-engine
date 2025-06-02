@@ -29,6 +29,8 @@ public class ItemKeys {
     public static final Key BONE_MEAL = Key.of("minecraft:bone_meal");
     public static final Key ENCHANTED_BOOK = Key.of("minecraft:enchanted_book");
     public static final Key TOTEM_OF_UNDYING = Key.of("minecraft:totem_of_undying");
+    public static final Key BARRIER = Key.of("minecraft:barrier");
+    public static final Key CACTUS = Key.of("minecraft:cactus");
 
     public static final Key[] AXES = new Key[] {
             WOODEN_AXE, STONE_AXE, IRON_AXE, GOLDEN_AXE, DIAMOND_AXE, NETHERITE_AXE

@@ -3,6 +3,7 @@ package net.momirealms.craftengine.core.block;
 import com.google.common.collect.ImmutableMap;
 import net.momirealms.craftengine.core.block.behavior.AbstractBlockBehavior;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviors;
+import net.momirealms.craftengine.core.block.behavior.UnsafeCompositeBlockBehavior;
 import net.momirealms.craftengine.core.block.properties.Property;
 import net.momirealms.craftengine.core.item.context.BlockPlaceContext;
 import net.momirealms.craftengine.core.loot.LootTable;
@@ -13,7 +14,6 @@ import net.momirealms.craftengine.core.plugin.context.function.Function;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.util.Key;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
 import net.momirealms.sparrow.nbt.CompoundTag;
 import net.momirealms.sparrow.nbt.Tag;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +42,7 @@ public abstract class AbstractCustomBlock implements CustomBlock {
             @NotNull Map<String, VariantState> variantMapper,
             @NotNull BlockSettings settings,
             @NotNull Map<EventTrigger, List<Function<PlayerOptionalContext>>> events,
-            @Nullable Map<String, Object> behavior,
+            @NotNull List<Map<String, Object>> behaviorConfig,
             @Nullable LootTable<?> lootTable
     ) {
         holder.bindValue(this);
@@ -53,7 +53,17 @@ public abstract class AbstractCustomBlock implements CustomBlock {
         this.events = events;
         this.variantProvider = new BlockStateVariantProvider(holder, ImmutableBlockState::new, properties);
         this.defaultState = this.variantProvider.getDefaultState();
-        this.behavior = BlockBehaviors.fromMap(this, behavior);
+        if (behaviorConfig.isEmpty()) {
+            this.behavior = new EmptyBlockBehavior();
+        } else if (behaviorConfig.size() == 1) {
+            this.behavior = BlockBehaviors.fromMap(this, behaviorConfig.get(0));
+        } else {
+            List<AbstractBlockBehavior> behaviors = new ArrayList<>();
+            for (Map<String, Object> config : behaviorConfig) {
+                behaviors.add((AbstractBlockBehavior) BlockBehaviors.fromMap(this, config));
+            }
+            this.behavior = new UnsafeCompositeBlockBehavior(this, behaviors);
+        }
         List<BiFunction<BlockPlaceContext, ImmutableBlockState, ImmutableBlockState>> placements = new ArrayList<>(4);
         for (Map.Entry<String, Property<?>> propertyEntry : this.properties.entrySet()) {
             placements.add(Property.createStateForPlacement(propertyEntry.getKey(), propertyEntry.getValue()));

@@ -2,6 +2,9 @@ package net.momirealms.craftengine.core.item.modifier;
 
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.item.ItemBuildContext;
+import net.momirealms.craftengine.core.item.NetworkItemHandler;
+import net.momirealms.sparrow.nbt.CompoundTag;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,13 +27,18 @@ public class RemoveComponentModifier<I> implements ItemDataModifier<I> {
 
     @Override
     public void apply(Item<I> item, ItemBuildContext context) {
-        for (String argument : arguments) {
+        for (String argument : this.arguments) {
             item.removeComponent(argument);
         }
     }
 
     @Override
-    public void remove(Item<I> item) {
-        // I can't guess
+    public void prepareNetworkItem(Item<I> item, ItemBuildContext context, CompoundTag networkData) {
+        for (String component : this.arguments) {
+            Tag previous = item.getNBTComponent(component);
+            if (previous != null) {
+                networkData.put(component, NetworkItemHandler.pack(NetworkItemHandler.Operation.ADD, previous));
+            }
+        }
     }
 }

@@ -42,12 +42,12 @@ public class BukkitEntity extends AbstractEntity {
     }
 
     @Override
-    public float getXRot() {
+    public float xRot() {
         return literalObject().getYaw();
     }
 
     @Override
-    public float getYRot() {
+    public float yRot() {
         return literalObject().getPitch();
     }
 

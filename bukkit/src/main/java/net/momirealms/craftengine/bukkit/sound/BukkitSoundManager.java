@@ -1,9 +1,10 @@
 package net.momirealms.craftengine.bukkit.sound;
 
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MRegistries;
 import net.momirealms.craftengine.bukkit.util.ComponentUtils;
 import net.momirealms.craftengine.bukkit.util.KeyUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.sound.AbstractSoundManager;
 import net.momirealms.craftengine.core.sound.JukeboxSong;
@@ -25,37 +26,38 @@ public class BukkitSoundManager extends AbstractSoundManager {
     protected void registerSongs(Map<Key, JukeboxSong> songs) {
         if (songs.isEmpty()) return;
         try {
-            unfreezeRegistry();
+            Object registry = CoreReflections.method$RegistryAccess$registryOrThrow.invoke(FastNMS.INSTANCE.registryAccess(), MRegistries.instance$Registries$JUKEBOX_SONG);;
+            unfreezeRegistry(registry);
             for (Map.Entry<Key, JukeboxSong> entry : songs.entrySet()) {
                 Key id = entry.getKey();
                 JukeboxSong jukeboxSong = entry.getValue();
                 Object resourceLocation = KeyUtils.toResourceLocation(id);
                 Object soundId = KeyUtils.toResourceLocation(jukeboxSong.sound());
-                Object song = Reflections.method$Registry$get.invoke(Reflections.instance$InternalRegistries$JUKEBOX_SONG, resourceLocation);
+                Object song = CoreReflections.method$Registry$get.invoke(registry, resourceLocation);
 
                 Object soundEvent = VersionHelper.isOrAbove1_21_2() ?
-                        Reflections.constructor$SoundEvent.newInstance(soundId, Optional.of(jukeboxSong.range())) :
-                        Reflections.constructor$SoundEvent.newInstance(soundId, jukeboxSong.range(), false);
-                Object soundHolder = Reflections.method$Holder$direct.invoke(null, soundEvent);
+                        CoreReflections.constructor$SoundEvent.newInstance(soundId, Optional.of(jukeboxSong.range())) :
+                        CoreReflections.constructor$SoundEvent.newInstance(soundId, jukeboxSong.range(), false);
+                Object soundHolder = CoreReflections.method$Holder$direct.invoke(null, soundEvent);
 
                 if (song == null) {
-                    song = Reflections.constructor$JukeboxSong.newInstance(soundHolder, ComponentUtils.adventureToMinecraft(jukeboxSong.description()), jukeboxSong.lengthInSeconds(), jukeboxSong.comparatorOutput());
-                    Object holder = Reflections.method$Registry$registerForHolder.invoke(null, Reflections.instance$InternalRegistries$JUKEBOX_SONG, resourceLocation, song);
-                    Reflections.method$Holder$Reference$bindValue.invoke(holder, song);
-                    Reflections.field$Holder$Reference$tags.set(holder, Set.of());
+                    song = CoreReflections.constructor$JukeboxSong.newInstance(soundHolder, ComponentUtils.adventureToMinecraft(jukeboxSong.description()), jukeboxSong.lengthInSeconds(), jukeboxSong.comparatorOutput());
+                    Object holder = CoreReflections.method$Registry$registerForHolder.invoke(null, registry, resourceLocation, song);
+                    CoreReflections.method$Holder$Reference$bindValue.invoke(holder, song);
+                    CoreReflections.field$Holder$Reference$tags.set(holder, Set.of());
                 }
             }
-            freezeRegistry();
+            freezeRegistry(registry);
         } catch (Exception e) {
             plugin.logger().warn("Failed to register jukebox songs.", e);
         }
     }
 
-    private void unfreezeRegistry() throws IllegalAccessException {
-        Reflections.field$MappedRegistry$frozen.set(Reflections.instance$InternalRegistries$JUKEBOX_SONG, false);
+    private void unfreezeRegistry(Object registry) throws IllegalAccessException {
+        CoreReflections.field$MappedRegistry$frozen.set(registry, false);
     }
 
-    private void freezeRegistry() throws IllegalAccessException {
-        Reflections.field$MappedRegistry$frozen.set(Reflections.instance$InternalRegistries$JUKEBOX_SONG, true);
+    private void freezeRegistry(Object registry) throws IllegalAccessException {
+        CoreReflections.field$MappedRegistry$frozen.set(registry, true);
     }
 }

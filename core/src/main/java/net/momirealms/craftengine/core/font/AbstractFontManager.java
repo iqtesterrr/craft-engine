@@ -516,7 +516,7 @@ public abstract class AbstractFontManager implements FontManager {
                     .resolve(namespacedPath.value());
 
             if (!doesImageFileExist(targetImagePath)) {
-                TranslationManager.instance().log("warning.config.image.file_not_found", path.toString(), id.toString(), targetImagePath.toString());
+//                TranslationManager.instance().log("warning.config.image.file_not_found", path.toString(), id.toString(), targetImagePath.toString());
                 // DO NOT RETURN, JUST GIVE WARNINGS
             } else if (heightObj == null) {
                 try (InputStream in = Files.newInputStream(targetImagePath)) {

@@ -1,8 +1,10 @@
 package net.momirealms.craftengine.core.item;
 
 import com.google.gson.JsonElement;
+import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.item.behavior.ItemBehavior;
 import net.momirealms.craftengine.core.util.Key;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,23 +56,35 @@ public interface Item<I> {
 
     Item<I> maxDamage(Integer data);
 
-    Optional<Integer> maxDamage();
+    int maxDamage();
 
     Item<I> dyedColor(Integer data);
 
     Optional<Integer> dyedColor();
 
-    Item<I> customName(String displayName);
+    Item<I> customNameJson(String displayName);
 
-    Optional<String> customName();
+    Item<I> customNameComponent(Component displayName);
 
-    default Optional<String> hoverName() {
-        return customName().or(this::itemName);
+    Optional<String> customNameJson();
+
+    Optional<Component> customNameComponent();
+
+    default Optional<String> hoverNameJson() {
+        return customNameJson().or(this::itemNameJson);
     }
 
-    Item<I> itemName(String itemName);
+    default Optional<Component> hoverNameComponent() {
+        return customNameComponent().or(this::itemNameComponent);
+    }
 
-    Optional<String> itemName();
+    Item<I> itemNameJson(String itemName);
+
+    Item<I> itemNameComponent(Component itemName);
+
+    Optional<String> itemNameJson();
+
+    Optional<Component> itemNameComponent();
 
     Item<I> itemModel(String itemModel);
 
@@ -80,7 +94,13 @@ public interface Item<I> {
 
     Optional<String> tooltipStyle();
 
-    Item<I> lore(List<String> lore);
+    Item<I> loreJson(List<String> lore);
+
+    Item<I> loreComponent(List<Component> lore);
+
+    Optional<List<String>> loreJson();
+
+    Optional<List<Component>> loreComponent();
 
     Optional<JukeboxPlayable> jukeboxSong();
 
@@ -90,7 +110,6 @@ public interface Item<I> {
 
     Item<I> equippable(EquipmentData equipmentData);
 
-    Optional<List<String>> lore();
 
     Item<I> unbreakable(boolean unbreakable);
 
@@ -110,7 +129,9 @@ public interface Item<I> {
 
     Item<I> itemFlags(List<String> flags);
 
-    Object getTag(Object... path);
+    Object getJavaTag(Object... path);
+
+    Tag getNBTTag(Object... path);
 
     Item<I> setTag(Object value, Object... path);
 
@@ -122,13 +143,21 @@ public interface Item<I> {
 
     void removeComponent(Object type);
 
-    Object getComponent(Object type);
+    Object getExactComponent(Object type);
 
-    Object getJavaTypeComponent(Object type);
+    Object getJavaComponent(Object type);
 
-    JsonElement getJsonTypeComponent(Object type);
+    JsonElement getJsonComponent(Object type);
+
+    Tag getNBTComponent(Object type);
 
     void setComponent(Object type, Object value);
+
+    void setJavaComponent(Object type, Object value);
+
+    void setJsonComponent(Object type, JsonElement value);
+
+    void setNBTComponent(Object type, Tag value);
 
     void resetComponent(Object type);
 

@@ -1,6 +1,8 @@
 package net.momirealms.craftengine.core.plugin.network;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.core.plugin.Plugin;
 import net.momirealms.craftengine.core.util.Key;
 import org.jetbrains.annotations.ApiStatus;
@@ -25,6 +27,10 @@ public interface NetWorkUser {
 
     void sendPacket(Object packet, boolean immediately);
 
+    void sendCustomPayload(Key channel, byte[] data);
+
+    void kick(Component message);
+
     void simulatePacket(Object packet);
 
     @ApiStatus.Internal
@@ -40,6 +46,8 @@ public interface NetWorkUser {
     Object serverPlayer();
 
     Object platformPlayer();
+
+    ChannelHandler connection();
 
     Map<Integer, EntityPacketHandler> entityPacketHandlers();
 

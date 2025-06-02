@@ -20,6 +20,10 @@ public class UseOnContext {
         this(player.world(), player, hand, player.getItemInHand(hand), hit);
     }
 
+    public UseOnContext(Player player, InteractionHand hand, Item<?> stack, BlockHitResult hit) {
+        this(player.world(), player, hand, stack, hit);
+    }
+
     public UseOnContext(World world, Player player, InteractionHand hand, Item<?> stack, BlockHitResult hit) {
         this.player = player;
         this.hand = hand;
@@ -73,6 +77,6 @@ public class UseOnContext {
     }
 
     public float getRotation() {
-        return this.player == null ? 0.0F : this.player.getYRot();
+        return this.player == null ? 0.0F : this.player.yRot();
     }
 }

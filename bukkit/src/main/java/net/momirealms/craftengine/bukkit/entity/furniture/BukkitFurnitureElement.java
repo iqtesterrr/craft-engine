@@ -3,10 +3,12 @@ package net.momirealms.craftengine.bukkit.entity.furniture;
 import net.momirealms.craftengine.bukkit.entity.data.ItemDisplayEntityData;
 import net.momirealms.craftengine.bukkit.item.BukkitItemManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MEntityTypes;
 import net.momirealms.craftengine.core.entity.Billboard;
 import net.momirealms.craftengine.core.entity.ItemDisplayContext;
 import net.momirealms.craftengine.core.entity.furniture.AbstractFurnitureElement;
+import net.momirealms.craftengine.core.entity.furniture.FurnitureElement;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.util.Key;
@@ -30,10 +32,10 @@ public class BukkitFurnitureElement extends AbstractFurnitureElement {
                                   ItemDisplayContext transform,
                                   Vector3f scale,
                                   Vector3f translation,
-                                  Vector3f offset,
+                                  Vector3f position,
                                   Quaternionf rotation,
                                   boolean applyDyedColor) {
-        super(item, billboard, transform, scale, translation, offset, rotation, applyDyedColor);
+        super(item, billboard, transform, scale, translation, position, rotation, applyDyedColor);
         this.commonValues = new ArrayList<>();
         ItemDisplayEntityData.Scale.addEntityDataIfNotDefaultValue(scale(), this.commonValues);
         ItemDisplayEntityData.RotationLeft.addEntityDataIfNotDefaultValue(rotation(), this.commonValues);
@@ -47,7 +49,7 @@ public class BukkitFurnitureElement extends AbstractFurnitureElement {
         Vector3f offset = conjugated.transform(new Vector3f(position()));
         packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                 entityId, UUID.randomUUID(), position.x() + offset.x, position.y() + offset.y, position.z() - offset.z, 0, position.xRot(),
-                Reflections.instance$EntityType$ITEM_DISPLAY, 0, Reflections.instance$Vec3$Zero, 0
+                MEntityTypes.instance$EntityType$ITEM_DISPLAY, 0, CoreReflections.instance$Vec3$Zero, 0
         ));
         packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityId, getCachedValues(dyedColor)));
     }
@@ -66,5 +68,73 @@ public class BukkitFurnitureElement extends AbstractFurnitureElement {
         }
         ItemDisplayEntityData.DisplayedItem.addEntityDataIfNotDefaultValue(item.getLiteralObject(), cachedValues);
         return cachedValues;
+    }
+
+    public static Builder builder() {
+        return new BuilderImpl();
+    }
+
+    public static class BuilderImpl implements Builder {
+        private boolean applyDyedColor;
+        private Key item;
+        private Billboard billboard;
+        private ItemDisplayContext transform;
+        private Vector3f scale;
+        private Vector3f translation;
+        private Vector3f position;
+        private Quaternionf rotation;
+
+        @Override
+        public Builder applyDyedColor(boolean applyDyedColor) {
+            this.applyDyedColor = applyDyedColor;
+            return this;
+        }
+
+        @Override
+        public Builder item(Key item) {
+            this.item = item;
+            return this;
+        }
+
+        @Override
+        public Builder billboard(Billboard billboard) {
+            this.billboard = billboard;
+            return this;
+        }
+
+        @Override
+        public Builder transform(ItemDisplayContext transform) {
+            this.transform = transform;
+            return this;
+        }
+
+        @Override
+        public Builder scale(Vector3f scale) {
+            this.scale = scale;
+            return this;
+        }
+
+        @Override
+        public Builder translation(Vector3f translation) {
+            this.translation = translation;
+            return this;
+        }
+
+        @Override
+        public Builder position(Vector3f position) {
+            this.position = position;
+            return this;
+        }
+
+        @Override
+        public Builder rotation(Quaternionf rotation) {
+            this.rotation = rotation;
+            return this;
+        }
+
+        @Override
+        public FurnitureElement build() {
+            return new BukkitFurnitureElement(item, billboard, transform, scale, translation, position, rotation, applyDyedColor);
+        }
     }
 }

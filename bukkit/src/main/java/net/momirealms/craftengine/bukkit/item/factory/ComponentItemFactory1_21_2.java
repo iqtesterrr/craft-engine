@@ -1,6 +1,5 @@
 package net.momirealms.craftengine.bukkit.item.factory;
 
-import com.saicone.rtag.data.ComponentType;
 import net.momirealms.craftengine.bukkit.item.ComponentItemWrapper;
 import net.momirealms.craftengine.bukkit.item.ComponentTypes;
 import net.momirealms.craftengine.core.item.EquipmentData;
@@ -8,7 +7,6 @@ import net.momirealms.craftengine.core.plugin.CraftEngine;
 
 import java.util.Optional;
 
-@SuppressWarnings("UnstableApiUsage")
 public class ComponentItemFactory1_21_2 extends ComponentItemFactory1_21 {
 
     public ComponentItemFactory1_21_2(CraftEngine plugin) {
@@ -26,13 +24,7 @@ public class ComponentItemFactory1_21_2 extends ComponentItemFactory1_21 {
 
     @Override
     protected Optional<String> tooltipStyle(ComponentItemWrapper item) {
-        if (!item.hasComponent(ComponentTypes.TOOLTIP_STYLE)) return Optional.empty();
-        return Optional.ofNullable(
-                (String) ComponentType.encodeJava(
-                        ComponentTypes.TOOLTIP_STYLE,
-                        item.getComponent(ComponentTypes.TOOLTIP_STYLE)
-                ).orElse(null)
-        );
+        return item.getJavaComponent(ComponentTypes.TOOLTIP_STYLE);
     }
 
     @Override
@@ -46,13 +38,7 @@ public class ComponentItemFactory1_21_2 extends ComponentItemFactory1_21 {
 
     @Override
     protected Optional<String> itemModel(ComponentItemWrapper item) {
-        if (!item.hasComponent(ComponentTypes.ITEM_MODEL)) return Optional.empty();
-        return Optional.ofNullable(
-                (String) ComponentType.encodeJava(
-                        ComponentTypes.ITEM_MODEL,
-                        item.getComponent(ComponentTypes.ITEM_MODEL)
-                ).orElse(null)
-        );
+        return item.getJavaComponent(ComponentTypes.ITEM_MODEL);
     }
 
     @Override

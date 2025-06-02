@@ -1,18 +1,25 @@
 package net.momirealms.craftengine.bukkit.plugin.user;
 
 import com.google.common.collect.Lists;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
 import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.item.BukkitItemManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.plugin.gui.CraftEngineInventoryHolder;
+import net.momirealms.craftengine.bukkit.plugin.network.payload.DiscardedPayload;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MAttributeHolders;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MMobEffects;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.bukkit.util.*;
 import net.momirealms.craftengine.bukkit.world.BukkitWorld;
 import net.momirealms.craftengine.core.block.BlockSettings;
+import net.momirealms.craftengine.core.block.BlockStateWrapper;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
-import net.momirealms.craftengine.core.block.PackedBlockState;
 import net.momirealms.craftengine.core.entity.player.GameMode;
 import net.momirealms.craftengine.core.entity.player.InteractionHand;
 import net.momirealms.craftengine.core.entity.player.Player;
@@ -20,6 +27,7 @@ import net.momirealms.craftengine.core.entity.seat.SeatEntity;
 import net.momirealms.craftengine.core.item.Item;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.config.Config;
+import net.momirealms.craftengine.core.plugin.context.CooldownData;
 import net.momirealms.craftengine.core.plugin.network.ConnectionState;
 import net.momirealms.craftengine.core.plugin.network.EntityPacketHandler;
 import net.momirealms.craftengine.core.plugin.network.ProtocolVersion;
@@ -29,19 +37,20 @@ import net.momirealms.craftengine.core.util.VersionHelper;
 import net.momirealms.craftengine.core.world.BlockPos;
 import net.momirealms.craftengine.core.world.World;
 import net.momirealms.craftengine.core.world.WorldEvents;
-import org.bukkit.FluidCollisionMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.SoundCategory;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.*;
@@ -53,6 +62,7 @@ public class BukkitServerPlayer extends Player {
     private ProtocolVersion protocolVersion = ProtocolVersion.UNKNOWN;
     // connection state
     private final Channel channel;
+    private ChannelHandler connection;
     private String name;
     private UUID uuid;
     private ConnectionState decoderState;
@@ -96,6 +106,8 @@ public class BukkitServerPlayer extends Player {
     // cache interaction range here
     private int lastUpdateInteractionRangeTick;
     private double cachedInteractionRange;
+    // cooldown data
+    private CooldownData cooldownData;
     // cache seat
     private SeatEntity seatEntity;
 
@@ -104,6 +116,13 @@ public class BukkitServerPlayer extends Player {
     public BukkitServerPlayer(BukkitCraftEngine plugin, Channel channel) {
         this.channel = channel;
         this.plugin = plugin;
+        for (String name : channel.pipeline().names()) {
+            ChannelHandler handler = channel.pipeline().get(name);
+            if (NetworkReflections.clazz$Connection.isInstance(handler)) {
+                this.connection = handler;
+                break;
+            }
+        }
     }
 
     public void setPlayer(org.bukkit.entity.Player player) {
@@ -111,6 +130,13 @@ public class BukkitServerPlayer extends Player {
         this.serverPlayerRef = new WeakReference<>(FastNMS.INSTANCE.method$CraftPlayer$getHandle(player));
         this.uuid = player.getUniqueId();
         this.name = player.getName();
+        byte[] bytes = player.getPersistentDataContainer().get(KeyUtils.toNamespacedKey(CooldownData.COOLDOWN_KEY), PersistentDataType.BYTE_ARRAY);
+        try {
+            this.cooldownData = CooldownData.fromBytes(bytes);
+        } catch (IOException e) {
+            this.cooldownData = new CooldownData();
+            this.plugin.logger().warn("Failed to parse cooldown data", e);
+        }
     }
 
     @Override
@@ -229,8 +255,8 @@ public class BukkitServerPlayer extends Player {
     @Override
     public boolean canInstabuild() {
         try {
-            Object abilities = Reflections.field$Player$abilities.get(serverPlayer());
-            return (boolean) Reflections.field$Abilities$instabuild.get(abilities);
+            Object abilities = CoreReflections.field$Player$abilities.get(serverPlayer());
+            return (boolean) CoreReflections.field$Abilities$instabuild.get(abilities);
         } catch (ReflectiveOperationException e) {
             CraftEngine.instance().logger().warn("Failed to get canInstabuild for " + name(), e);
             return false;
@@ -277,6 +303,35 @@ public class BukkitServerPlayer extends Player {
     @Override
     public void sendPacket(Object packet, boolean immediately) {
         this.plugin.networkManager().sendPacket(this, packet, immediately);
+    }
+
+    @Override
+    public void sendCustomPayload(Key channel, byte[] data) {
+        try {
+            Object channelKey = KeyUtils.toResourceLocation(channel);
+            Object dataPayload;
+            if (DiscardedPayload.useNewMethod) {
+                dataPayload = NetworkReflections.constructor$DiscardedPayload.newInstance(channelKey, data);
+            } else {
+                dataPayload = NetworkReflections.constructor$DiscardedPayload.newInstance(channelKey, Unpooled.wrappedBuffer(data));
+            }
+            Object responsePacket = NetworkReflections.constructor$ClientboundCustomPayloadPacket.newInstance(dataPayload);
+            this.sendPacket(responsePacket, true);
+        } catch (Exception e) {
+            CraftEngine.instance().logger().warn("Failed to send custom payload to " + name(), e);
+        }
+    }
+
+    @Override
+    public void kick(Component message) {
+        try {
+            Object reason = ComponentUtils.adventureToMinecraft(message);
+            Object kickPacket = NetworkReflections.constructor$ClientboundDisconnectPacket.newInstance(reason);
+            this.sendPacket(kickPacket, true);
+            this.nettyChannel().disconnect();
+        } catch (Exception e) {
+            CraftEngine.instance().logger().warn("Failed to kick " + name(), e);
+        }
     }
 
     @Override
@@ -338,7 +393,7 @@ public class BukkitServerPlayer extends Player {
             try {
                 Object serverPlayer = serverPlayer();
                 Object gameMode = FastNMS.INSTANCE.field$ServerPlayer$gameMode(serverPlayer);
-                this.gameTicks = (int) Reflections.field$ServerPlayerGameMode$gameTicks.get(gameMode);
+                this.gameTicks = (int) CoreReflections.field$ServerPlayerGameMode$gameTicks.get(gameMode);
             } catch (ReflectiveOperationException e) {
                 CraftEngine.instance().logger().warn("Failed to get game tick for " + name(), e);
             }
@@ -408,7 +463,7 @@ public class BukkitServerPlayer extends Player {
         // instant break
         boolean custom = immutableBlockState != null;
         if (custom && getDestroyProgress(state, pos) >= 1f) {
-            PackedBlockState vanillaBlockState = immutableBlockState.vanillaBlockState();
+            BlockStateWrapper vanillaBlockState = immutableBlockState.vanillaBlockState();
             // if it's not an instant break on client side, we should resend level event
             if (vanillaBlockState != null && getDestroyProgress(vanillaBlockState.handle(), pos) < 1f) {
                 Object levelEventPacket = FastNMS.INSTANCE.constructor$ClientboundLevelEventPacket(
@@ -440,24 +495,24 @@ public class BukkitServerPlayer extends Player {
             if (canBreak) {
                 if (VersionHelper.isOrAbove1_20_5()) {
                     Object serverPlayer = serverPlayer();
-                    Object attributeInstance = Reflections.method$ServerPlayer$getAttribute.invoke(serverPlayer, Reflections.instance$Holder$Attribute$block_break_speed);
-                    Object newPacket = Reflections.constructor$ClientboundUpdateAttributesPacket0.newInstance(entityID(), Lists.newArrayList(attributeInstance));
+                    Object attributeInstance = CoreReflections.method$ServerPlayer$getAttribute.invoke(serverPlayer, MAttributeHolders.BLOCK_BREAK_SPEED);
+                    Object newPacket = NetworkReflections.constructor$ClientboundUpdateAttributesPacket0.newInstance(entityID(), Lists.newArrayList(attributeInstance));
                     sendPacket(newPacket, true);
                 } else {
-                    resetEffect(Reflections.instance$MobEffecr$mining_fatigue);
-                    resetEffect(Reflections.instance$MobEffecr$haste);
+                    resetEffect(MMobEffects.MINING_FATIGUE);
+                    resetEffect(MMobEffects.HASTE);
                 }
             } else {
                 if (VersionHelper.isOrAbove1_20_5()) {
                     Object attributeModifier = VersionHelper.isOrAbove1_21() ?
-                            Reflections.constructor$AttributeModifier.newInstance(KeyUtils.toResourceLocation(Key.DEFAULT_NAMESPACE, "custom_hardness"), -9999d, Reflections.instance$AttributeModifier$Operation$ADD_VALUE) :
-                            Reflections.constructor$AttributeModifier.newInstance(UUID.randomUUID(), Key.DEFAULT_NAMESPACE + ":custom_hardness", -9999d, Reflections.instance$AttributeModifier$Operation$ADD_VALUE);
-                    Object attributeSnapshot = Reflections.constructor$ClientboundUpdateAttributesPacket$AttributeSnapshot.newInstance(Reflections.instance$Holder$Attribute$block_break_speed, 1d, Lists.newArrayList(attributeModifier));
-                    Object newPacket = Reflections.constructor$ClientboundUpdateAttributesPacket1.newInstance(entityID(), Lists.newArrayList(attributeSnapshot));
+                            CoreReflections.constructor$AttributeModifier.newInstance(KeyUtils.toResourceLocation(Key.DEFAULT_NAMESPACE, "custom_hardness"), -9999d, CoreReflections.instance$AttributeModifier$Operation$ADD_VALUE) :
+                            CoreReflections.constructor$AttributeModifier.newInstance(UUID.randomUUID(), Key.DEFAULT_NAMESPACE + ":custom_hardness", -9999d, CoreReflections.instance$AttributeModifier$Operation$ADD_VALUE);
+                    Object attributeSnapshot = NetworkReflections.constructor$ClientboundUpdateAttributesPacket$AttributeSnapshot.newInstance(MAttributeHolders.BLOCK_BREAK_SPEED, 1d, Lists.newArrayList(attributeModifier));
+                    Object newPacket = NetworkReflections.constructor$ClientboundUpdateAttributesPacket1.newInstance(entityID(), Lists.newArrayList(attributeSnapshot));
                     sendPacket(newPacket, true);
                 } else {
-                    Object fatiguePacket = MobEffectUtils.createPacket(Reflections.instance$MobEffecr$mining_fatigue, entityID(), (byte) 9, -1, false, false, false);
-                    Object hastePacket = MobEffectUtils.createPacket(Reflections.instance$MobEffecr$haste, entityID(), (byte) 0, -1, false, false, false);
+                    Object fatiguePacket = MobEffectUtils.createPacket(MMobEffects.MINING_FATIGUE, entityID(), (byte) 9, -1, false, false, false);
+                    Object hastePacket = MobEffectUtils.createPacket(MMobEffects.HASTE, entityID(), (byte) 0, -1, false, false, false);
                     sendPackets(List.of(fatiguePacket, hastePacket), true);
                 }
             }
@@ -489,12 +544,12 @@ public class BukkitServerPlayer extends Player {
     }
 
     private void resetEffect(Object mobEffect) throws ReflectiveOperationException {
-        Object effectInstance = Reflections.method$ServerPlayer$getEffect.invoke(serverPlayer(), mobEffect);
+        Object effectInstance = CoreReflections.method$ServerPlayer$getEffect.invoke(serverPlayer(), mobEffect);
         Object packet;
         if (effectInstance != null) {
-            packet = Reflections.constructor$ClientboundUpdateMobEffectPacket.newInstance(entityID(), effectInstance);
+            packet = NetworkReflections.constructor$ClientboundUpdateMobEffectPacket.newInstance(entityID(), effectInstance);
         } else {
-            packet = Reflections.constructor$ClientboundRemoveMobEffectPacket.newInstance(entityID(), mobEffect);
+            packet = NetworkReflections.constructor$ClientboundRemoveMobEffectPacket.newInstance(entityID(), mobEffect);
         }
         sendPacket(packet, true);
     }
@@ -523,9 +578,9 @@ public class BukkitServerPlayer extends Player {
 
             // send hit sound if the sound is removed
             if (currentTick - this.lastHitBlockTime > 3) {
-                Object blockOwner = Reflections.field$StateHolder$owner.get(this.destroyedState);
-                Object soundType = Reflections.field$BlockBehaviour$soundType.get(blockOwner);
-                Object soundEvent = Reflections.field$SoundType$hitSound.get(soundType);
+                Object blockOwner = FastNMS.INSTANCE.method$BlockState$getBlock(this.destroyedState);
+                Object soundType = CoreReflections.field$BlockBehaviour$soundType.get(blockOwner);
+                Object soundEvent = CoreReflections.field$SoundType$hitSound.get(soundType);
                 Object soundId = FastNMS.INSTANCE.field$SoundEvent$location(soundEvent);
                 player.playSound(location, soundId.toString(), SoundCategory.BLOCKS, 0.5F, 0.5F);
                 this.lastHitBlockTime = currentTick;
@@ -535,7 +590,7 @@ public class BukkitServerPlayer extends Player {
             if (this.isDestroyingCustomBlock) {
                 // prevent server from taking over breaking custom blocks
                 Object gameMode = FastNMS.INSTANCE.field$ServerPlayer$gameMode(serverPlayer);
-                Reflections.field$ServerPlayerGameMode$isDestroyingBlock.set(gameMode, false);
+                CoreReflections.field$ServerPlayerGameMode$isDestroyingBlock.set(gameMode, false);
                 // check item in hand
                 Item<ItemStack> item = this.getItemInHand(InteractionHand.MAIN_HAND);
                 if (item != null) {
@@ -594,14 +649,14 @@ public class BukkitServerPlayer extends Player {
                                 // Error might occur so we use try here
                                 try {
                                     FastNMS.INSTANCE.setMayBuild(serverPlayer, true);
-                                    Reflections.method$ServerPlayerGameMode$destroyBlock.invoke(gameMode, blockPos);
+                                    CoreReflections.method$ServerPlayerGameMode$destroyBlock.invoke(gameMode, blockPos);
                                 } finally {
                                     FastNMS.INSTANCE.setMayBuild(serverPlayer, false);
                                 }
                             }
                         } else {
                             // normal break check
-                            Reflections.method$ServerPlayerGameMode$destroyBlock.invoke(gameMode, blockPos);
+                            CoreReflections.method$ServerPlayerGameMode$destroyBlock.invoke(gameMode, blockPos);
                         }
                         // send break particle + (removed sounds)
                         sendPacket(FastNMS.INSTANCE.constructor$ClientboundLevelEventPacket(WorldEvents.BLOCK_BREAK_EFFECT, blockPos, id, false), false);
@@ -616,6 +671,11 @@ public class BukkitServerPlayer extends Player {
         }
     }
 
+    @Override
+    public void breakBlock(int x, int y, int z) {
+        platformPlayer().breakBlock(new Location(platformPlayer().getWorld(), x, y, z).getBlock());
+    }
+
     private void broadcastDestroyProgress(org.bukkit.entity.Player player, BlockPos hitPos, Object blockPos, int stage) {
         Object packet = FastNMS.INSTANCE.constructor$ClientboundBlockDestructionPacket(Integer.MAX_VALUE - entityID(), blockPos, stage);
         for (org.bukkit.entity.Player other : player.getWorld().getPlayers()) {
@@ -624,7 +684,7 @@ public class BukkitServerPlayer extends Player {
             double d1 = (double) hitPos.y() - otherLocation.getY();
             double d2 = (double) hitPos.z() - otherLocation.getZ();
             if (d0 * d0 + d1 * d1 + d2 * d2 < 1024.0D) {
-                plugin.networkManager().sendPacket(other, packet);
+                this.plugin.networkManager().sendPacket(this.plugin.adapt(other), packet);
             }
         }
     }
@@ -673,12 +733,12 @@ public class BukkitServerPlayer extends Player {
     }
 
     @Override
-    public float getYRot() {
+    public float yRot() {
         return platformPlayer().getPitch();
     }
 
     @Override
-    public float getXRot() {
+    public float xRot() {
         return platformPlayer().getYaw();
     }
 
@@ -729,6 +789,19 @@ public class BukkitServerPlayer extends Player {
     public org.bukkit.entity.Player platformPlayer() {
         if (playerRef == null) return null;
         return playerRef.get();
+    }
+
+    @Override
+    public ChannelHandler connection() {
+        if (this.connection == null) {
+            Object serverPlayer = serverPlayer();
+            if (serverPlayer != null) {
+                this.connection = (ChannelHandler) FastNMS.INSTANCE.field$Player$connection$connection(serverPlayer);
+            } else {
+                throw new IllegalStateException("Cannot init or find connection instance for player " + name());
+            }
+        }
+        return this.connection;
     }
 
     @Override
@@ -835,6 +908,50 @@ public class BukkitServerPlayer extends Player {
     @Override
     public boolean isFlying() {
         return platformPlayer().isFlying();
+    }
+
+    @Override
+    public int foodLevel() {
+        return platformPlayer().getFoodLevel();
+    }
+
+    @Override
+    public void setFoodLevel(int foodLevel) {
+        this.platformPlayer().setFoodLevel(Math.min(Math.max(0, foodLevel), 20));
+    }
+
+    @Override
+    public float saturation() {
+        return platformPlayer().getSaturation();
+    }
+
+    @Override
+    public void setSaturation(float saturation) {
+        this.platformPlayer().setSaturation(saturation);
+    }
+
+    @Override
+    public void addPotionEffect(Key potionEffectType, int duration, int amplifier, boolean ambient, boolean particles) {
+        PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(KeyUtils.toNamespacedKey(potionEffectType));
+        if (type == null) return;
+        this.platformPlayer().addPotionEffect(new PotionEffect(type, duration, amplifier, ambient, particles));
+    }
+
+    @Override
+    public void removePotionEffect(Key potionEffectType) {
+        PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(KeyUtils.toNamespacedKey(potionEffectType));
+        if (type == null) return;
+        this.platformPlayer().removePotionEffect(type);
+    }
+
+    @Override
+    public void clearPotionEffects() {
+        this.platformPlayer().clearActivePotionEffects();
+    }
+
+    @Override
+    public CooldownData cooldown() {
+        return this.cooldownData;
     }
 
     @Override

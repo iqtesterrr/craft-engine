@@ -1,0 +1,71 @@
+categories:
+  default:default:
+    priority: 1
+    name: "<!i><white><i18n:category.default.name></white>"
+    lore:
+      - "<!i><gray><i18n:category.default.lore>"
+    icon: default:topaz
+    list:
+      - "#default:palm_tree"
+      - "#default:topaz"
+      - "#default:furniture"
+      - "#default:misc"
+  default:palm_tree:
+    name: "<!i><green><i18n:category.palm_tree></green>"
+    hidden: true
+    icon: default:palm_log
+    list:
+      - default:palm_sapling
+      - default:palm_leaves
+      - default:palm_log
+      - default:stripped_palm_log
+      - default:palm_wood
+      - default:stripped_palm_wood
+      - default:palm_planks
+  default:topaz:
+    name: "<!i><#FF8C00><i18n:category.topaz></#FF8C00>"
+    hidden: true
+    icon: default:topaz
+    list:
+      - default:topaz
+      - default:topaz_ore
+      - default:deepslate_topaz_ore
+      - default:topaz_axe
+      - default:topaz_pickaxe
+      - default:topaz_hoe
+      - default:topaz_shovel
+      - default:topaz_sword
+      - default:topaz_bow
+      - default:topaz_crossbow
+      - default:topaz_rod
+      - default:topaz_trident
+      - default:topaz_helmet
+      - default:topaz_chestplate
+      - default:topaz_leggings
+      - default:topaz_boots
+  default:furniture:
+    name: "<!i><#FFD700><i18n:category.furniture></#FFD700>"
+    hidden: true
+    icon: default:table_lamp
+    list:
+      - default:bench
+      - default:table_lamp
+      - default:wooden_chair
+  default:misc:
+    name: "<!i><gray><i18n:category.misc></gray>"
+    hidden: true
+    icon: default:chinese_lantern
+    list:
+      - default:chinese_lantern
+      - default:netherite_anvil
+      - default:fairy_flower
+      - default:reed
+      - default:flame_cane
+      - default:gunpowder_block
+      - default:solid_gunpowder_block
+      - default:ender_pearl_flower_seeds
+      - default:gui_head_size_1
+      - default:gui_head_size_4
+      - minecraft:air
+      - default:copper_coil
+      - default:flame_elytra

@@ -2,8 +2,7 @@ package net.momirealms.craftengine.core.entity.furniture;
 
 import net.momirealms.craftengine.core.entity.player.Player;
 import net.momirealms.craftengine.core.util.Key;
-import net.momirealms.craftengine.core.world.Vec3d;
-import net.momirealms.craftengine.core.world.World;
+import net.momirealms.craftengine.core.world.WorldPosition;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -13,9 +12,7 @@ import java.util.UUID;
 public interface Furniture {
     void initializeColliders();
 
-    Vec3d position();
-
-    World world();
+    WorldPosition position();
 
     boolean isValid();
 

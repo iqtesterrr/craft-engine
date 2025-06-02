@@ -62,10 +62,11 @@ public class TemplateManagerImpl implements TemplateManager {
     }
 
     @Override
-    public Map<String, Object> applyTemplates(Map<String, Object> input) {
+    public Map<String, Object> applyTemplates(Key id, Map<String, Object> input) {
         Objects.requireNonNull(input, "Input must not be null");
         Map<String, Object> result = new LinkedHashMap<>();
-        processMap(input, Collections.emptyMap(), (obj) -> {
+        processMap(input, Map.of("{__ID__}", PlainStringTemplateArgument.plain(id.value()),
+                "{__NAMESPACE__}", PlainStringTemplateArgument.plain(id.namespace())), (obj) -> {
             // 当前位于根节点下，如果下一级就是模板，则应把模板结果与当前map合并
             // 如果模板结果不是map，则为非法值，因为不可能出现类似于下方的配置
             // items:

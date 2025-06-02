@@ -3,6 +3,7 @@ package net.momirealms.craftengine.core.util;
 import com.mojang.datafixers.util.Either;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedException;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +15,10 @@ import java.util.function.Supplier;
 public final class ResourceConfigUtils {
 
     private ResourceConfigUtils() {}
+
+    public static <T, O> T getOrDefault(@Nullable O raw, Function<O, T> function, T defaultValue) {
+        return raw != null ? function.apply(raw) : defaultValue;
+    }
 
     public static <T> T requireNonNullOrThrow(T obj, String node) {
         if (obj == null)

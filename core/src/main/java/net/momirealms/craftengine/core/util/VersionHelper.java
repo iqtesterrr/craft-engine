@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import static java.util.Objects.requireNonNull;
 
 public class VersionHelper {
+    // todo 在跨平台时候，将其设计到平台实现
     private static final Class<?> clazz$DetectedVersion = requireNonNull(
             ReflectionUtils.getClazz("net.minecraft.DetectedVersion", "net.minecraft.MinecraftVersion"));
     private static final Class<?> clazz$WorldVersion = requireNonNull(
@@ -59,6 +60,8 @@ public class VersionHelper {
             throw new RuntimeException(e);
         }
     }
+
+    public static void init() {}
 
     public static float version() {
         return version;

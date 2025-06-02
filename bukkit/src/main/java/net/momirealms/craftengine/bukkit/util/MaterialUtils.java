@@ -4,8 +4,8 @@ import net.momirealms.craftengine.core.util.Key;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;

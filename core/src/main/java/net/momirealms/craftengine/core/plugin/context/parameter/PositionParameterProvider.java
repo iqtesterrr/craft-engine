@@ -18,6 +18,8 @@ public class PositionParameterProvider implements ChainParameterProvider<WorldPo
         CONTEXT_FUNCTIONS.put(DirectContextParameters.X, WorldPosition::x);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.Y, WorldPosition::y);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.Z, WorldPosition::z);
+        CONTEXT_FUNCTIONS.put(DirectContextParameters.YAW, WorldPosition::xRot);
+        CONTEXT_FUNCTIONS.put(DirectContextParameters.PITCH, WorldPosition::yRot);
         CONTEXT_FUNCTIONS.put(DirectContextParameters.BLOCK_X, p -> MCUtils.fastFloor(p.x()));
         CONTEXT_FUNCTIONS.put(DirectContextParameters.BLOCK_Y, p -> MCUtils.fastFloor(p.y()));
         CONTEXT_FUNCTIONS.put(DirectContextParameters.BLOCK_Z, p -> MCUtils.fastFloor(p.z()));

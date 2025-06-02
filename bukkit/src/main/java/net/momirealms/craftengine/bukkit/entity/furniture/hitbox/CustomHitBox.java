@@ -2,7 +2,9 @@ package net.momirealms.craftengine.bukkit.entity.furniture.hitbox;
 
 import net.momirealms.craftengine.bukkit.entity.data.BaseEntityData;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MAttributeHolders;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.core.entity.furniture.*;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.util.Key;
@@ -56,13 +58,13 @@ public class CustomHitBox extends AbstractHitBox {
         try {
             packets.accept(FastNMS.INSTANCE.constructor$ClientboundAddEntityPacket(
                     entityId[0], UUID.randomUUID(), position.x() + offset.x, position.y() + offset.y, position.z() - offset.z, 0, position.xRot(),
-                    FastNMS.INSTANCE.toNMSEntityType(this.entityType), 0, Reflections.instance$Vec3$Zero, 0
+                    FastNMS.INSTANCE.toNMSEntityType(this.entityType), 0, CoreReflections.instance$Vec3$Zero, 0
             ), true);
             packets.accept(FastNMS.INSTANCE.constructor$ClientboundSetEntityDataPacket(entityId[0], List.copyOf(this.cachedValues)), true);
             if (VersionHelper.isOrAbove1_20_5() && this.scale != 1) {
-                Object attributeInstance = Reflections.constructor$AttributeInstance.newInstance(Reflections.instance$Holder$Attribute$scale, (Consumer<?>) (o) -> {});
-                Reflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, this.scale);
-                packets.accept(Reflections.constructor$ClientboundUpdateAttributesPacket0.newInstance(entityId[0], Collections.singletonList(attributeInstance)), false);
+                Object attributeInstance = CoreReflections.constructor$AttributeInstance.newInstance(MAttributeHolders.SCALE, (Consumer<?>) (o) -> {});
+                CoreReflections.method$AttributeInstance$setBaseValue.invoke(attributeInstance, this.scale);
+                packets.accept(NetworkReflections.constructor$ClientboundUpdateAttributesPacket0.newInstance(entityId[0], Collections.singletonList(attributeInstance)), false);
             }
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Failed to construct custom hitbox spawn packet", e);

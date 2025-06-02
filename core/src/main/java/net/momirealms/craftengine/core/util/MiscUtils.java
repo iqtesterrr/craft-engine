@@ -23,6 +23,17 @@ public class MiscUtils {
         throw new IllegalArgumentException("Expected Map, got: " + (obj == null ? null : obj.getClass().getSimpleName()));
     }
 
+    @SuppressWarnings("unchecked")
+    public static List<Map<String, Object>> getAsMapList(Object obj) {
+        if (obj == null) return List.of();
+        if (obj instanceof List<?> list) {
+            return (List<Map<String, Object>>) list;
+        } else if (obj instanceof Map<?, ?>) {
+            return List.of((Map<String, Object>) obj);
+        }
+        throw new IllegalArgumentException("Expected MapList/Map, got: " + obj.getClass().getSimpleName());
+    }
+
     public static List<String> getAsStringList(Object o) {
         List<String> list = new ArrayList<>();
         if (o instanceof List<?>) {

@@ -2,6 +2,7 @@ package net.momirealms.craftengine.core.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import sun.misc.Unsafe;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -13,6 +14,18 @@ import java.util.List;
 
 public class ReflectionUtils {
     private static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
+
+    public static final Unsafe UNSAFE;
+
+    static {
+        try {
+            Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+            unsafeField.setAccessible(true);
+            UNSAFE = (Unsafe) unsafeField.get(null);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private ReflectionUtils() {}
 

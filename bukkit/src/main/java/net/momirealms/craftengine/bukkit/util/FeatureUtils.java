@@ -1,5 +1,7 @@
 package net.momirealms.craftengine.bukkit.util;
 
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MRegistries;
 import net.momirealms.craftengine.core.util.Key;
 
 public class FeatureUtils {
@@ -8,7 +10,7 @@ public class FeatureUtils {
 
     public static Object createFeatureKey(Key id) {
         try {
-            return Reflections.method$ResourceKey$create.invoke(null, Reflections.instance$Registries$CONFIGURED_FEATURE, KeyUtils.toResourceLocation(id));
+            return CoreReflections.method$ResourceKey$create.invoke(null, MRegistries.instance$Registries$CONFIGURED_FEATURE, KeyUtils.toResourceLocation(id));
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
         }

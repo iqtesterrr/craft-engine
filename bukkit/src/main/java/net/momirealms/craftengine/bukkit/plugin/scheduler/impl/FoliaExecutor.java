@@ -1,26 +1,26 @@
 package net.momirealms.craftengine.bukkit.plugin.scheduler.impl;
 
+import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.core.plugin.scheduler.RegionExecutor;
 import net.momirealms.craftengine.core.plugin.scheduler.SchedulerTask;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 
 public class FoliaExecutor implements RegionExecutor<World> {
-    private final Plugin plugin;
+    private final BukkitCraftEngine plugin;
 
-    public FoliaExecutor(Plugin plugin) {
+    public FoliaExecutor(BukkitCraftEngine plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public void run(Runnable runnable, World world, int x, int z) {
         Optional.ofNullable(world).ifPresentOrElse(w ->
-                Bukkit.getRegionScheduler().execute(plugin, w, x, z, runnable),
-                () -> Bukkit.getGlobalRegionScheduler().execute(plugin, runnable)
+                Bukkit.getRegionScheduler().execute(plugin.javaPlugin(), w, x, z, runnable),
+                () -> Bukkit.getGlobalRegionScheduler().execute(plugin.javaPlugin(), runnable)
         );
     }
 
@@ -43,15 +43,15 @@ public class FoliaExecutor implements RegionExecutor<World> {
     public SchedulerTask runLater(Runnable runnable, long delay, World world, int x, int z) {
         if (world == null) {
             if (delay <= 0) {
-                return new FoliaTask(Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduledTask -> runnable.run(), delay));
+                return new FoliaTask(Bukkit.getGlobalRegionScheduler().runDelayed(plugin.javaPlugin(), scheduledTask -> runnable.run(), delay));
             } else {
-                return new FoliaTask(Bukkit.getGlobalRegionScheduler().run(plugin, scheduledTask -> runnable.run()));
+                return new FoliaTask(Bukkit.getGlobalRegionScheduler().run(plugin.javaPlugin(), scheduledTask -> runnable.run()));
             }
         } else {
             if (delay <= 0) {
-                return new FoliaTask(Bukkit.getRegionScheduler().run(plugin, world, x, z, scheduledTask -> runnable.run()));
+                return new FoliaTask(Bukkit.getRegionScheduler().run(plugin.javaPlugin(), world, x, z, scheduledTask -> runnable.run()));
             } else {
-                return new FoliaTask(Bukkit.getRegionScheduler().runDelayed(plugin, world, x, z, scheduledTask -> runnable.run(), delay));
+                return new FoliaTask(Bukkit.getRegionScheduler().runDelayed(plugin.javaPlugin(), world, x, z, scheduledTask -> runnable.run(), delay));
             }
         }
     }
@@ -59,14 +59,14 @@ public class FoliaExecutor implements RegionExecutor<World> {
     @Override
     public SchedulerTask runRepeating(Runnable runnable, long delay, long period, World world, int x, int z) {
         if (world == null) {
-            return new FoliaTask(Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin, scheduledTask -> runnable.run(), delay, period));
+            return new FoliaTask(Bukkit.getGlobalRegionScheduler().runAtFixedRate(plugin.javaPlugin(), scheduledTask -> runnable.run(), delay, period));
         } else {
-            return new FoliaTask(Bukkit.getRegionScheduler().runAtFixedRate(plugin, world, x, z, scheduledTask -> runnable.run(), delay, period));
+            return new FoliaTask(Bukkit.getRegionScheduler().runAtFixedRate(plugin.javaPlugin(), world, x, z, scheduledTask -> runnable.run(), delay, period));
         }
     }
 
     @Override
     public void execute(@NotNull Runnable runnable) {
-        Bukkit.getGlobalRegionScheduler().execute(plugin, runnable);
+        Bukkit.getGlobalRegionScheduler().execute(plugin.javaPlugin(), runnable);
     }
 }

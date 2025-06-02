@@ -1,6 +1,6 @@
 package net.momirealms.craftengine.core.pack;
 
-public class ResourceLocation {
+public final class ResourceLocation {
 
     public static boolean isValid(final String resourceLocation) {
         int index = resourceLocation.indexOf(":");

@@ -129,7 +129,7 @@ public interface GuiElement {
 
         @Override
         public Item<?> item() {
-            return gui().itemAt(index).item();
+            return gui().itemAt(this.index).item();
         }
 
         @Override

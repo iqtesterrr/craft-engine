@@ -2,9 +2,10 @@ package net.momirealms.craftengine.bukkit.world;
 
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
-import net.momirealms.craftengine.bukkit.plugin.injector.BukkitInjector;
+import net.momirealms.craftengine.bukkit.plugin.injector.RecipeInjector;
+import net.momirealms.craftengine.bukkit.plugin.injector.WorldStorageInjector;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.block.ImmutableBlockState;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.config.Config;
@@ -92,7 +93,7 @@ public class BukkitWorldManager implements WorldManager, Listener {
 
     public void delayedInit() {
         // events and tasks
-        Bukkit.getPluginManager().registerEvents(this, this.plugin.bootstrap());
+        Bukkit.getPluginManager().registerEvents(this, this.plugin.javaPlugin());
         this.tickTask = this.plugin.scheduler().asyncRepeating(() -> {
             try {
                 if (this.isTicking) {
@@ -291,7 +292,7 @@ public class BukkitWorldManager implements WorldManager, Listener {
             for (int i = 0; i < ceSections.length; i++) {
                 CESection ceSection = ceSections[i];
                 Object section = sections[i];
-                BukkitInjector.uninjectLevelChunkSection(section);
+                WorldStorageInjector.uninjectLevelChunkSection(section);
                 if (Config.restoreVanillaBlocks()) {
                     if (!ceSection.statesContainer().isEmpty()) {
                         for (int x = 0; x < 16; x++) {
@@ -332,16 +333,16 @@ public class BukkitWorldManager implements WorldManager, Listener {
                     Object section = sections[i];
                     if (Config.syncCustomBlocks()) {
                         Object statesContainer = FastNMS.INSTANCE.field$LevelChunkSection$states(section);
-                        Object data = Reflections.varHandle$PalettedContainer$data.get(statesContainer);
-                        Object palette = Reflections.field$PalettedContainer$Data$palette.get(data);
+                        Object data = CoreReflections.varHandle$PalettedContainer$data.get(statesContainer);
+                        Object palette = CoreReflections.field$PalettedContainer$Data$palette.get(data);
                         boolean requiresSync = false;
-                        if (Reflections.clazz$SingleValuePalette.isInstance(palette)) {
-                            Object onlyBlockState = Reflections.field$SingleValuePalette$value.get(palette);
+                        if (CoreReflections.clazz$SingleValuePalette.isInstance(palette)) {
+                            Object onlyBlockState = CoreReflections.field$SingleValuePalette$value.get(palette);
                             if (!BlockStateUtils.isVanillaBlock(BlockStateUtils.blockStateToId(onlyBlockState))) {
                                 requiresSync = true;
                             }
-                        } else if (Reflections.clazz$LinearPalette.isInstance(palette)) {
-                            Object[] blockStates = (Object[]) Reflections.field$LinearPalette$values.get(palette);
+                        } else if (CoreReflections.clazz$LinearPalette.isInstance(palette)) {
+                            Object[] blockStates = (Object[]) CoreReflections.field$LinearPalette$values.get(palette);
                             for (Object blockState : blockStates) {
                                 if (blockState != null) {
                                     if (!BlockStateUtils.isVanillaBlock(BlockStateUtils.blockStateToId(blockState))) {
@@ -350,9 +351,9 @@ public class BukkitWorldManager implements WorldManager, Listener {
                                     }
                                 }
                             }
-                        } else if (Reflections.clazz$HashMapPalette.isInstance(palette)) {
-                            Object biMap = Reflections.field$HashMapPalette$values.get(palette);
-                            Object[] blockStates = (Object[]) Reflections.field$CrudeIncrementalIntIdentityHashBiMap$keys.get(biMap);
+                        } else if (CoreReflections.clazz$HashMapPalette.isInstance(palette)) {
+                            Object biMap = CoreReflections.field$HashMapPalette$values.get(palette);
+                            Object[] blockStates = (Object[]) CoreReflections.field$CrudeIncrementalIntIdentityHashBiMap$keys.get(biMap);
                             for (Object blockState : blockStates) {
                                 if (blockState != null) {
                                     if (!BlockStateUtils.isVanillaBlock(BlockStateUtils.blockStateToId(blockState))) {
@@ -394,14 +395,14 @@ public class BukkitWorldManager implements WorldManager, Listener {
                         }
                     }
                     int finalI = i;
-                    BukkitInjector.injectLevelChunkSection(section, ceSection, ceChunk, new SectionPos(pos.x, ceChunk.sectionY(i), pos.z),
+                    WorldStorageInjector.injectLevelChunkSection(section, ceSection, ceChunk, new SectionPos(pos.x, ceChunk.sectionY(i), pos.z),
                             (injected) -> sections[finalI] = injected);
                 }
                 if (Config.enableRecipeSystem()) {
                     @SuppressWarnings("unchecked")
                     Map<Object, Object> blockEntities = (Map<Object, Object>) FastNMS.INSTANCE.field$ChunkAccess$blockEntities(levelChunk);
                     for (Object blockEntity : blockEntities.values()) {
-                        BukkitInjector.injectCookingBlockEntity(blockEntity);
+                        RecipeInjector.injectCookingBlockEntity(blockEntity);
                     }
                 }
             } catch (ReflectiveOperationException e) {

@@ -21,8 +21,6 @@ public interface CustomItem<I> extends BuildableItem<I> {
 
     Key material();
 
-    NetworkItemDataProcessor<I>[] networkItemDataProcessors();
-
     ItemDataModifier<I>[] dataModifiers();
 
     Map<String, ItemDataModifier<I>> dataModifierMap();

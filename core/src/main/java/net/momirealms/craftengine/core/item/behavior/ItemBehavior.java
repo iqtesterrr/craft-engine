@@ -15,4 +15,9 @@ public abstract class ItemBehavior {
     public InteractionResult use(World world, Player player, InteractionHand hand) {
         return InteractionResult.PASS;
     }
+
+    // TODO
+    public InteractionResult useOnEntity() {
+        return InteractionResult.PASS;
+    }
 }

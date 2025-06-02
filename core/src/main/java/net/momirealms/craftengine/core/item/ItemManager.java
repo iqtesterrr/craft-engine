@@ -11,8 +11,8 @@ import net.momirealms.craftengine.core.plugin.config.ConfigParser;
 import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.util.Key;
 import org.incendo.cloud.suggestion.Suggestion;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public interface ItemManager<T> extends Manageable, ModelGenerator {
@@ -58,6 +58,8 @@ public interface ItemManager<T> extends Manageable, ModelGenerator {
     Optional<List<ItemBehavior>> getItemBehavior(Key key);
 
     Optional<? extends BuildableItem<T>> getVanillaItem(Key key);
+
+    NetworkItemHandler<T> networkItemHandler();
 
     default Optional<? extends BuildableItem<T>> getBuildableItem(Key key) {
         Optional<CustomItem<T>> item = getCustomItem(key);

@@ -1,8 +1,6 @@
 package net.momirealms.craftengine.bukkit.item;
 
 import com.saicone.rtag.item.ItemTagStream;
-import net.momirealms.craftengine.bukkit.item.behavior.AxeItemBehavior;
-import net.momirealms.craftengine.bukkit.item.behavior.BoneMealItemBehavior;
 import net.momirealms.craftengine.bukkit.item.behavior.BucketItemBehavior;
 import net.momirealms.craftengine.bukkit.item.behavior.WaterBucketItemBehavior;
 import net.momirealms.craftengine.bukkit.item.factory.BukkitItemFactory;
@@ -11,21 +9,24 @@ import net.momirealms.craftengine.bukkit.item.listener.DebugStickListener;
 import net.momirealms.craftengine.bukkit.item.listener.ItemEventListener;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MBuiltInRegistries;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MRegistries;
 import net.momirealms.craftengine.bukkit.util.ItemUtils;
 import net.momirealms.craftengine.bukkit.util.KeyUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
 import net.momirealms.craftengine.core.entity.player.Player;
 import net.momirealms.craftengine.core.item.*;
 import net.momirealms.craftengine.core.item.modifier.IdModifier;
+import net.momirealms.craftengine.core.plugin.config.Config;
 import net.momirealms.craftengine.core.plugin.context.ContextHolder;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.registry.BuiltInRegistries;
 import net.momirealms.craftengine.core.registry.Holder;
 import net.momirealms.craftengine.core.registry.WritableRegistry;
 import net.momirealms.craftengine.core.util.Key;
-import net.momirealms.craftengine.core.util.ReflectionUtils;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import net.momirealms.craftengine.core.util.ResourceKey;
+import net.momirealms.craftengine.core.util.VersionHelper;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -34,18 +35,14 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 public class BukkitItemManager extends AbstractItemManager<ItemStack> {
     static {
-        registerVanillaItemExtraBehavior(AxeItemBehavior.INSTANCE, ItemKeys.AXES);
         registerVanillaItemExtraBehavior(WaterBucketItemBehavior.INSTANCE, ItemKeys.WATER_BUCKETS);
         registerVanillaItemExtraBehavior(BucketItemBehavior.INSTANCE, ItemKeys.BUCKET);
-        registerVanillaItemExtraBehavior(BoneMealItemBehavior.INSTANCE, ItemKeys.BONE_MEAL);
     }
 
     private static BukkitItemManager instance;
@@ -54,6 +51,7 @@ public class BukkitItemManager extends AbstractItemManager<ItemStack> {
     private final ItemEventListener itemEventListener;
     private final DebugStickListener debugStickListener;
     private final ArmorEventListener armorEventListener;
+    private final NetworkItemHandler<ItemStack> networkItemHandler;
 
     public BukkitItemManager(BukkitCraftEngine plugin) {
         super(plugin);
@@ -63,68 +61,50 @@ public class BukkitItemManager extends AbstractItemManager<ItemStack> {
         this.itemEventListener = new ItemEventListener(plugin);
         this.debugStickListener = new DebugStickListener(plugin);
         this.armorEventListener = new ArmorEventListener();
+        this.networkItemHandler = VersionHelper.isOrAbove1_20_5() ? new ModernNetworkItemHandler() : new LegacyNetworkItemHandler();
         this.registerAllVanillaItems();
-        if (plugin.hasMod()) {
-            Class<?> clazz$CustomStreamCodec = ReflectionUtils.getClazz("net.momirealms.craftengine.mod.item.CustomStreamCodec");
-            if (clazz$CustomStreamCodec != null) {
-                Field s2cProcessor = ReflectionUtils.getDeclaredField(clazz$CustomStreamCodec, Function.class, 0);
-                Field c2sProcessor = ReflectionUtils.getDeclaredField(clazz$CustomStreamCodec, Function.class, 1);
-                Function<Object, Object> s2c = (raw) -> {
-                    ItemStack itemStack = FastNMS.INSTANCE.method$CraftItemStack$asCraftMirror(raw);
-                    Item<ItemStack> wrapped = this.wrap(itemStack.clone());
-                    Optional<CustomItem<ItemStack>> customItem = wrapped.getCustomItem();
-                    if (customItem.isEmpty()) {
-                        return raw;
-                    }
-                    CustomItem<ItemStack> custom = customItem.get();
-                    if (!custom.hasClientBoundDataModifier()) {
-                        return raw;
-                    }
-                    for (NetworkItemDataProcessor<ItemStack> processor : custom.networkItemDataProcessors()) {
-                        processor.toClient(wrapped, ItemBuildContext.EMPTY);
-                    }
-                    wrapped.load();
-                    return wrapped.getLiteralObject();
-                };
-
-                Function<Object, Object> c2s = (raw) -> {
-                    ItemStack itemStack = FastNMS.INSTANCE.method$CraftItemStack$asCraftMirror(raw);
-                    Item<ItemStack> wrapped = this.wrap(itemStack);
-                    Optional<CustomItem<ItemStack>> customItem = wrapped.getCustomItem();
-                    if (customItem.isEmpty()) {
-                        return raw;
-                    }
-                    CustomItem<ItemStack> custom = customItem.get();
-                    if (!custom.hasClientBoundDataModifier()) {
-                        return raw;
-                    }
-                    for (NetworkItemDataProcessor<ItemStack> processor : custom.networkItemDataProcessors()) {
-                        processor.toServer(wrapped, ItemBuildContext.EMPTY);
-                    }
-                    wrapped.load();
-                    return wrapped.getLiteralObject();
-                };
-                try {
-                    assert s2cProcessor != null;
-                    s2cProcessor.set(null, s2c);
-                    assert c2sProcessor != null;
-                    c2sProcessor.set(null, c2s);
-                } catch (ReflectiveOperationException e) {
-                    plugin.logger().warn("Failed to load custom stream codec", e);
-                }
-            }
-        }
     }
 
     @Override
     public void delayedInit() {
-        Bukkit.getPluginManager().registerEvents(this.itemEventListener, this.plugin.bootstrap());
-        Bukkit.getPluginManager().registerEvents(this.debugStickListener, this.plugin.bootstrap());
-        Bukkit.getPluginManager().registerEvents(this.armorEventListener, this.plugin.bootstrap());
+        Bukkit.getPluginManager().registerEvents(this.itemEventListener, this.plugin.javaPlugin());
+        Bukkit.getPluginManager().registerEvents(this.debugStickListener, this.plugin.javaPlugin());
+        Bukkit.getPluginManager().registerEvents(this.armorEventListener, this.plugin.javaPlugin());
+    }
+
+    @Override
+    public NetworkItemHandler<ItemStack> networkItemHandler() {
+        return this.networkItemHandler;
     }
 
     public static BukkitItemManager instance() {
         return instance;
+    }
+
+    public Optional<ItemStack> s2c(ItemStack itemStack, Player player) {
+        try {
+            Item<ItemStack> wrapped = wrap(itemStack);
+            if (wrapped == null) return Optional.empty();
+            return this.networkItemHandler.s2c(wrapped, player).map(Item::load);
+        } catch (Throwable e) {
+            if (Config.debug()) {
+                this.plugin.logger().warn("Failed to handle s2c items.", e);
+            }
+            return Optional.empty();
+        }
+    }
+
+    public Optional<ItemStack> c2s(ItemStack itemStack) {
+        try {
+            Item<ItemStack> wrapped = wrap(itemStack);
+            if (wrapped == null) return Optional.empty();
+            return this.networkItemHandler.c2s(wrapped).map(Item::load);
+        } catch (Throwable e) {
+            if (Config.debug()) {
+                this.plugin.logger().warn("Failed to handle c2s items.", e);
+            }
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -234,10 +214,10 @@ public class BukkitItemManager extends AbstractItemManager<ItemStack> {
                             .orElseGet(() -> ((WritableRegistry<Key>) BuiltInRegistries.OPTIMIZED_ITEM_ID)
                                     .register(new ResourceKey<>(BuiltInRegistries.OPTIMIZED_ITEM_ID.key().location(), id), id));
                     Object resourceLocation = KeyUtils.toResourceLocation(id.namespace(), id.value());
-                    Object mcHolder = ((Optional<Object>) Reflections.method$Registry$getHolder1.invoke(Reflections.instance$BuiltInRegistries$ITEM, Reflections.method$ResourceKey$create.invoke(null, Reflections.instance$Registries$ITEM, resourceLocation))).get();
-                    Set<Object> tags = (Set<Object>) Reflections.field$Holder$Reference$tags.get(mcHolder);
+                    Object mcHolder = ((Optional<Object>) CoreReflections.method$Registry$getHolder1.invoke(MBuiltInRegistries.ITEM, CoreReflections.method$ResourceKey$create.invoke(null, MRegistries.instance$Registries$ITEM, resourceLocation))).get();
+                    Set<Object> tags = (Set<Object>) CoreReflections.field$Holder$Reference$tags.get(mcHolder);
                     for (Object tag : tags) {
-                        Key tagId = Key.of(Reflections.field$TagKey$location.get(tag).toString());
+                        Key tagId = Key.of(CoreReflections.field$TagKey$location.get(tag).toString());
                         VANILLA_ITEM_TAGS.computeIfAbsent(tagId, (key) -> new ArrayList<>()).add(holder);
                     }
                 }

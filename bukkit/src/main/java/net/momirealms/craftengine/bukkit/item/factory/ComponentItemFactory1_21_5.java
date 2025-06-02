@@ -3,14 +3,15 @@ package net.momirealms.craftengine.bukkit.item.factory;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.saicone.rtag.data.ComponentType;
-import com.saicone.rtag.tag.TagList;
-import com.saicone.rtag.util.ChatComponent;
+import net.kyori.adventure.text.Component;
 import net.momirealms.craftengine.bukkit.item.ComponentItemWrapper;
 import net.momirealms.craftengine.bukkit.item.ComponentTypes;
-import net.momirealms.craftengine.bukkit.util.ComponentUtils;
 import net.momirealms.craftengine.core.item.JukeboxPlayable;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
+import net.momirealms.craftengine.core.util.AdventureHelper;
 import net.momirealms.craftengine.core.util.GsonHelper;
+import net.momirealms.sparrow.nbt.ListTag;
+import net.momirealms.sparrow.nbt.Tag;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,60 +25,91 @@ public class ComponentItemFactory1_21_5 extends ComponentItemFactory1_21_4 {
     }
 
     @Override
-    protected void customName(ComponentItemWrapper item, String json) {
+    protected void customNameJson(ComponentItemWrapper item, String json) {
         if (json == null) {
             item.resetComponent(ComponentTypes.CUSTOM_NAME);
         } else {
-            item.setNBTComponent(ComponentTypes.CUSTOM_NAME, ChatComponent.toTag(ComponentUtils.jsonToMinecraft(json)));
+            item.setSparrowNBTComponent(ComponentTypes.CUSTOM_NAME, AdventureHelper.componentToNbt(AdventureHelper.jsonToComponent(json)));
         }
     }
 
     @Override
-    protected Optional<String> customName(ComponentItemWrapper item) {
-        if (!item.hasComponent(ComponentTypes.CUSTOM_NAME)) return Optional.empty();
-        return ComponentType.encodeJson(ComponentTypes.CUSTOM_NAME, item.getComponent(ComponentTypes.CUSTOM_NAME)).map(jsonElement -> GsonHelper.get().toJson(jsonElement));
+    protected Optional<String> customNameJson(ComponentItemWrapper item) {
+        return item.getJsonComponent(ComponentTypes.CUSTOM_NAME).map(it -> GsonHelper.get().toJson(it));
     }
 
     @Override
-    protected void itemName(ComponentItemWrapper item, String json) {
+    protected void customNameComponent(ComponentItemWrapper item, Component component) {
+        if (component == null) {
+            item.resetComponent(ComponentTypes.CUSTOM_NAME);
+        } else {
+            item.setSparrowNBTComponent(ComponentTypes.CUSTOM_NAME, AdventureHelper.componentToNbt(component));
+        }
+    }
+
+    @Override
+    protected Optional<Component> customNameComponent(ComponentItemWrapper item) {
+        return customNameJson(item).map(AdventureHelper::jsonToComponent);
+    }
+
+    @Override
+    protected void itemNameJson(ComponentItemWrapper item, String json) {
         if (json == null) {
             item.resetComponent(ComponentTypes.ITEM_NAME);
         } else {
-            item.setNBTComponent(ComponentTypes.ITEM_NAME, ChatComponent.toTag(ComponentUtils.jsonToMinecraft(json)));
+            item.setSparrowNBTComponent(ComponentTypes.ITEM_NAME, AdventureHelper.componentToNbt(AdventureHelper.jsonToComponent(json)));
         }
     }
 
     @Override
-    protected Optional<String> itemName(ComponentItemWrapper item) {
-        if (!item.hasComponent(ComponentTypes.ITEM_NAME)) return Optional.empty();
-        return ComponentType.encodeJson(ComponentTypes.ITEM_NAME, item.getComponent(ComponentTypes.ITEM_NAME)).map(jsonElement -> GsonHelper.get().toJson(jsonElement));
+    protected void itemNameComponent(ComponentItemWrapper item, Component component) {
+        if (component == null) {
+            item.resetComponent(ComponentTypes.ITEM_NAME);
+        } else {
+            item.setSparrowNBTComponent(ComponentTypes.ITEM_NAME, AdventureHelper.componentToNbt(component));
+        }
     }
 
     @Override
-    protected Optional<List<String>> lore(ComponentItemWrapper item) {
+    protected Optional<String> itemNameJson(ComponentItemWrapper item) {
+        return item.getJsonComponent(ComponentTypes.ITEM_NAME).map(it -> GsonHelper.get().toJson(it));
+    }
+
+    @Override
+    protected Optional<List<String>> loreJson(ComponentItemWrapper item) {
         if (!item.hasComponent(ComponentTypes.LORE)) return Optional.empty();
-        return ComponentType.encodeJson(
-                ComponentTypes.LORE,
-                item.getComponent(ComponentTypes.LORE)
-        ).map(list -> {
-           List<String> lore = new ArrayList<>();
-           for (JsonElement jsonElement : (JsonArray) list) {
-               lore.add(GsonHelper.get().toJson(jsonElement));
-           }
-           return lore;
-        });
+        Optional<JsonElement> json = item.getJsonComponent(ComponentTypes.LORE);
+        if (json.isEmpty()) return Optional.empty();
+        List<String> lore = new ArrayList<>();
+        for (JsonElement jsonElement : (JsonArray) json.get()) {
+            lore.add(GsonHelper.get().toJson(jsonElement));
+        }
+        return Optional.of(lore);
     }
 
     @Override
-    protected void lore(ComponentItemWrapper item, List<String> lore) {
+    protected void loreComponent(ComponentItemWrapper item, List<Component> lore) {
         if (lore == null || lore.isEmpty()) {
             item.resetComponent(ComponentTypes.LORE);
         } else {
-            List<Object> loreTags = new ArrayList<>();
-            for (String json : lore) {
-                loreTags.add(ChatComponent.toTag(ComponentUtils.jsonToMinecraft(json)));
+            List<Tag> loreTags = new ArrayList<>();
+            for (Component component : lore) {
+                loreTags.add(AdventureHelper.componentToTag(component));
             }
-            item.setNBTComponent(ComponentTypes.LORE, TagList.newTag(loreTags));
+            item.setSparrowNBTComponent(ComponentTypes.LORE, new ListTag(loreTags));
+        }
+    }
+
+    @Override
+    protected void loreJson(ComponentItemWrapper item, List<String> lore) {
+        if (lore == null || lore.isEmpty()) {
+            item.resetComponent(ComponentTypes.LORE);
+        } else {
+            List<Tag> loreTags = new ArrayList<>();
+            for (String json : lore) {
+                loreTags.add(AdventureHelper.componentToTag(AdventureHelper.jsonToComponent(json)));
+            }
+            item.setSparrowNBTComponent(ComponentTypes.LORE, new ListTag(loreTags));
         }
     }
 
@@ -86,7 +118,7 @@ public class ComponentItemFactory1_21_5 extends ComponentItemFactory1_21_4 {
         if (!item.hasComponent(ComponentTypes.JUKEBOX_PLAYABLE)) return Optional.empty();
         String song = (String) ComponentType.encodeJava(
                 ComponentTypes.JUKEBOX_PLAYABLE,
-                item.getComponent(ComponentTypes.JUKEBOX_PLAYABLE)).orElse(null);
+                item.getComponentExact(ComponentTypes.JUKEBOX_PLAYABLE)).orElse(null);
         if (song == null) return Optional.empty();
         return Optional.of(new JukeboxPlayable(song, true));
     }

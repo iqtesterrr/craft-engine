@@ -16,6 +16,8 @@ import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.plugin.config.Config;
 import net.momirealms.craftengine.core.plugin.config.ConfigParser;
 import net.momirealms.craftengine.core.plugin.context.event.EventFunctions;
+import net.momirealms.craftengine.core.plugin.context.text.TextProvider;
+import net.momirealms.craftengine.core.plugin.context.text.TextProviders;
 import net.momirealms.craftengine.core.plugin.locale.LocalizedResourceConfigException;
 import net.momirealms.craftengine.core.plugin.locale.TranslationManager;
 import net.momirealms.craftengine.core.registry.BuiltInRegistries;
@@ -437,13 +439,12 @@ public abstract class AbstractItemManager<I> extends AbstractModelGenerator impl
         }, "external");
         registerDataFunction((obj) -> {
             String name = obj.toString();
-            return new DisplayNameModifier<>(name);
+            return new CustomNameModifier<>(name);
         }, "custom-name");
         registerDataFunction((obj) -> {
             String name = obj.toString();
             return new ItemNameModifier<>(name);
         }, "item-name", "display-name");
-
         registerDataFunction((obj) -> {
             List<String> name = MiscUtils.getAsStringList(obj);
             return new LoreModifier<>(name);
@@ -500,6 +501,14 @@ public abstract class AbstractItemManager<I> extends AbstractModelGenerator impl
                 return new EquippableModifier<>(EquipmentData.fromMap(data));
             }, "equippable");
         }
+        registerDataFunction((obj) -> {
+            Map<String, Object> data = MiscUtils.castToMap(obj, false);
+            Map<String, TextProvider> arguments = new HashMap<>();
+            for (Map.Entry<String, Object> entry : data.entrySet()) {
+                arguments.put(entry.getKey(), TextProviders.fromString(entry.getValue().toString()));
+            }
+            return new ArgumentModifier<>(arguments);
+        }, "args", "argument", "arguments");
     }
 
     protected void processModelRecursively(

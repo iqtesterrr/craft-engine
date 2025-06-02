@@ -2,14 +2,14 @@ package net.momirealms.craftengine.bukkit.block.behavior;
 
 import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.bukkit.CraftBukkitReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MBlocks;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MFluids;
 import net.momirealms.craftengine.bukkit.util.BlockStateUtils;
 import net.momirealms.craftengine.bukkit.util.EventUtils;
 import net.momirealms.craftengine.bukkit.util.LocationUtils;
-import net.momirealms.craftengine.bukkit.util.Reflections;
-import net.momirealms.craftengine.core.block.CustomBlock;
-import net.momirealms.craftengine.core.block.EmptyBlock;
-import net.momirealms.craftengine.core.block.ImmutableBlockState;
-import net.momirealms.craftengine.core.block.UpdateOption;
+import net.momirealms.craftengine.core.block.*;
 import net.momirealms.craftengine.core.block.behavior.BlockBehaviorFactory;
 import net.momirealms.craftengine.core.item.context.BlockPlaceContext;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
@@ -17,7 +17,6 @@ import net.momirealms.craftengine.core.util.Direction;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.ResourceConfigUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
-import net.momirealms.craftengine.shared.block.BlockBehavior;
 import org.bukkit.block.BlockState;
 import org.bukkit.event.block.BlockFormEvent;
 
@@ -25,15 +24,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 
-// TODO Inject FallingBlockEntity?
-public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
+public class ConcretePowderBlockBehavior extends BukkitBlockBehavior {
     public static final Factory FACTORY = new Factory();
-    private final Key targetBlock;
+    private final Key targetBlock; // TODO 更宽泛的，使用state，似乎也不是很好的方案？
     private Object defaultBlockState;
     private ImmutableBlockState defaultImmutableBlockState;
 
-    public ConcretePowderBlockBehavior(CustomBlock block, float hurtAmount, int maxHurt, Key targetBlock) {
-        super(block, hurtAmount, maxHurt);
+    public ConcretePowderBlockBehavior(CustomBlock block, Key targetBlock) {
+        super(block);
         this.targetBlock = targetBlock;
     }
 
@@ -55,7 +53,7 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
             this.defaultImmutableBlockState = customBlock.defaultState();
         } else {
             CraftEngine.instance().logger().warn("Failed to create solid block " + this.targetBlock + " in ConcretePowderBlockBehavior");
-            this.defaultBlockState = Reflections.instance$Blocks$STONE$defaultState;
+            this.defaultBlockState = MBlocks.STONE$defaultState;
             this.defaultImmutableBlockState = EmptyBlock.STATE;
         }
         return this.defaultBlockState;
@@ -70,7 +68,7 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
             if (!shouldSolidify(level, blockPos, previousState)) {
                 return super.updateStateForPlacement(context, state);
             } else {
-                BlockState craftBlockState = (BlockState) Reflections.method$CraftBlockStates$getBlockState.invoke(null, level, blockPos);
+                BlockState craftBlockState = (BlockState) CraftBukkitReflections.method$CraftBlockStates$getBlockState.invoke(null, level, blockPos);
                 craftBlockState.setBlockData(BlockStateUtils.fromBlockData(getDefaultBlockState()));
                 BlockFormEvent event = new BlockFormEvent(craftBlockState.getBlock(), craftBlockState);
                 if (!EventUtils.fireAndCheckCancel(event)) {
@@ -79,7 +77,7 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
                     return super.updateStateForPlacement(context, state);
                 }
             }
-        } catch (ReflectiveOperationException e) {
+        } catch (Exception e) {
             CraftEngine.instance().logger().warn("Failed to update state for placement " + context.getClickedPos(), e);
         }
         return super.updateStateForPlacement(context, state);
@@ -91,7 +89,7 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
         Object blockPos = args[1];
         Object replaceableState = args[3];
         if (shouldSolidify(world, blockPos, replaceableState)) {
-            Reflections.method$CraftEventFactory$handleBlockFormEvent.invoke(null, world, blockPos, getDefaultBlockState(), UpdateOption.UPDATE_ALL.flags());
+            CraftBukkitReflections.method$CraftEventFactory$handleBlockFormEvent.invoke(null, world, blockPos, getDefaultBlockState(), UpdateOption.UPDATE_ALL.flags());
         }
     }
 
@@ -107,18 +105,18 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
             pos = args[4];
         }
         if (touchesLiquid(level, pos)) {
-            if (!Reflections.clazz$Level.isInstance(level)) {
+            if (!CoreReflections.clazz$Level.isInstance(level)) {
                 return getDefaultBlockState();
             } else {
-                BlockState craftBlockState = (BlockState) Reflections.method$CraftBlockStates$getBlockState.invoke(null, level, pos);
+                BlockState craftBlockState = (BlockState) CraftBukkitReflections.method$CraftBlockStates$getBlockState.invoke(null, level, pos);
                 craftBlockState.setBlockData(BlockStateUtils.fromBlockData(getDefaultBlockState()));
                 BlockFormEvent event = new BlockFormEvent(craftBlockState.getBlock(), craftBlockState);
                 if (!EventUtils.fireAndCheckCancel(event)) {
-                    return Reflections.method$CraftBlockState$getHandle.invoke(craftBlockState);
+                    return CraftBukkitReflections.method$CraftBlockState$getHandle.invoke(craftBlockState);
                 }
             }
         }
-        return super.updateShape(thisBlock, args, superMethod);
+        return args[0];
     }
 
     private static boolean shouldSolidify(Object level, Object blockPos, Object blockState) throws ReflectiveOperationException {
@@ -126,23 +124,23 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
     }
 
     private static boolean canSolidify(Object state) throws ReflectiveOperationException {
-        Object fluidState = Reflections.field$BlockStateBase$fluidState.get(state);
+        Object fluidState = CoreReflections.field$BlockStateBase$fluidState.get(state);
         if (fluidState == null) return false;
-        Object fluidType = Reflections.method$FluidState$getType.invoke(fluidState);
-        return fluidType == Reflections.instance$Fluids$WATER || fluidType == Reflections.instance$Fluids$FLOWING_WATER;
+        Object fluidType = CoreReflections.method$FluidState$getType.invoke(fluidState);
+        return fluidType == MFluids.instance$Fluids$WATER || fluidType == MFluids.instance$Fluids$FLOWING_WATER;
     }
 
     private static boolean touchesLiquid(Object level, Object pos) throws ReflectiveOperationException {
         boolean flag = false;
-        Object mutablePos = Reflections.method$BlockPos$mutable.invoke(pos);
+        Object mutablePos = CoreReflections.method$BlockPos$mutable.invoke(pos);
         int j = Direction.values().length;
         for (int k = 0; k < j; k++) {
-            Object direction = Reflections.instance$Directions[k];
+            Object direction = CoreReflections.instance$Directions[k];
             Object blockState = FastNMS.INSTANCE.method$BlockGetter$getBlockState(level, mutablePos);
-            if (direction != Reflections.instance$Direction$DOWN || canSolidify(blockState)) {
-                Reflections.method$MutableBlockPos$setWithOffset.invoke(mutablePos, pos, direction);
+            if (direction != CoreReflections.instance$Direction$DOWN || canSolidify(blockState)) {
+                CoreReflections.method$MutableBlockPos$setWithOffset.invoke(mutablePos, pos, direction);
                 blockState = FastNMS.INSTANCE.method$BlockGetter$getBlockState(level, mutablePos);
-                if (canSolidify(blockState) && !(boolean) Reflections.method$BlockStateBase$isFaceSturdy.invoke(blockState, level, pos, FastNMS.INSTANCE.method$Direction$getOpposite(direction), Reflections.instance$SupportType$FULL)) {
+                if (canSolidify(blockState) && !(boolean) CoreReflections.method$BlockStateBase$isFaceSturdy.invoke(blockState, level, pos, FastNMS.INSTANCE.method$Direction$getOpposite(direction), CoreReflections.instance$SupportType$FULL)) {
                     flag = true;
                     break;
                 }
@@ -155,10 +153,8 @@ public class ConcretePowderBlockBehavior extends FallingBlockBehavior {
 
         @Override
         public BlockBehavior create(CustomBlock block, Map<String, Object> arguments) {
-            float hurtAmount = ResourceConfigUtils.getAsFloat(arguments.getOrDefault("hurt-amount", -1f), "hurt-amount");
-            int hurtMax = ResourceConfigUtils.getAsInt(arguments.getOrDefault("max-hurt", -1), "max-hurt");
             String solidBlock = ResourceConfigUtils.requireNonEmptyStringOrThrow(arguments.get("solid-block"), "warning.config.block.behavior.concrete.missing_solid");
-            return new ConcretePowderBlockBehavior(block, hurtAmount, hurtMax, Key.of(solidBlock));
+            return new ConcretePowderBlockBehavior(block, Key.of(solidBlock));
         }
     }
 }

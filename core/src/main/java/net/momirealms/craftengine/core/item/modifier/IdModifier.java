@@ -21,9 +21,4 @@ public class IdModifier<I> implements ItemDataModifier<I> {
     public void apply(Item<I> item, ItemBuildContext context) {
         item.customId(this.argument);
     }
-
-    @Override
-    public void remove(Item<I> item) {
-        // WHY DO YOU WANT TO REMOVE CRAFTENGINE ID?
-    }
 }

@@ -13,7 +13,9 @@ public class EntityDataUtils {
     private static final int RIGHT_ALIGNMENT = 0x10; // 16
     public static final int BLOCK_STATE_DATA_ID = VersionHelper.isOrAbove1_20_2() ? 23 : 22;
     public static final int TEXT_DATA_ID = VersionHelper.isOrAbove1_20_2() ? 23 : 22;
+    public static final int DISPLAYED_ITEM_DATA_ID = VersionHelper.isOrAbove1_20_2() ? 23 : 22;
     public static final int CUSTOM_NAME_DATA_ID = 2;
+    public static final int ITEM_DATA_ID = 8;
 
     public static byte encodeTextDisplayMask(boolean hasShadow, boolean isSeeThrough, boolean useDefaultBackground, int alignment) {
         int bitMask = 0;

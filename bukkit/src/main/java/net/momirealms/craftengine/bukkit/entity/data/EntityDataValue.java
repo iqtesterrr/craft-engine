@@ -1,7 +1,7 @@
 package net.momirealms.craftengine.bukkit.entity.data;
 
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
-import net.momirealms.craftengine.bukkit.util.Reflections;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.core.util.ReflectionUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
 
@@ -91,7 +91,7 @@ public class EntityDataValue {
     }
 
     private static Object initSerializersByName(String name) throws ReflectiveOperationException {
-        return ReflectionUtils.getDeclaredField(Reflections.clazz$EntityDataSerializers, new String[]{fieldsObf[internalID++], name}).get(null);
+        return ReflectionUtils.getDeclaredField(CoreReflections.clazz$EntityDataSerializers, new String[]{fieldsObf[internalID++], name}).get(null);
     }
 
     private EntityDataValue() {

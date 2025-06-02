@@ -7,6 +7,7 @@ import net.momirealms.craftengine.bukkit.api.event.CustomBlockAttemptPlaceEvent;
 import net.momirealms.craftengine.bukkit.api.event.CustomBlockPlaceEvent;
 import net.momirealms.craftengine.bukkit.block.BukkitBlockManager;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
+import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.CoreReflections;
 import net.momirealms.craftengine.bukkit.util.*;
 import net.momirealms.craftengine.bukkit.world.BukkitBlockInWorld;
 import net.momirealms.craftengine.core.block.CustomBlock;
@@ -183,10 +184,10 @@ public class BlockItemBehavior extends ItemBehavior {
             Object player = context.getPlayer().serverPlayer();
             Object blockState = state.customBlockState().handle();
             Object blockPos = LocationUtils.toBlockPos(context.getClickedPos());
-            Object voxelShape = Reflections.method$CollisionContext$of.invoke(null, player);
+            Object voxelShape = CoreReflections.method$CollisionContext$of.invoke(null, player);
             Object world = FastNMS.INSTANCE.field$CraftWorld$ServerLevel((World) context.getLevel().platformWorld());
-            boolean defaultReturn = ((!this.checkStatePlacement() || (boolean) Reflections.method$BlockStateBase$canSurvive.invoke(blockState, world, blockPos))
-                    && (boolean) Reflections.method$ServerLevel$checkEntityCollision.invoke(world, blockState, player, voxelShape, blockPos, true));
+            boolean defaultReturn = ((!this.checkStatePlacement() || (boolean) CoreReflections.method$BlockStateBase$canSurvive.invoke(blockState, world, blockPos))
+                    && (boolean) CoreReflections.method$ServerLevel$checkEntityCollision.invoke(world, blockState, player, voxelShape, blockPos, true));
             Block block = FastNMS.INSTANCE.method$CraftBlock$at(world, blockPos);
             BlockData blockData = FastNMS.INSTANCE.method$CraftBlockData$fromData(blockState);
             BlockCanBuildEvent canBuildEvent = new BlockCanBuildEvent(block, (org.bukkit.entity.Player) context.getPlayer().platformPlayer(), blockData, defaultReturn, context.getHand() == InteractionHand.MAIN_HAND ? EquipmentSlot.HAND : EquipmentSlot.OFF_HAND);

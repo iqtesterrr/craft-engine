@@ -12,6 +12,7 @@ import net.momirealms.craftengine.core.item.modifier.IdModifier;
 import net.momirealms.craftengine.core.plugin.CraftEngine;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.SkullUtils;
+import net.momirealms.sparrow.nbt.Tag;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.inventory.ItemFlag;
@@ -33,12 +34,17 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
 
     @Override
     protected void setTag(LegacyItemWrapper item, Object value, Object... path) {
-        item.set(value, path);
+        item.setTag(value, path);
     }
 
     @Override
-    protected Object getTag(LegacyItemWrapper item, Object... path) {
-        return item.get(path);
+    protected Object getJavaTag(LegacyItemWrapper item, Object... path) {
+        return item.getJavaTag(path);
+    }
+
+    @Override
+    protected Tag getNBTTag(LegacyItemWrapper item, Object... path) {
+        return item.getNBTTag(path);
     }
 
     @Override
@@ -53,39 +59,39 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
 
     @Override
     protected Optional<Key> customId(LegacyItemWrapper item) {
-        Object id = item.get(IdModifier.CRAFT_ENGINE_ID);
+        Object id = item.getJavaTag(IdModifier.CRAFT_ENGINE_ID);
         if (id == null) return Optional.empty();
         return Optional.of(Key.of(id.toString()));
     }
 
     @Override
     protected void customId(LegacyItemWrapper item, Key id) {
-        item.set(id.toString(), IdModifier.CRAFT_ENGINE_ID);
+        item.setTag(id.toString(), IdModifier.CRAFT_ENGINE_ID);
     }
 
     @Override
-    protected void customName(LegacyItemWrapper item, String json) {
+    protected void customNameJson(LegacyItemWrapper item, String json) {
         if (json != null) {
-            item.set(json, "display", "Name");
+            item.setTag(json, "display", "Name");
         } else {
             item.remove("display", "Name");
         }
     }
 
     @Override
-    protected Optional<String> customName(LegacyItemWrapper item) {
+    protected Optional<String> customNameJson(LegacyItemWrapper item) {
         if (!item.hasTag("display", "Name")) return Optional.empty();
-        return Optional.of(item.get("display", "Name"));
+        return Optional.of(item.getJavaTag("display", "Name"));
     }
 
     @Override
-    protected void itemName(LegacyItemWrapper item, String json) {
-        customName(item, json);
+    protected void itemNameJson(LegacyItemWrapper item, String json) {
+        customNameJson(item, json);
     }
 
     @Override
-    protected Optional<String> itemName(LegacyItemWrapper item) {
-        return customName(item);
+    protected Optional<String> itemNameJson(LegacyItemWrapper item) {
+        return customNameJson(item);
     }
 
     @Override
@@ -93,14 +99,14 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
         if (data == null) {
             item.remove("CustomModelData");
         } else {
-            item.set(data, "CustomModelData");
+            item.setTag(data, "CustomModelData");
         }
     }
 
     @Override
     protected Optional<Integer> customModelData(LegacyItemWrapper item) {
         if (!item.hasTag("CustomModelData")) return Optional.empty();
-        return Optional.of(item.get("CustomModelData"));
+        return Optional.of(item.getJavaTag("CustomModelData"));
     }
 
     @Override
@@ -108,8 +114,8 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
         if (skullData == null) {
             item.remove("SkullOwner");
         } else {
-            item.set(UUID.nameUUIDFromBytes(SkullUtils.identifierFromBase64(skullData).getBytes(StandardCharsets.UTF_8)), "SkullOwner", "Id");
-            item.set(
+            item.setTag(UUID.nameUUIDFromBytes(SkullUtils.identifierFromBase64(skullData).getBytes(StandardCharsets.UTF_8)), "SkullOwner", "Id");
+            item.setTag(
                     List.of(Map.of("Value", skullData)),
                     "SkullOwner", "Properties", "textures"
             );
@@ -117,45 +123,45 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
     }
 
     @Override
-    protected Optional<List<String>> lore(LegacyItemWrapper item) {
+    protected Optional<List<String>> loreJson(LegacyItemWrapper item) {
         if (!item.hasTag("display", "Lore")) return Optional.empty();
-        return Optional.of(item.get("display", "Lore"));
+        return Optional.of(item.getJavaTag("display", "Lore"));
     }
 
     @Override
-    protected void lore(LegacyItemWrapper item, List<String> lore) {
+    protected void loreJson(LegacyItemWrapper item, List<String> lore) {
         if (lore == null || lore.isEmpty()) {
             item.remove("display", "Lore");
         } else {
-            item.set(lore, "display", "Lore");
+            item.setTag(lore, "display", "Lore");
         }
     }
 
     @Override
     protected boolean unbreakable(LegacyItemWrapper item) {
-        return Optional.ofNullable((Boolean) item.get("Unbreakable")).orElse(false);
+        return Optional.ofNullable((Boolean) item.getJavaTag("Unbreakable")).orElse(false);
     }
 
     @Override
     protected void unbreakable(LegacyItemWrapper item, boolean unbreakable) {
-        item.set(unbreakable, "Unbreakable");
+        item.setTag(unbreakable, "Unbreakable");
     }
 
     @Override
     protected Optional<Integer> damage(LegacyItemWrapper item) {
         if (!item.hasTag("Damage")) return Optional.empty();
-        return Optional.of(item.get("Damage"));
+        return Optional.of(item.getJavaTag("Damage"));
     }
 
     @Override
     protected void damage(LegacyItemWrapper item, Integer damage) {
-        item.set(damage, "Damage");
+        item.setTag(damage, "Damage");
     }
 
     @Override
     protected Optional<Integer> dyedColor(LegacyItemWrapper item) {
         if (!item.hasTag("display", "color")) return Optional.empty();
-        return Optional.of(item.get("display", "color"));
+        return Optional.of(item.getJavaTag("display", "color"));
     }
 
     @Override
@@ -163,13 +169,13 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
         if (color == null) {
             item.remove("display", "color");
         } else {
-            item.set(color, "display", "color");
+            item.setTag(color, "display", "color");
         }
     }
 
     @Override
-    protected Optional<Integer> maxDamage(LegacyItemWrapper item) {
-        return Optional.of((int) item.getItem().getType().getMaxDurability());
+    protected int maxDamage(LegacyItemWrapper item) {
+        return item.getItem().getType().getMaxDurability();
     }
 
     @Override
@@ -187,7 +193,7 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
         for (Enchantment enchantment : enchantments) {
             tags.add((Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level())));
         }
-        item.set(tags, "Enchantments");
+        item.setTag(tags, "Enchantments");
     }
 
     @Override
@@ -200,12 +206,12 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
         for (Enchantment enchantment : enchantments) {
             tags.add((Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level())));
         }
-        item.set(tags, "StoredEnchantments");
+        item.setTag(tags, "StoredEnchantments");
     }
 
     @Override
     protected void addEnchantment(LegacyItemWrapper item, Enchantment enchantment) {
-        Object enchantments = item.getExact("Enchantments");
+        Object enchantments = item.getExactTag("Enchantments");
         if (enchantments != null) {
             for (Object enchant : TagList.getValue(enchantments)) {
                 if (TagBase.getValue(TagCompound.get(enchant, "id")).equals(enchant.toString())) {
@@ -215,13 +221,13 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
             }
             item.add(Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level()), "Enchantments");
         } else {
-            item.set(List.of(Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level())), "Enchantments");
+            item.setTag(List.of(Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level())), "Enchantments");
         }
     }
 
     @Override
     protected void addStoredEnchantment(LegacyItemWrapper item, Enchantment enchantment) {
-        Object enchantments = item.getExact("StoredEnchantments");
+        Object enchantments = item.getExactTag("StoredEnchantments");
         if (enchantments != null) {
             for (Object enchant : TagList.getValue(enchantments)) {
                 if (TagBase.getValue(TagCompound.get(enchant, "id")).equals(enchant.toString())) {
@@ -231,7 +237,7 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
             }
             item.add(Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level()), "StoredEnchantments");
         } else {
-            item.set(List.of(Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level())), "StoredEnchantments");
+            item.setTag(List.of(Map.of("id", enchantment.id().toString(), "lvl", (short) enchantment.level())), "StoredEnchantments");
         }
     }
 
@@ -254,7 +260,7 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
             ItemFlag itemFlag = ItemFlag.valueOf(flag);
             f = f | 1 << itemFlag.ordinal();
         }
-        item.set(f, "HideFlags");
+        item.setTag(f, "HideFlags");
     }
 
     @Override
@@ -269,13 +275,13 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
 
     @Override
     protected void repairCost(LegacyItemWrapper item, Integer data) {
-        item.set(data, "RepairCost");
+        item.setTag(data, "RepairCost");
     }
 
     @Override
     protected Optional<Integer> repairCost(LegacyItemWrapper item) {
         if (!item.hasTag("RepairCost")) return Optional.empty();
-        return Optional.of(item.get("RepairCost"));
+        return Optional.of(item.getJavaTag("RepairCost"));
     }
 
     @Override
@@ -284,14 +290,14 @@ public class UniversalItemFactory extends BukkitItemFactory<LegacyItemWrapper> {
             item.remove("Trim");
             return;
         }
-        item.set(trim.material(), "Trim", "material");
-        item.set(trim.pattern(), "Trim", "pattern");
+        item.setTag(trim.material(), "Trim", "material");
+        item.setTag(trim.pattern(), "Trim", "pattern");
     }
 
     @Override
     protected Optional<Trim> trim(LegacyItemWrapper item) {
-        String material = item.get("Trim", "material");
-        String pattern = item.get("Trim", "pattern");
+        String material = item.getJavaTag("Trim", "material");
+        String pattern = item.getJavaTag("Trim", "pattern");
         if (material == null || pattern == null) return Optional.empty();
         return Optional.of(new Trim(material, pattern));
     }

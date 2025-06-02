@@ -1,7 +1,0 @@
-{
-  "id": "craftengine",
-  "version": "${project_version}",
-  "mixins": [
-    "mixins.craftengine.json"
-  ]
-}

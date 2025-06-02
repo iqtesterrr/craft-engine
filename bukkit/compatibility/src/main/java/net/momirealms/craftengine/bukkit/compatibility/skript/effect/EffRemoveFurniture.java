@@ -6,7 +6,7 @@ import ch.njol.skript.lang.Expression;
 import ch.njol.skript.lang.SkriptParser;
 import ch.njol.util.Kleenean;
 import net.momirealms.craftengine.bukkit.api.CraftEngineFurniture;
-import net.momirealms.craftengine.bukkit.entity.furniture.LoadedFurniture;
+import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.Nullable;
@@ -23,9 +23,9 @@ public class EffRemoveFurniture extends Effect {
     protected void execute(Event e) {
         for (Entity entity : entities.getArray(e)) {
             if (CraftEngineFurniture.isFurniture(entity)) {
-                LoadedFurniture loadedFurniture = CraftEngineFurniture.getLoadedFurnitureByBaseEntity(entity);
-                if (loadedFurniture != null) {
-                    loadedFurniture.destroy();
+                Furniture bukkitFurniture = CraftEngineFurniture.getLoadedFurnitureByBaseEntity(entity);
+                if (bukkitFurniture != null) {
+                    bukkitFurniture.destroy();
                 }
             }
         }

@@ -2,8 +2,8 @@ package net.momirealms.craftengine.bukkit.item.behavior;
 
 import net.momirealms.craftengine.bukkit.api.event.FurnitureAttemptPlaceEvent;
 import net.momirealms.craftengine.bukkit.api.event.FurniturePlaceEvent;
+import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurniture;
 import net.momirealms.craftengine.bukkit.entity.furniture.BukkitFurnitureManager;
-import net.momirealms.craftengine.bukkit.entity.furniture.LoadedFurniture;
 import net.momirealms.craftengine.bukkit.nms.FastNMS;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
 import net.momirealms.craftengine.bukkit.util.DirectionUtils;
@@ -105,7 +105,7 @@ public class FurnitureItemBehavior extends ItemBehavior {
                 finalPlacePosition = new Vec3d(xz.left(), xz.right(), clickedPosition.z());
             }
         } else {
-            furnitureYaw = placement.rotationRule().apply(180 + player.getXRot());
+            furnitureYaw = placement.rotationRule().apply(180 + player.xRot());
             Pair<Double, Double> xz = placement.alignmentRule().apply(Pair.of(clickedPosition.x(), clickedPosition.z()));
             finalPlacePosition = new Vec3d(xz.left(), clickedPosition.y(), xz.right());
         }
@@ -134,7 +134,7 @@ public class FurnitureItemBehavior extends ItemBehavior {
 
         Item<?> item = context.getItem();
 
-        LoadedFurniture loadedFurniture = BukkitFurnitureManager.instance().place(
+        BukkitFurniture bukkitFurniture = BukkitFurnitureManager.instance().place(
                 furnitureLocation.clone(), customFurniture,
                 FurnitureExtraData.builder()
                         .item(item.copyWithCount(1))
@@ -142,15 +142,15 @@ public class FurnitureItemBehavior extends ItemBehavior {
                         .dyedColor(item.dyedColor().orElse(null))
                         .build(), false);
 
-        FurniturePlaceEvent placeEvent = new FurniturePlaceEvent(bukkitPlayer, loadedFurniture, furnitureLocation, context.getHand());
+        FurniturePlaceEvent placeEvent = new FurniturePlaceEvent(bukkitPlayer, bukkitFurniture, furnitureLocation, context.getHand());
         if (EventUtils.fireAndCheckCancel(placeEvent)) {
-            loadedFurniture.destroy();
+            bukkitFurniture.destroy();
             return InteractionResult.FAIL;
         }
 
         Cancellable dummy = Cancellable.dummy();
         PlayerOptionalContext functionContext = PlayerOptionalContext.of(player, ContextHolder.builder()
-                .withParameter(DirectContextParameters.FURNITURE, loadedFurniture)
+                .withParameter(DirectContextParameters.FURNITURE, bukkitFurniture)
                 .withParameter(DirectContextParameters.POSITION, LocationUtils.toWorldPosition(furnitureLocation))
                 .withParameter(DirectContextParameters.EVENT, dummy)
                 .withParameter(DirectContextParameters.HAND, context.getHand())

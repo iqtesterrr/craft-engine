@@ -6,12 +6,18 @@ import net.momirealms.craftengine.core.plugin.config.ConfigParser;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.world.WorldPosition;
 import org.incendo.cloud.suggestion.Suggestion;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Optional;
 
 public interface FurnitureManager extends Manageable {
+    Key FURNITURE_KEY = Key.of("craftengine:furniture_id");
+    Key FURNITURE_EXTRA_DATA_KEY = Key.of("craftengine:furniture_extra_data");
+    Key FURNITURE_SEAT_BASE_ENTITY_KEY = Key.of("craftengine:seat_to_base_entity");
+    Key FURNITURE_SEAT_VECTOR_3F_KEY = Key.of("craftengine:seat_vector");
+    Key FURNITURE_COLLISION = Key.of("craftengine:collision");
+
     String FURNITURE_ADMIN_NODE = "craftengine.furniture.admin";
 
     ConfigParser parser();

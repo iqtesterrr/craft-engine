@@ -5,19 +5,23 @@ plugins {
 
 repositories {
     maven("https://jitpack.io/")
-    maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.momirealms.net/releases/")
+    maven("https://libraries.minecraft.net/")
+    maven("https://repo.papermc.io/repository/maven-public/")
     mavenCentral()
 }
 
 dependencies {
     compileOnly(project(":core"))
-    compileOnly(project(":shared"))
     compileOnly(project(":bukkit:legacy"))
     // Anti Grief
     compileOnly("net.momirealms:antigrieflib:${rootProject.properties["anti_grief_version"]}")
     // NBT
     compileOnly("net.momirealms:sparrow-nbt:${rootProject.properties["sparrow_nbt_version"]}")
+    compileOnly("net.momirealms:sparrow-nbt-adventure:${rootProject.properties["sparrow_nbt_version"]}")
+    compileOnly("net.momirealms:sparrow-nbt-codec:${rootProject.properties["sparrow_nbt_version"]}")
+    compileOnly("net.momirealms:sparrow-nbt-legacy-codec:${rootProject.properties["sparrow_nbt_version"]}")
+    // Util
     compileOnly("net.momirealms:sparrow-util:${rootProject.properties["sparrow_util_version"]}")
     // NMS
     compileOnly("net.momirealms:craft-engine-nms-helper:${rootProject.properties["nms_helper_version"]}")
@@ -46,7 +50,6 @@ dependencies {
     compileOnly("com.saicone.rtag:rtag-item:${rootProject.properties["rtag_version"]}")
     // Adventure
     compileOnly("net.kyori:adventure-api:${rootProject.properties["adventure_bundle_version"]}")
-    compileOnly("net.kyori:adventure-platform-bukkit:${rootProject.properties["adventure_platform_version"]}")
     compileOnly("net.kyori:adventure-text-minimessage:${rootProject.properties["adventure_bundle_version"]}")
     compileOnly("net.kyori:adventure-text-serializer-gson:${rootProject.properties["adventure_bundle_version"]}") {
         exclude("com.google.code.gson", "gson")
@@ -88,7 +91,6 @@ tasks {
         relocate("com.saicone.rtag", "net.momirealms.craftengine.libraries.tag")
         relocate("org.incendo", "net.momirealms.craftengine.libraries")
         relocate("dev.dejvokep", "net.momirealms.craftengine.libraries")
-        relocate("org.apache.commons.io", "net.momirealms.craftengine.libraries.commons.io")
         relocate("org.bstats", "net.momirealms.craftengine.libraries.bstats")
         relocate("com.github.benmanes.caffeine", "net.momirealms.craftengine.libraries.caffeine")
         relocate("net.bytebuddy", "net.momirealms.craftengine.libraries.bytebuddy")
@@ -96,7 +98,7 @@ tasks {
         relocate("org.ahocorasick", "net.momirealms.craftengine.libraries.ahocorasick")
         relocate("com.ezylang.evalex", "net.momirealms.craftengine.libraries.evalex")
         relocate("com.google.common.jimfs", "net.momirealms.craftengine.libraries.jimfs")
-        relocate("org.apache.commons.imaging", "net.momirealms.craftengine.libraries.imaging")
+        relocate("org.apache.commons", "net.momirealms.craftengine.libraries.commons")
     }
 }
 
