@@ -54,7 +54,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Path;
@@ -69,8 +68,6 @@ public class BukkitCraftEngine extends CraftEngine {
     private SchedulerTask tickTask;
     private boolean successfullyLoaded = false;
     private boolean successfullyEnabled = false;
-    private boolean requiresRestart = false;
-    private boolean hasMod = false;
     private AntiGriefLib antiGrief;
     private JavaPlugin javaPlugin;
     private final Path dataFolderPath;
@@ -91,16 +88,6 @@ public class BukkitCraftEngine extends CraftEngine {
         super.logger = logger;
         super.platform = new BukkitPlatform();
         super.scheduler = new BukkitSchedulerAdapter(this);
-        // find mod class if present
-        Class<?> modClass = ReflectionUtils.getClazz(MOD_CLASS);
-        if (modClass != null) {
-            Field isSuccessfullyRegistered = ReflectionUtils.getDeclaredField(modClass, "isSuccessfullyRegistered");
-            try {
-                requiresRestart = !(boolean) isSuccessfullyRegistered.get(null);
-                hasMod = true;
-            } catch (Exception ignore) {
-            }
-        }
         Class<?> compatibilityClass = Objects.requireNonNull(ReflectionUtils.getClazz(COMPATIBILITY_CLASS), "Compatibility class not found");
         try {
             super.compatibilityManager = (CompatibilityManager) Objects.requireNonNull(ReflectionUtils.getConstructor(compatibilityClass, 0)).newInstance(this);
@@ -118,7 +105,8 @@ public class BukkitCraftEngine extends CraftEngine {
         this.config = new Config(this);
     }
 
-    protected void injectRegistries() {
+    public void injectRegistries() {
+        if (super.blockManager != null) return;
         try {
             BlockGenerator.init();
             super.blockManager = new BukkitBlockManager(this);
@@ -132,7 +120,6 @@ public class BukkitCraftEngine extends CraftEngine {
         if (super.blockManager == null) {
             injectRegistries();
         }
-        if (this.requiresRestart) return;
         try {
             WorldStorageInjector.init();
         } catch (Exception e) {
@@ -177,17 +164,6 @@ public class BukkitCraftEngine extends CraftEngine {
             return;
         }
         this.successfullyEnabled = true;
-        if (this.requiresRestart) {
-            logger().warn(" ");
-            logger().warn(" ");
-            logger().warn(" ");
-            logger().warn("This is the first time you have installed CraftEngine. A restart is required to apply the changes.");
-            logger().warn(" ");
-            logger().warn(" ");
-            logger().warn(" ");
-            Bukkit.getServer().shutdown();
-            return;
-        }
         if (!this.successfullyLoaded) {
             logger().severe(" ");
             logger().severe(" ");
@@ -389,14 +365,6 @@ public class BukkitCraftEngine extends CraftEngine {
         return Optional.ofNullable((BukkitServerPlayer) networkManager().getOnlineUser(player)).orElseGet(
                 () -> (BukkitServerPlayer) networkManager().getUser(player)
         );
-    }
-
-    public boolean hasMod() {
-        return hasMod;
-    }
-
-    public boolean requiresRestart() {
-        return requiresRestart;
     }
 
     public AntiGriefLib antiGrief() {

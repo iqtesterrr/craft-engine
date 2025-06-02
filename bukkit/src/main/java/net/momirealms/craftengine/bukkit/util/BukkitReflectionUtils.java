@@ -2,11 +2,8 @@ package net.momirealms.craftengine.bukkit.util;
 
 import net.momirealms.craftengine.core.util.ReflectionUtils;
 import net.momirealms.craftengine.core.util.VersionHelper;
-import org.bukkit.Bukkit;
 
-import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 
 public final class BukkitReflectionUtils {
@@ -14,52 +11,27 @@ public final class BukkitReflectionUtils {
     private static final String PREFIX_CRAFTBUKKIT = "org.bukkit.craftbukkit";
     private static final String CRAFT_SERVER = "CraftServer";
     private static final String CB_PKG_VERSION;
-    public static final int MAJOR_REVISION;
 
     private BukkitReflectionUtils() {}
 
     static {
-        final Class<?> serverClass;
-        if (Bukkit.getServer() == null) {
-            // Paper plugin Bootstrapper 1.20.6+
-            serverClass = Objects.requireNonNull(ReflectionUtils.getClazz("org.bukkit.craftbukkit.CraftServer"));
+        if (VersionHelper.isMojmap()) {
+            CB_PKG_VERSION = ".";
         } else {
-            serverClass = Bukkit.getServer().getClass();
-        }
-        final String pkg = serverClass.getPackage().getName();
-        final String nmsVersion = pkg.substring(pkg.lastIndexOf(".") + 1);
-        if (!nmsVersion.contains("_")) {
-            int fallbackVersion = -1;
-            if (Bukkit.getServer() != null) {
-                try {
-                    final Method getMinecraftVersion = serverClass.getDeclaredMethod("getMinecraftVersion");
-                    fallbackVersion = Integer.parseInt(getMinecraftVersion.invoke(Bukkit.getServer()).toString().split("\\.")[1]);
-                } catch (final Exception ignored) {
-                }
-            } else {
-                // Paper plugin bootstrapper 1.20.6+
-                try {
-                    final Class<?> sharedConstants = Objects.requireNonNull(ReflectionUtils.getClazz("net.minecraft.SharedConstants"));
-                    final Method getCurrentVersion = sharedConstants.getDeclaredMethod("getCurrentVersion");
-                    final Object currentVersion = getCurrentVersion.invoke(null);
-                    final Method getName = currentVersion.getClass().getDeclaredMethod("getName");
-                    final String versionName = (String) getName.invoke(currentVersion);
+            String name;
+            label: {
+                for (int i = 0; i <= VersionHelper.minorVersion(); i++) {
                     try {
-                        fallbackVersion = Integer.parseInt(versionName.split("\\.")[1]);
-                    } catch (final Exception ignored) {
+                        name = ".v1_" + VersionHelper.majorVersion() + "_R" + i + ".";
+                        Class.forName(PREFIX_CRAFTBUKKIT + name + CRAFT_SERVER);
+                        break label;
+                    } catch (ClassNotFoundException ignored) {
                     }
-                } catch (final ReflectiveOperationException e) {
-                    throw new RuntimeException(e);
                 }
+                throw new RuntimeException("Could not find CraftServer version");
             }
-            MAJOR_REVISION = fallbackVersion;
-        } else {
-            MAJOR_REVISION = Integer.parseInt(nmsVersion.split("_")[1]);
+            CB_PKG_VERSION = name;
         }
-        String name = serverClass.getName();
-        name = name.substring(PREFIX_CRAFTBUKKIT.length());
-        name = name.substring(0, name.length() - CRAFT_SERVER.length());
-        CB_PKG_VERSION = name;
     }
 
     public static String assembleCBClass(String className) {

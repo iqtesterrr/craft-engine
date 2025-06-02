@@ -22,7 +22,6 @@ import net.momirealms.craftengine.core.plugin.logger.filter.DisconnectLogFilter;
 import net.momirealms.craftengine.core.util.AdventureHelper;
 import net.momirealms.craftengine.core.util.Key;
 import net.momirealms.craftengine.core.util.MiscUtils;
-import net.momirealms.craftengine.core.util.ReflectionUtils;
 import net.momirealms.craftengine.core.world.InjectionTarget;
 import net.momirealms.craftengine.core.world.chunk.storage.CompressionMethod;
 
@@ -30,8 +29,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -340,17 +337,6 @@ public class Config {
         emoji$anvil = config.getBoolean("emoji.anvil", true);
         emoji$book = config.getBoolean("emoji.book", true);
         emoji$sign = config.getBoolean("emoji.sign", true);
-
-        Class<?> modClazz = ReflectionUtils.getClazz(CraftEngine.MOD_CLASS);
-        if (modClazz != null) {
-            Method setMaxChainMethod = ReflectionUtils.getStaticMethod(modClazz, void.class, new String[] {"setMaxChainUpdate"}, int.class);
-            try {
-                assert setMaxChainMethod != null;
-                setMaxChainMethod.invoke(null, performance$max_block_chain_update_limit);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                plugin.logger().warn("Failed to set max chain update", e);
-            }
-        }
 
         firstTime = false;
     }

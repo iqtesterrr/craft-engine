@@ -43,7 +43,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public abstract class CraftEngine implements Plugin {
-    public static final String MOD_CLASS = "net.momirealms.craftengine.mod.CraftEnginePlugin";
     private static CraftEngine instance;
     protected PluginLogger logger;
     protected Consumer<Supplier<String>> debugger = (s) -> {};
@@ -304,7 +303,7 @@ public abstract class CraftEngine implements Plugin {
                 Dependencies.GSON,
                 Dependencies.COMMONS_IO, Dependencies.COMMONS_LANG3, Dependencies.COMMONS_IMAGING,
                 Dependencies.ZSTD,
-                Dependencies.BYTE_BUDDY,
+                Dependencies.BYTE_BUDDY, Dependencies.BYTE_BUDDY_AGENT,
                 Dependencies.SNAKE_YAML,
                 Dependencies.BOOSTED_YAML,
                 Dependencies.OPTION,

@@ -39,6 +39,7 @@ dependencies {
     compileOnly("io.netty:netty-all:${rootProject.properties["netty_version"]}")
     // ByteBuddy
     compileOnly("net.bytebuddy:byte-buddy:${rootProject.properties["byte_buddy_version"]}")
+    compileOnly("net.bytebuddy:byte-buddy-agent:${rootProject.properties["byte_buddy_version"]}")
     // Command
     compileOnly("org.incendo:cloud-core:${rootProject.properties["cloud_core_version"]}")
     compileOnly("org.incendo:cloud-minecraft-extras:${rootProject.properties["cloud_minecraft_extras_version"]}")

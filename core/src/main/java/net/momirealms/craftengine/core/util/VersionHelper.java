@@ -15,7 +15,9 @@ public class VersionHelper {
     public static final Field field$DetectedVersion$name = requireNonNull(
             ReflectionUtils.getDeclaredField(clazz$DetectedVersion, String.class, 1));
 
-    private static final float version;
+    private static final int version;
+    private static final int majorVersion;
+    private static final int minorVersion;
     private static final boolean mojmap;
     private static final boolean folia;
     private static final boolean paper;
@@ -39,31 +41,47 @@ public class VersionHelper {
             Object detectedVersion = field$DetectedVersion$BUILT_IN.get(null);
             String name = (String) field$DetectedVersion$name.get(detectedVersion);
             String[] split = name.split("\\.");
-            version = Float.parseFloat(split[1] + "." + (split.length == 3 ? split[2] : "0"));
+            int major = Integer.parseInt(split[1]);
+            int minor = split.length == 3 ? Integer.parseInt(split[2]) : 0;
+
+            // 2001 = 1.20.1
+            // 2104 = 1.21.4
+            version = major * 100 + minor;
+
+            v1_20 = version >= 2000;
+            v1_20_1 = version >= 2001;
+            v1_20_2 = version >= 2002;
+            v1_20_3 = version >= 2003;
+            v1_20_4 = version >= 2004;
+            v1_20_5 = version >= 2005;
+            v1_20_6 = version >= 2006;
+            v1_21 = version >= 2100;
+            v1_21_1 = version >= 2101;
+            v1_21_2 = version >= 2102;
+            v1_21_3 = version >= 2103;
+            v1_21_4 = version >= 2104;
+            v1_21_5 = version >= 2105;
+
+            majorVersion = major;
+            minorVersion = minor;
+
             mojmap = checkMojMap();
             folia = checkFolia();
             paper = checkPaper();
-            v1_20 = version >= 20f;
-            v1_20_1 = version >= 20.1f;
-            v1_20_2 = version >= 20.2f;
-            v1_20_3 = version >= 20.3f;
-            v1_20_4 = version >= 20.4f;
-            v1_20_5 = version >= 20.5f;
-            v1_20_6 = version >= 20.6f;
-            v1_21 = version >= 21f;
-            v1_21_1 = version >= 21.1f;
-            v1_21_2 = version >= 21.2f;
-            v1_21_3 = version >= 21.3f;
-            v1_21_4 = version >= 21.4f;
-            v1_21_5 = version >= 21.5f;
         } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to init VersionHelper", e);
         }
     }
 
-    public static void init() {}
+    public static int majorVersion() {
+        return majorVersion;
+    }
 
-    public static float version() {
+    public static int minorVersion() {
+        return minorVersion;
+    }
+
+    public static int version() {
         return version;
     }
 

@@ -199,6 +199,18 @@ public class Dependencies {
             List.of(Relocation.of("bytebuddy", "net{}bytebuddy"))
     );
 
+    public static final Dependency BYTE_BUDDY_AGENT = new Dependency(
+            "byte-buddy-agent",
+            "net{}bytebuddy",
+            "byte-buddy-agent",
+            List.of(Relocation.of("bytebuddy", "net{}bytebuddy"))
+    ) {
+        @Override
+        public String getVersion() {
+            return BYTE_BUDDY.getVersion();
+        }
+    };
+
     public static final Dependency SNAKE_YAML = new Dependency(
             "snake-yaml",
             "org{}yaml",
