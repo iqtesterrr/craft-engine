@@ -101,17 +101,17 @@ public class LaySeat extends AbstractSeat {
 					MEntityTypes.instance$EntityType$PLAYER, 0, CoreReflections.instance$Vec3$Zero, 0);
 
 			// Info
-			EnumSet enumSet = EnumSet.noneOf((Class<? extends Enum>) CoreReflections.clazz$ClientboundPlayerInfoUpdatePacket$Action);
-			enumSet.add(CoreReflections.instance$ClientboundPlayerInfoUpdatePacket$Action$ADD_PLAYER);
+			EnumSet enumSet = EnumSet.noneOf((Class<? extends Enum>) NetworkReflections.clazz$ClientboundPlayerInfoUpdatePacket$Action);
+			enumSet.add(NetworkReflections.instance$ClientboundPlayerInfoUpdatePacket$Action$ADD_PLAYER);
 			Object entry;
 			if (VersionHelper.isOrAbove1_21_4()) {
-				entry = CoreReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
+				entry = NetworkReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
 						uuid, npcProfile, false, 0, CoreReflections.instance$GameType$SURVIVAL, null, true, 0, null);
 			} else if (VersionHelper.isOrAbove1_21_3()) {
-				entry = CoreReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
+				entry = NetworkReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
 						uuid, npcProfile, false, 0, CoreReflections.instance$GameType$SURVIVAL, null, 0, null);
 			} else {
-				entry = CoreReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
+				entry = NetworkReflections.constructor$ClientBoundPlayerInfoUpdatePacket$Entry.newInstance(
 						uuid, npcProfile, false, 0, CoreReflections.instance$GameType$SURVIVAL, null, null);
 			}
 			Object npcInfoPacket = FastNMS.INSTANCE.constructor$ClientboundPlayerInfoUpdatePacket(enumSet, Collections.singletonList(entry));
@@ -124,7 +124,7 @@ public class LaySeat extends AbstractSeat {
 			bedLoc.setY(bedLoc.getWorld().getMinHeight());
 			Object bedPos = LocationUtils.toBlockPos(new BlockPos(bedLoc.getBlockX(), bedLoc.getBlockY(), bedLoc.getBlockZ()));
 			Object blockState = BlockStateUtils.blockDataToBlockState(bedData);
-			Object bedPacket = CoreReflections.constructor$ClientboundBlockUpdatePacket.newInstance(bedPos, blockState);
+			Object bedPacket = NetworkReflections.constructor$ClientboundBlockUpdatePacket.newInstance(bedPos, blockState);
 
 			// Data
 			Object npcData = CoreReflections.method$Entity$getEntityData.invoke(npc);
@@ -146,15 +146,15 @@ public class LaySeat extends AbstractSeat {
 			);
 
 			// Remove
-			Object npcRemovePacket = CoreReflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{npcId});
+			Object npcRemovePacket = NetworkReflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{npcId});
 
 			// TP
 			Object npcTeleportPacket;
 			if (VersionHelper.isOrAbove1_21_3()) {
 				Object positionMoveRotation = CoreReflections.method$PositionMoveRotation$of.invoke(null, npc);
-				npcTeleportPacket = CoreReflections.constructor$ClientboundTeleportEntityPacket.newInstance(npcId, positionMoveRotation, Set.of(), false);
+				npcTeleportPacket = NetworkReflections.constructor$ClientboundTeleportEntityPacket.newInstance(npcId, positionMoveRotation, Set.of(), false);
 			} else {
-				npcTeleportPacket = CoreReflections.constructor$ClientboundTeleportEntityPacket.newInstance(npc);
+				npcTeleportPacket = NetworkReflections.constructor$ClientboundTeleportEntityPacket.newInstance(npc);
 			}
 
 
@@ -217,8 +217,11 @@ public class LaySeat extends AbstractSeat {
 			float npcYawOffset = 0.0f;
 			if (player.getY() > 0.0874218749) {
 				if (VersionHelper.isOrAbove1_21_2()) {
-					if (npcDir == Direction.SOUTH) npcYawOffset = 27;
-					if (npcDir == Direction.NORTH) npcYawOffset = -26;
+					double offset = loc.x() - Math.floor(loc.x()) - 0.5;
+
+					if (Math.abs(offset) > 0.05005) {
+						npcYawOffset = offset > 0 ? +27f : -26f;
+					}
 				}
 			}
 
@@ -345,7 +348,7 @@ public class LaySeat extends AbstractSeat {
 			Object blockPos = LocationUtils.toBlockPos(bedLoc.getBlockX(), bedLoc.getBlockY(), bedLoc.getBlockZ());
 			Object blockState = BlockStateUtils.blockDataToBlockState(bedLoc.getBlock().getBlockData());
 			try {
-				Object blockUpdatePacket = CoreReflections.constructor$ClientboundBlockUpdatePacket.newInstance(blockPos, blockState);
+				Object blockUpdatePacket = NetworkReflections.constructor$ClientboundBlockUpdatePacket.newInstance(blockPos, blockState);
 				if (player.getPotionEffect(PotionEffectType.INVISIBILITY) == null) CoreReflections.method$Entity$setInvisible.invoke(serverPlayer.serverPlayer(), false);
 				from.sendPacket(this.npcRemovePacket, true);
 				from.sendPacket(blockUpdatePacket, true);
@@ -362,7 +365,7 @@ public class LaySeat extends AbstractSeat {
 					player.setSleepingIgnored(false);
 				}
 
-				Object fullSlots = CoreReflections.method$ClientboundSetEquipmentPacket$getSlots.invoke(this.fullEquipPacket);
+				Object fullSlots = NetworkReflections.method$ClientboundSetEquipmentPacket$getSlots.invoke(this.fullEquipPacket);
 				Object recoverEquip = NetworkReflections.constructor$ClientboundSetEquipmentPacket.newInstance(player.getEntityId(), fullSlots);
 
 				for (org.bukkit.entity.Player p : PlayerUtils.getTrackedBy(player)) {
@@ -418,7 +421,7 @@ public class LaySeat extends AbstractSeat {
 		@Override
 		public void handleContainerSetSlot(NetWorkUser user, NMSPacketEvent event, Object packet) {
 			try {
-				int slot = (int) CoreReflections.method$ClientboundContainerSetSlotPacket$getSlot.invoke(packet);
+				int slot = (int) NetworkReflections.method$ClientboundContainerSetSlotPacket$getSlot.invoke(packet);
 				org.bukkit.entity.Player player = (org.bukkit.entity.Player) user.platformPlayer();
 
 				int convertSlot;
@@ -441,9 +444,9 @@ public class LaySeat extends AbstractSeat {
 				}
 
 				if (!(convertSlot == player.getInventory().getHeldItemSlot() || (isPlayerInv && (slot == 45 || (slot >= 5 && slot <= 8))))) return;
-				int containerId = (int) CoreReflections.method$ClientboundContainerSetSlotPacket$getContainerId.invoke(packet);
-				int stateId = (int) CoreReflections.method$ClientboundContainerSetSlotPacket$getStateId.invoke(packet);
-				Object replacePacket = CoreReflections.constructor$ClientboundContainerSetSlotPacket.newInstance(containerId, stateId, slot, MItems.Air$ItemStack);
+				int containerId = (int) NetworkReflections.method$ClientboundContainerSetSlotPacket$getContainerId.invoke(packet);
+				int stateId = (int) NetworkReflections.method$ClientboundContainerSetSlotPacket$getStateId.invoke(packet);
+				Object replacePacket = NetworkReflections.constructor$ClientboundContainerSetSlotPacket.newInstance(containerId, stateId, slot, MItems.Air$ItemStack);
 				event.replacePacket(replacePacket);
 			} catch (Exception e) {
 				CraftEngine.instance().logger().warn("Failed to handleContainerSetSlotPacket", e);
@@ -456,9 +459,9 @@ public class LaySeat extends AbstractSeat {
 				try {
 					Object animatePacket;
 					if (e.getAnimationType() == PlayerAnimationType.ARM_SWING) {
-						animatePacket = CoreReflections.constructor$ClientboundAnimatePacket.newInstance(npc, 0);
+						animatePacket = NetworkReflections.constructor$ClientboundAnimatePacket.newInstance(npc, 0);
 					} else {
-						animatePacket = CoreReflections.constructor$ClientboundAnimatePacket.newInstance(npc, 3);
+						animatePacket = NetworkReflections.constructor$ClientboundAnimatePacket.newInstance(npc, 3);
 					}
 					serverPlayer.sendPacket(animatePacket, true);
 					for (org.bukkit.entity.Player other : PlayerUtils.getTrackedBy(serverPlayer.platformPlayer())) {
@@ -549,7 +552,7 @@ public class LaySeat extends AbstractSeat {
 		private void updateNpcYaw(float playerYaw) {
 			byte packYaw = getRot(playerYaw);
 			try {
-				this.npcRotHeadPacket = CoreReflections.constructor$ClientboundRotateHeadPacket.newInstance(npc, packYaw);
+				this.npcRotHeadPacket = NetworkReflections.constructor$ClientboundRotateHeadPacket.newInstance(npc, packYaw);
 			} catch (Exception exception) {
 				CraftEngine.instance().logger().warn("Failed to sync NPC yaw", exception);
 			}

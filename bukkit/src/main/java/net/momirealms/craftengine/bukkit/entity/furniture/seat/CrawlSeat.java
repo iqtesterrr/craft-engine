@@ -133,7 +133,7 @@ public class CrawlSeat extends AbstractSeat {
 			super.dismount(player);
 			((org.bukkit.entity.Player) player.platformPlayer()).setPose(Pose.STANDING, false);
 			try {
-				Object packet = CoreReflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{visualId});
+				Object packet = NetworkReflections.constructor$ClientboundRemoveEntitiesPacket.newInstance((Object) new int[]{visualId});
 				player.sendPacket(packet, false);
 			} catch (Exception e) {
 				BukkitCraftEngine.instance().logger().warn("Failed to remove crawl entity", e);
