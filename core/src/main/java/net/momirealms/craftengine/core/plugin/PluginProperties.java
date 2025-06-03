@@ -26,6 +26,9 @@ public class PluginProperties {
 
         private static PluginProperties getInstance() {
              try (InputStream inputStream = PluginProperties.class.getClassLoader().getResourceAsStream("craft-engine.properties")) {
+                 if (inputStream == null) {
+                     throw new RuntimeException("Missing craft-engine.properties");
+                 }
                  HashMap<String, String> versionMap = new HashMap<>();
                  Properties properties = new Properties();
                  properties.load(inputStream);
