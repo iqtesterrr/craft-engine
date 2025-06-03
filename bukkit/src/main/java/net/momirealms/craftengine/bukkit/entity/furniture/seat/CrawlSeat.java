@@ -12,9 +12,8 @@ import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MAttributeH
 import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.MEntityTypes;
 import net.momirealms.craftengine.bukkit.plugin.reflection.minecraft.NetworkReflections;
 import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
-import net.momirealms.craftengine.bukkit.util.EntityUtils;
 import net.momirealms.craftengine.bukkit.util.PlayerUtils;
-import net.momirealms.craftengine.core.entity.furniture.AbstractSeat;
+import net.momirealms.craftengine.bukkit.entity.furniture.seat.BukkitSeat;
 import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import net.momirealms.craftengine.core.entity.furniture.Seat;
 import net.momirealms.craftengine.core.entity.furniture.SeatFactory;
@@ -36,10 +35,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class CrawlSeat extends AbstractSeat {
+public class CrawlSeat extends BukkitSeat {
 	public static final SeatFactory FACTORY = new Factory();
-	private static final List<Object> visualData = new ArrayList<>();
-	private final boolean limitPlayerRotation;
+    private static final List<Object> visualData = new ArrayList<>();
 
 	static {
 		ShulkerData.NoGravity.addEntityDataIfNotDefaultValue(true, visualData);
@@ -48,21 +46,19 @@ public class CrawlSeat extends AbstractSeat {
 		ShulkerData.SharedFlags.addEntityDataIfNotDefaultValue((byte) 0x20, visualData);
 	}
 
-	public CrawlSeat(Vector3f offset, float yaw, boolean limitPlayerRotation) {
-		super(offset, yaw);
-		this.limitPlayerRotation = limitPlayerRotation;
-	}
+    public CrawlSeat(Vector3f offset, float yaw, boolean limitPlayerRotation) {
+        super(offset, yaw, limitPlayerRotation);
+    }
 
 	@Override
 	public SeatEntity spawn(Player player, Furniture furniture) {
 		return spawn((org.bukkit.entity.Player) player.platformPlayer(), furniture);
 	}
 
-	public SeatEntity spawn(org.bukkit.entity.Player player, Furniture furniture) {
-		Location location = ((BukkitFurniture)furniture).calculateSeatLocation(this);
+        public SeatEntity spawn(org.bukkit.entity.Player player, Furniture furniture) {
+                Location location = ((BukkitFurniture)furniture).calculateSeatLocation(this);
 
-		org.bukkit.entity.Entity seatEntity = EntityUtils.spawnSeatEntity(furniture, this, player.getWorld(), location, this.limitPlayerRotation, null);
-		seatEntity.addPassenger(player);
+                org.bukkit.entity.Entity seatEntity = spawnSeatEntity(player, furniture, location);
 
 		// Fix Rider Pose
 		int visualId = CoreReflections.instance$Entity$ENTITY_COUNTER.incrementAndGet();

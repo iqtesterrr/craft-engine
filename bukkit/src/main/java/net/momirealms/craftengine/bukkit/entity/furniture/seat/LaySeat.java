@@ -18,7 +18,7 @@ import net.momirealms.craftengine.bukkit.plugin.scheduler.impl.FoliaTask;
 import net.momirealms.craftengine.bukkit.plugin.user.BukkitServerPlayer;
 import net.momirealms.craftengine.bukkit.util.*;
 import net.momirealms.craftengine.core.entity.EquipmentSlot;
-import net.momirealms.craftengine.core.entity.furniture.AbstractSeat;
+import net.momirealms.craftengine.bukkit.entity.furniture.seat.BukkitSeat;
 import net.momirealms.craftengine.core.entity.furniture.Furniture;
 import net.momirealms.craftengine.core.entity.furniture.Seat;
 import net.momirealms.craftengine.core.entity.furniture.SeatFactory;
@@ -49,18 +49,18 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class LaySeat extends AbstractSeat {
+public class LaySeat extends BukkitSeat {
 	public static final SeatFactory FACTORY = new Factory();
 	private final Direction facing;
 	private final boolean sleep;
 	private final boolean phantom;
 
-	public LaySeat(Vector3f offset, Direction facing, boolean sleep, boolean phantom) {
-		super(offset, 0);
-		this.facing = facing;
-		this.sleep = sleep;
-		this.phantom = phantom;
-	}
+    public LaySeat(Vector3f offset, Direction facing, boolean sleep, boolean phantom) {
+        super(offset, 0, false);
+        this.facing = facing;
+        this.sleep = sleep;
+        this.phantom = phantom;
+    }
 
 	@Override
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -193,10 +193,10 @@ public class LaySeat extends AbstractSeat {
 			packets.add(emptyEquipPacket);
 			Object npcInitPackets = FastNMS.INSTANCE.constructor$ClientboundBundlePacket(packets);
 
-			// Spawn
-			org.bukkit.entity.Entity seatEntity = EntityUtils.spawnSeatEntity(furniture, this, player.getWorld(), loc, false, null);
-			seatEntity.addPassenger(player); // 0.5 higher
-			cePlayer.sendPacket(npcInitPackets, true);
+                        // Spawn
+                        org.bukkit.entity.Entity seatEntity = spawnSeatEntity(player, furniture, loc);
+                        // seatEntity already has player passenger
+                        cePlayer.sendPacket(npcInitPackets, true);
 			cePlayer.sendPacket(fullEquipPacket, true);
 			if (player.getY() > 0) {
 				BukkitCraftEngine.instance().scheduler().asyncLater(() -> cePlayer.sendPacket(npcTeleportPacket, true),
