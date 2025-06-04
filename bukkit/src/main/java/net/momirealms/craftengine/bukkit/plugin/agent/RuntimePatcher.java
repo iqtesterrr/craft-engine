@@ -8,6 +8,7 @@ import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.bytecode.ByteCodeAppender;
 import net.bytebuddy.jar.asm.Opcodes;
 import net.momirealms.craftengine.bukkit.plugin.BukkitCraftEngine;
+import net.momirealms.craftengine.bukkit.plugin.agent.HelloWorldAgent;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,5 +51,6 @@ public class RuntimePatcher {
         setPlugin.invoke(null, plugin);
         Instrumentation inst = ByteBuddyAgent.install();
         BlocksAgent.agentmain(null, inst);
+        HelloWorldAgent.agentmain(null, inst);
     }
 }
